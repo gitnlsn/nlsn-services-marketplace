@@ -41,6 +41,7 @@ This project is a Next.js web application that provides a marketplace for servic
 ### Mermaid Diagram Validation
 
 *   Validate Mermaid diagrams in documentation: `npm run validate-mermaid`
+*   When creating Mermaid diagrams, leverage CSS and styling, including colors, to enhance visualization and clarity.
 
 ## Development Conventions
 

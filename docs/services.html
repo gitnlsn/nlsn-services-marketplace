@@ -3,134 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Services Page Demo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #0056b3;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .description {
-            text-align: center;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        .carousel-container {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .carousel-slide {
-            display: flex;
-            transition: transform 0.5s ease-in-out;
-        }
-        .carousel-slide img {
-            width: 100%;
-            flex-shrink: 0;
-            display: block;
-            height: auto;
-        }
-        .carousel-button {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(0,0,0,0.5);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 18px;
-            border-radius: 50%;
-            z-index: 100;
-        }
-        .carousel-button.prev {
-            left: 10px;
-        }
-        .carousel-button.next {
-            right: 10px;
-        }
-        .hire-button-container {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .hire-button {
-            background-color: #28a745;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .hire-button:hover {
-            background-color: #218838;
-        }
-    </style>
+    <title>Services: Creation, Management, and Discovery</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Our Services</h1>
-        <p class="description">
-            Welcome to our services page! We offer a wide range of high-quality services tailored to meet your needs.
-            Explore our gallery below to see examples of our work and discover how we can help you achieve your goals.
-            Each service is delivered with professionalism and attention to detail, ensuring your complete satisfaction.
-        </p>
+    <h1>Services: Creation, Management, and Discovery</h1>
 
-        <h2>Service Discoverability</h2>
-        <p class="description">
-            Our services are now discoverable through advanced semantic search capabilities. Instead of traditional categories or tags,
-            we leverage embeddings generated from the detailed descriptions of each service. This allows for more intuitive and relevant search results,
-            connecting users with the perfect service based on the meaning and context of their queries.
-        </p>
+    <p>The "Services" section of our platform is the core marketplace where professionals showcase their expertise and clients find the solutions they need. This document outlines the comprehensive lifecycle of a service, from its initial creation by a professional to its sophisticated discovery by potential clients.</p>
 
-        <div class="carousel-container">
-            <div class="carousel-slide" id="carouselSlide">
-                <img src="https://picsum.photos/id/237/800/400" alt="Service Image 1">
-                <img src="https://picsum.photos/id/238/800/400" alt="Service Image 2">
-                <img src="https://picsum.photos/id/239/800/400" alt="Service Image 3">
-                <img src="https://picsum.photos/id/240/800/400" alt="Service Image 4">
-            </div>
-            <button class="carousel-button prev" onclick="moveSlide(-1)">&#10094;</button>
-            <button class="carousel-button next" onclick="moveSlide(1)">&#10095;</button>
-        </div>
+    <h2>1. Service Creation and Enrichment</h2>
+    <p>Professionals initiate the process by creating detailed service listings. This involves:</p>
+    <ul>
+        <li><strong>Defining the Service:</strong> Providing a clear title and a comprehensive description that accurately conveys the scope, benefits, and deliverables of the service.</li>
+        <li><strong>Setting Pricing:</strong> Specifying the cost structure, whether it's a fixed price, hourly rate, or custom quote.</li>
+        <li><strong>Visual Portfolio:</strong> Uploading high-quality photos to visually represent their work and enhance the service's appeal.</li>
+        <li><strong>Categorization:</strong> Assigning relevant categories and tags to improve initial discoverability.</li>
+    </ul>
+    <p>Upon creation, the platform processes the service description to generate a unique vector embedding. This embedding captures the semantic meaning of the service, enabling advanced search capabilities.</p>
 
-        <div class="hire-button-container">
-            <a href="#" class="hire-button">Hire Now</a>
-        </div>
-    </div>
+    <h2>2. Service Management</h2>
+    <p>Professionals maintain full control over their active and inactive service listings. Key management features include:</p>
+    <ul>
+        <li><strong>Editing:</strong> Updating descriptions, pricing, media, and other details as their offerings evolve.</li>
+        <li><strong>Status Toggling:</strong> Activating or deactivating services based on availability or demand.</li>
+        <li><strong>Performance Monitoring:</strong> Accessing insights into service views, inquiries, and booking history.</li>
+    </ul>
 
-    <script>
-        const carouselSlide = document.getElementById('carouselSlide');
-        const images = carouselSlide.querySelectorAll('img');
-        let currentIndex = 0;
+    <h2>3. Service Discovery (Semantic Search Integration)</h2>
+    <p>Clients discover services primarily through our intuitive semantic search engine. This process leverages the vector embeddings generated during service creation:</p>
+    <ul>
+        <li><strong>Query Embedding:</strong> When a client enters a search query, a vector embedding is generated for their query.</li>
+        <li><strong>Similarity Matching:</strong> The platform compares the client's query embedding with the embeddings of all available services. Services with the highest semantic similarity are ranked higher.</li>
+        <li><strong>Personalized Results:</strong> This approach ensures that clients find services that match the *intent* behind their search, even if exact keywords aren't used.</li>
+    </ul>
 
-        function moveSlide(direction) {
-            currentIndex += direction;
-            if (currentIndex < 0) {
-                currentIndex = images.length - 1;
-            } else if (currentIndex >= images.length) {
-                currentIndex = 0;
-            }
-            carouselSlide.style.transform = `translateX(${-currentIndex * 100}%)`;
-        }
-    </script>
+    <h2>4. Service Display and Engagement</h2>
+    <p>Once discovered, services are presented to clients in an engaging and informative manner:</p>
+    <ul>
+        <li><strong>Search Results:</strong> Concise cards summarizing key service details.</li>
+        <li><strong>Professional Profiles:</strong> A dedicated section on the professional's profile showcasing all their active services.</li>
+        <li><strong>Service Detail Pages:</strong> Comprehensive pages for each service, featuring full descriptions, media galleries, reviews, and a clear call-to-action (e.g., "Hire Now" or "Contact Professional").</li>
+    </ul>
+
+    <h2>Diagram: Service Lifecycle and Discovery Flow</h2>
+    <pre class="mermaid">
+        graph TD
+            subgraph Professional Workflow
+                A[Professional] --> B(Create Service Listing);
+                B --> C{Add Details, Pricing, Media};
+                C --> D[Platform: Generate Embedding];
+                D --> E[Service Stored in Database];
+            end
+
+            subgraph Client Workflow
+                F[Client] --> G(Enter Search Query);
+                G --> H[Platform: Generate Query Embedding];
+                H --> I{Perform Semantic Search};
+                I --> J[Retrieve Relevant Services];
+                J --> K(View Service Details);
+                K --> L(Engage / Hire Service);
+            end
+
+            E -- "Available for" --> I;
+            I -- "Displays" --> J;
+            J -- "Leads to" --> K;
+    </pre>
 </body>
 </html>
