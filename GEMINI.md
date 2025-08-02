@@ -36,7 +36,53 @@ This project is a Next.js web application that provides a marketplace for servic
 ### Testing
 
 *   Run all tests: `npm test` (if configured)
-*   Lint and type check: `npm run lint` and `npm run typecheck` (or equivalent commands based on `package.json` scripts).
+*   Integration tests: Full database and API testing with test database
+*   Unit tests: Individual service function testing
+*   Lint and type check: `npm run lint` and `npm run typecheck` (or equivalent commands based on `package.json` scripts)
+*   **ALWAYS run `npm run ci` after every implementation** to validate errors and typechecks
+
+### Code Architecture Guidelines
+
+#### tRPC Router Pattern
+*   Extract all business logic from tRPC procedures into separate service functions
+*   Keep tRPC procedures thin - only handle authentication, validation, and error mapping
+*   Make service functions easily testable without tRPC context
+*   Service functions should accept all required data as parameters
+*   Return structured data that can be easily tested
+
+#### Service Layer Structure
+**❌ Bad: Business logic in tRPC procedure**
+```typescript
+export const userRouter = createTRPCRouter({
+  updateProfile: protectedProcedure
+    .input(updateProfileSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Complex business logic here makes testing difficult
+      const user = await ctx.db.user.findUnique({...});
+      if (!user) throw new Error("User not found");
+      // More logic...
+    })
+});
+```
+
+**✅ Good: Business logic extracted to service**
+```typescript
+export const userRouter = createTRPCRouter({
+  updateProfile: protectedProcedure
+    .input(updateProfileSchema)
+    .mutation(async ({ ctx, input }) => {
+      return await userService.updateProfile(ctx.db, ctx.session.user.id, input);
+    })
+});
+```
+
+#### Testing Patterns
+*   Integration tests should test complete workflows end-to-end
+*   Use test database with proper setup/teardown
+*   Mock external services (payment gateways, email providers)
+*   Test error conditions and edge cases
+*   Verify database state changes
+*   Test authorization and access controls
 
 ### Mermaid Diagram Validation
 
@@ -71,7 +117,7 @@ During the development process, always update the `docs` folder first, validate 
 
 When creating new documentation pages in the `docs` folder, always remember to add a corresponding link in `docs/index.html` under the 'Navigation' section to ensure it is discoverable.
 
-During the design of the system, Gemini should generate a documentation markdown file inside the `gemini-generated` folder in the project root. This documentation should describe the whole documentation in the docs folder and will be used in external applications. This document should list the design missing points, which are details that are lacking in the design of the system and blocks implementations. This file is not kept in git ignore. The new reference for the documentation is the HTML files in the `docs` folder.
+During the design of the system, Gemini should generate a documentation markdown file inside the `ai-cli-metadata` folder in the project root. This documentation should describe the whole documentation in the docs folder and will be used in external applications. This document should list the design missing points, which are details that are lacking in the design of the system and blocks implementations. This file is not kept in git ignore. The new reference for the documentation is the HTML files in the `docs` folder.
 
 Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the HTML files in the `docs` folder and the user messages and requests to determine the truth.
 
