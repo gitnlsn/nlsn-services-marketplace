@@ -13,7 +13,8 @@
 		"preview": "next build && next start",
 		"start": "next start",
 		"typecheck": "tsc --noEmit",
-		"ci": "npm run check && npm run typecheck && npm run build"
+		"validate-mermaid": "node scripts/validate-mermaid.js",
+		"ci": "npm run validate-mermaid && npm run check && npm run typecheck && npm run build"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.7.2",
@@ -33,6 +34,10 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"mermaid": "^10.9.1",
+		"glob": "^10.4.2",
+		"@mermaid-js/mermaid-cli": "^10.9.1",
+		"jsdom": "^24.1.0",
 		"@tailwindcss/postcss": "^4.0.15",
 		"@types/node": "^20.14.10",
 		"@types/react": "^19.0.0",

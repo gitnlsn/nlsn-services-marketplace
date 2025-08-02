@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Journeys - Platform Documentation</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        pre.mermaid { background: #e9ecef; border: 1px solid #ddd; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Journeys on the Platform</h1>
+        <p>This document outlines the key user journeys and interactions within the platform, detailing the steps users take to achieve their goals and how different user roles interact. Diagrams are rendered using Mermaid.</p>
+
+        <h2>Example Journey: Service Discovery & Hiring</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[User 1: Search Service] --> B{Service Found?}
+    B -- Yes --> C[User 1: View Service Page]
+    B -- No --> D[User 1: Refine Search / Browse Categories]
+
+    C --> E{Ready to Hire?}
+    E -- Yes --> F[User 1: Initiate Hiring Process]
+    E -- No --> G[User 1: Contact Provider / Save for Later]
+
+    F --> H[Platform: Process Payment & Booking]
+    H --> I[User 2: Receive Notification of New Booking]
+
+    I --> J{User 2: Accept Booking?}
+    J -- Yes --> K[User 2: Start Service Delivery]
+    J -- No --> L[User 2: Decline Booking / Propose Alternative]
+
+    K --> M[Platform: Notify User 1 - Service Started]
+    L --> N[Platform: Notify User 1 - Booking Declined]
+
+    subgraph User 1 Actions
+        A
+        C
+        D
+        F
+        G
+    end
+
+    subgraph User 2 Actions
+        I
+        J
+        K
+        L
+    end
+
+    subgraph Platform Processes
+        B
+        E
+        H
+        M
+        N
+    end
+
+        A -- "User 1 is a client looking for a service." --> A;
+    I -- "User 2 is the service provider." --> I;
+</pre>
+
+        <!-- Add more user journeys below using Mermaid syntax within <pre class="mermaid"> tags -->
+
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

@@ -3,58 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Architecture</title>
+    <title>System Architecture Diagrams</title>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: true });
     </script>
 </head>
 <body>
-    <h1>Service Marketplace Architecture</h1>
+    <h1>System Architecture Diagrams</h1>
 
-    <h2>Project Description</h2>
-    <p>
-        This document outlines the architecture for a peer-to-peer service marketplace designed to connect professionals who are both offering and seeking services. The platform facilitates the entire process from service discovery to payment and communication. A key feature is the use of semantic search via embeddings to provide a more intuitive and accurate matching of users with services.
-    </p>
-
-    <h2>Core Systems Explained</h2>
-
-    <h3>1. Authentication</h3>
-    <p>
-        Authentication is handled via NextAuth.js, configured to use Google as the primary OAuth provider. This simplifies the registration and login process, as users can sign in with their existing Google accounts. The system does not store passwords, relying on Google's secure authentication. Upon successful login, NextAuth creates a session and a JSON Web Token (JWT) that is used to authorize subsequent API requests.
-    </p>
-
-    <h3>2. Service Creation and Management</h3>
-    <p>
-        A user can create multiple, distinct service pages. Each service has a title, a detailed description, a price, and a gallery for photos and videos. When a user creates or updates a service, the backend generates a vector embedding from the service description using a machine learning model. This embedding is a numerical representation of the text's meaning and is stored in the database alongside the service data.
-    </p>
-
-    <h3>3. Service Discovery (Semantic Search)</h3>
-    <p>
-        Clients find services through a search interface. When a user types a search query, the frontend sends the query to the backend. The backend converts the search query into an embedding using the same model. It then performs a vector similarity search against the stored service embeddings in the database. This returns the most semantically relevant services, rather than just those with exact keyword matches. The results are displayed to the user, who can then view the service pages.
-    </p>
-
-    <h3>4. Payment and Withdrawal Flow</h3>
-    <p>
-        The payment system is built around Pagarme to act as a central payment gateway and escrow service.
-        <ul>
-            <li><b>Booking:</b> When a user decides to book a service, they pay the full amount to the platform via Pagarme.</li>
-            <li><b>Escrow:</b> The funds are held by the platform. This action triggers a notification to the service provider and opens a communication channel between the two users.</li>
-            <li><b>Payout:</b> Once the service is marked as complete by the client, the funds are released to the professional's platform account, minus a service fee.</li>
-            <li><b>Withdrawal:</b> Professionals can view their balance and request a withdrawal at any time. The backend processes this request and initiates a transfer to their registered bank account via the Pagarme API.</li>
-        </ul>
-    </p>
+    <p>For a detailed explanation of these diagrams, please refer to the main <a href="./index.html">documentation</a>.</p>
 
     <h2>High-Level Overview</h2>
     <pre class="mermaid">
         graph TD
-            A[User] -->|Searches/Books Service| B(React Frontend);
+            A[User] -->|Interacts with| B(React Frontend);
             B -->|tRPC API Calls| C(Next.js API Routes);
             C -->|Database Queries| D(Prisma ORM);
             D --> E(PostgreSQL Database with pgvector);
             C -->|Payment Processing| F(Pagarme API);
             C -->|File Uploads| G(Cloud Storage);
             C -->|Embedding Generation| H(Embedding Model);
+            C -->|Notifications| I(Twilio API);
     </pre>
 
     <h2>User Use Cases</h2>
@@ -70,12 +40,12 @@
                 UC3(View Service/Portfolio)
                 UC4(Book a Service)
                 UC5(Pay for Service)
-                UC6(Communicate with other Users)
                 UC7(Leave a Review)
                 UC8(Create/Edit Service Listing)
                 UC9(Upload Photos/Videos)
                 UC10(Manage Bookings)
                 UC11(View Earnings & Request Withdrawal)
+                UC12(Manage Notification Preferences)
             end
 
             U -- manages --> UC1
@@ -83,12 +53,12 @@
             UC2 --> UC3
             UC3 --> UC4
             UC4 --> UC5
-            UC5 --> UC6
-            UC6 --> UC7
+            UC5 --> UC7
             U -- can --> UC8
             UC8 -- includes --> UC9
             U -- can --> UC10
             U -- can --> UC11
+            U -- manages --> UC12
     </pre>
 
     <h2>Service Discovery (Semantic Search)</h2>
@@ -118,17 +88,23 @@
             participant Frontend
             participant Backend
             participant Pagarme
+            participant Twilio
 
             "User (as Client)"->>Frontend: Selects a service to book
             Frontend->>Backend: POST /api/bookings (serviceId)
             Backend->>Pagarme: Create Charge
-            Pagarme-->>Backend: Returns payment details (e.g., Pix code, Boleto link)
+            Pagarme-->>Backend: Returns payment details
             Backend-->>Frontend: Displays payment instructions
             "User (as Client)"->>Pagarme: Completes payment
             Pagarme->>Backend: Webhook notification (payment success)
-            Backend->>Backend: Update booking status to "Paid", credit professional's account balance (minus platform fee)
+            Backend->>Backend: Update booking status to "Paid", credit professional's account balance
+            Backend->>Twilio: Send booking confirmation to Client
+            Backend->>Twilio: Send new booking alert to Professional
             Backend->>Frontend: Notify client of success
-            Backend-->>"User (as Professional)": Notify of new booking and updated balance
+            "User (as Professional)"->>Backend: Notifies service complete
+            "User (as Client)"->>Backend: (Optional) Notifies service complete
+            Backend->>Backend: Funds held for 15 days
+            Backend->>"User (as Professional)": Funds available for withdrawal after 15 days
     </pre>
 
     <h2>Withdrawal Flow</h2>
@@ -138,6 +114,7 @@
             participant Frontend
             participant Backend
             participant Pagarme
+            participant Twilio
 
             "User (as Professional)"->>Frontend: Requests withdrawal
             Frontend->>Backend: POST /api/withdrawals (amount)
@@ -145,6 +122,7 @@
             Backend->>Pagarme: Initiate Transfer to user's bank account
             Pagarme-->>Backend: Confirmation of transfer
             Backend->>Backend: Update user's balance
+            Backend->>Twilio: Send withdrawal confirmation to Professional
             Backend-->>Frontend: Notify user of successful withdrawal
     </pre>
 
