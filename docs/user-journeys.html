@@ -16,6 +16,46 @@
         <h1>User Journeys on the Platform</h1>
         <p>This document outlines the key user journeys and interactions within the platform, detailing the steps users take to achieve their goals and how different user roles interact. Diagrams are rendered using Mermaid.</p>
 
+        <h2>High-Level User Use Cases</h2>
+        <pre class="mermaid">
+        graph TD
+            subgraph "Customer"
+                C[ ]
+            end
+
+            subgraph "Professional"
+                P[ ]
+            end
+
+            subgraph "System"
+                UC1(Manage Profile)
+                UC2(Search for Services)
+                UC3(View Service/Portfolio)
+                UC4(Book a Service)
+                UC5(Pay for Service)
+                UC7(Leave a Review)
+                UC8(Create/Edit Service Listing)
+                UC9(Upload Photos/Videos)
+                UC10(Manage Bookings)
+                UC11(View Earnings & Request Withdrawal)
+                UC12(Manage Notification Preferences)
+            end
+
+            C -- can --> UC1
+            P -- can --> UC1
+            C -- can --> UC2
+            UC2 --> UC3
+            UC3 --> UC4
+            UC4 --> UC5
+            UC5 --> UC7
+            P -- can --> UC8
+            UC8 -- includes --> UC9
+            P -- can --> UC10
+            P -- can --> UC11
+            C -- can --> UC12
+            P -- can --> UC12
+    </pre>
+
         <h2>Example Journey: Service Discovery & Hiring</h2>
         <pre class="mermaid">
 flowchart TD

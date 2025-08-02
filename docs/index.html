@@ -37,8 +37,21 @@
         <li><a href="./search.html"><strong>Search</strong></a>: A look under the hood of our semantic search engine.</li>
         <li><a href="./payments.html"><strong>Payments</strong></a>: The complete lifecycle of a transaction, from booking to withdrawal.</li>
         <li><a href="./notifications.html"><strong>Notifications</strong></a>: How we keep users informed with timely alerts.</li>
-        <li><a href="./diagrams.html"><strong>Diagrams</strong></a>: A visual gallery of the system's architecture and flows.</li>
         <li><a href="./user-journeys.html"><strong>User Journeys</strong></a>: Detailed user flows and interactions.</li>
+        <li><a href="./services-demo.html"><strong>Services Page Demo</strong></a>: A demo of the services page layout.</li>
     </ul>
+
+    <h2>High-Level System Architecture</h2>
+    <pre class="mermaid">
+        graph TD
+            A[User] -->|Interacts with| B(React Frontend);
+            B -->|tRPC API Calls| C(Next.js API Routes);
+            C -->|Database Queries| D(Prisma ORM);
+            D --> E(PostgreSQL Database with pgvector);
+            C -->|Payment Processing| F(Pagarme API);
+            C -->|File Uploads| G(Cloud Storage);
+            C -->|Embedding Generation| H(Embedding Model);
+            C -->|Notifications| I(Twilio API);
+    </pre>
 </body>
 </html>

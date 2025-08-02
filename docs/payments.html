@@ -43,30 +43,47 @@
     <h3>Booking Flow</h3>
     <pre class="mermaid">
         sequenceDiagram
-            participant Client
-            participant Professional
-            participant Platform
+            participant "User (as Client)"
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
             participant Pagarme
+            participant Twilio
 
-            Client->>Platform: Books a service
-            Platform->>Pagarme: Creates a charge
-            Pagarme->>Client: Prompts for payment
-            Client->>Pagarme: Completes payment
-            Pagarme->>Platform: Confirms payment
-            Platform->>Professional: Notifies of new booking
+            "User (as Client)"->>Frontend: Selects a service to book
+            Frontend->>Backend: POST /api/bookings (serviceId)
+            Backend->>Pagarme: Create Charge
+            Pagarme-->>Backend: Returns payment details
+            Backend-->>Frontend: Displays payment instructions
+            "User (as Client)"->>Pagarme: Completes payment
+            Pagarme->>Backend: Webhook notification (payment success)
+            Backend->>Backend: Update booking status to "Paid", credit professional's account balance
+            Backend->>Twilio: Send booking confirmation to Client
+            Backend->>Twilio: Send new booking alert to Professional
+            Backend->>Frontend: Notify client of success
+            "User (as Professional)"->>Backend: Notifies service complete
+            "User (as Client)"->>Backend: (Optional) Notifies service complete
+            Backend->>Backend: Funds held for 15 days
+            Backend->>"User (as Professional)": Funds available for withdrawal after 15 days
     </pre>
 
     <h3>Withdrawal Flow</h3>
     <pre class="mermaid">
         sequenceDiagram
-            participant Professional
-            participant Platform
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
             participant Pagarme
+            participant Twilio
 
-            Professional->>Platform: Requests withdrawal
-            Platform->>Pagarme: Initiates transfer
-            Pagarme->>Professional: Sends funds to bank account
-            Pagarme->>Platform: Confirms transfer
+            "User (as Professional)"->>Frontend: Requests withdrawal
+            Frontend->>Backend: POST /api/withdrawals (amount)
+            Backend->>Backend: Verify user balance and process request
+            Backend->>Pagarme: Initiate Transfer to user's bank account
+            Pagarme-->>Backend: Confirmation of transfer
+            Backend->>Backend: Update user's balance
+            Backend->>Twilio: Send withdrawal confirmation to Professional
+            Backend-->>Frontend: Notify user of successful withdrawal
     </pre>
 </body>
 </html>

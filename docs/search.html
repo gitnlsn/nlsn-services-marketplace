@@ -45,12 +45,12 @@
             participant EmbeddingModel
             participant Database
 
-            User->>Frontend: Enters search query
+            User->>Frontend: Enters search query (e.g., "logo design for my new coffee shop")
             Frontend->>Backend: Sends search query
             Backend->>EmbeddingModel: Generates embedding for the query
             EmbeddingModel-->>Backend: Returns query embedding
-            Backend->>Database: Performs vector similarity search
-            Database-->>Backend: Returns ranked list of services
+            Backend->>Database: Performs vector similarity search for services
+            Database-->>Backend: Returns ranked list of matching services
             Backend-->>Frontend: Sends service results
             Frontend-->>User: Displays relevant services
     </pre>
