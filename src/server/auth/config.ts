@@ -14,15 +14,16 @@ declare module "next-auth" {
 	interface Session extends DefaultSession {
 		user: {
 			id: string;
-			// ...other properties
-			// role: UserRole;
+			isProfessional: boolean;
+			phone?: string | null;
 		} & DefaultSession["user"];
+		accessToken?: string;
 	}
 
-	// interface User {
-	//   // ...other properties
-	//   // role: UserRole;
-	// }
+	interface User {
+		isProfessional: boolean;
+		phone?: string | null;
+	}
 }
 
 /**
@@ -32,25 +33,73 @@ declare module "next-auth" {
  */
 export const authConfig = {
 	providers: [
-		GoogleProvider,
-		/**
-		 * ...add more providers here.
-		 *
-		 * Most other providers require a bit more work than the Discord provider. For example, the
-		 * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-		 * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-		 *
-		 * @see https://next-auth.js.org/providers/github
-		 */
-	],
-	adapter: PrismaAdapter(db),
-	callbacks: {
-		session: ({ session, user }) => ({
-			...session,
-			user: {
-				...session.user,
-				id: user.id,
+		GoogleProvider({
+			clientId: process.env.AUTH_GOOGLE_ID ?? "",
+			clientSecret: process.env.AUTH_GOOGLE_SECRET ?? "",
+			authorization: {
+				params: {
+					prompt: "consent",
+					access_type: "offline",
+					response_type: "code",
+				},
 			},
 		}),
+	],
+	adapter: PrismaAdapter(db),
+	session: {
+		strategy: "database",
+		maxAge: 7 * 24 * 60 * 60, // 7 days as requested
+		updateAge: 24 * 60 * 60, // 24 hours - updates session on activity
+		generateSessionToken: () => {
+			// Generate cryptographically secure session tokens
+			return crypto.randomUUID();
+		},
 	},
+	cookies: {
+		sessionToken: {
+			name: "next-auth.session-token",
+			options: {
+				httpOnly: true,
+				sameSite: "lax",
+				path: "/",
+				secure: process.env.NODE_ENV === "production",
+				maxAge: 7 * 24 * 60 * 60, // 7 days
+			},
+		},
+	},
+	pages: {
+		signIn: "/login",
+		error: "/auth/error",
+	},
+	callbacks: {
+		async session({ session, user }) {
+			return {
+				...session,
+				user: {
+					...session.user,
+					id: user.id,
+					isProfessional: user.isProfessional,
+					phone: user.phone,
+				},
+			};
+		},
+		async redirect({ url, baseUrl }) {
+			// Allows relative callback URLs
+			if (url.startsWith("/")) return `${baseUrl}${url}`;
+			// Allows callback URLs on the same origin
+			if (new URL(url).origin === baseUrl) return url;
+			return baseUrl;
+		},
+	},
+	events: {
+		async createUser({ user }) {
+			// Log user creation for analytics
+			console.log(`New user created: ${user.email}`);
+		},
+		async signIn({ user, account, profile }) {
+			// Log successful sign-ins
+			console.log(`User signed in: ${user.email} via ${account?.provider}`);
+		},
+	},
+	debug: process.env.NODE_ENV === "development",
 } satisfies NextAuthConfig;

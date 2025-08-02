@@ -1,0 +1,355 @@
+"use client";
+
+import { Filter, MapPin, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
+import { Sheet, SheetContent, SheetTrigger } from "~/components/ui/sheet";
+import { api } from "~/trpc/react";
+
+interface SearchResultsProps {
+	initialQuery: string;
+	initialCategory: string;
+}
+
+export function SearchResults({
+	initialQuery,
+	initialCategory,
+}: SearchResultsProps) {
+	const router = useRouter();
+	const [searchQuery, setSearchQuery] = useState(initialQuery);
+	const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+	const [priceType, setPriceType] = useState<"all" | "fixed" | "hourly">("all");
+	const [minPrice, setMinPrice] = useState<string>("");
+	const [maxPrice, setMaxPrice] = useState<string>("");
+	const [location, setLocation] = useState<string>("");
+
+	// Get categories for filter
+	const { data: categories } = api.search.getCategories.useQuery();
+
+	// Search services
+	const {
+		data: searchResults,
+		isLoading,
+		refetch,
+	} = api.search.searchServices.useQuery({
+		query: searchQuery || "serviços",
+		categoryId: selectedCategory || undefined,
+		priceType,
+		minPrice: minPrice ? Number(minPrice) : undefined,
+		maxPrice: maxPrice ? Number(maxPrice) : undefined,
+		location: location || undefined,
+		limit: 20,
+	});
+
+	const handleSearch = (e: React.FormEvent) => {
+		e.preventDefault();
+		const params = new URLSearchParams();
+		if (searchQuery) params.set("q", searchQuery);
+		if (selectedCategory) params.set("category", selectedCategory);
+		router.push(`/search?${params.toString()}`);
+		void refetch();
+	};
+
+	const clearFilters = () => {
+		setSelectedCategory("");
+		setPriceType("all");
+		setMinPrice("");
+		setMaxPrice("");
+		setLocation("");
+		void refetch();
+	};
+
+	const FiltersContent = () => (
+		<div className="space-y-6">
+			<div>
+				<label
+					htmlFor="category-select"
+					className="mb-2 block font-medium text-sm"
+				>
+					Categoria
+				</label>
+				<Select value={selectedCategory} onValueChange={setSelectedCategory}>
+					<SelectTrigger id="category-select">
+						<SelectValue placeholder="Todas as categorias" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="">Todas as categorias</SelectItem>
+						{categories?.map((category) => (
+							<SelectItem key={category.id} value={category.id}>
+								{category.name} ({category.serviceCount})
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
+
+			<div>
+				<label
+					htmlFor="price-type-select"
+					className="mb-2 block font-medium text-sm"
+				>
+					Tipo de Preço
+				</label>
+				<Select
+					value={priceType}
+					onValueChange={(value: "all" | "fixed" | "hourly") =>
+						setPriceType(value)
+					}
+				>
+					<SelectTrigger id="price-type-select">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">Todos</SelectItem>
+						<SelectItem value="fixed">Preço Fixo</SelectItem>
+						<SelectItem value="hourly">Por Hora</SelectItem>
+					</SelectContent>
+				</Select>
+			</div>
+
+			<div>
+				<label htmlFor="min-price" className="mb-2 block font-medium text-sm">
+					Faixa de Preço
+				</label>
+				<div className="grid grid-cols-2 gap-2">
+					<Input
+						id="min-price"
+						type="number"
+						placeholder="Mín"
+						value={minPrice}
+						onChange={(e) => setMinPrice(e.target.value)}
+					/>
+					<Input
+						id="max-price"
+						type="number"
+						placeholder="Máx"
+						value={maxPrice}
+						onChange={(e) => setMaxPrice(e.target.value)}
+					/>
+				</div>
+			</div>
+
+			<div>
+				<label
+					htmlFor="location-input"
+					className="mb-2 block font-medium text-sm"
+				>
+					Localização
+				</label>
+				<Input
+					id="location-input"
+					type="text"
+					placeholder="Digite a cidade ou região"
+					value={location}
+					onChange={(e) => setLocation(e.target.value)}
+				/>
+			</div>
+
+			<div className="space-y-2">
+				<Button onClick={() => refetch()} className="w-full">
+					Aplicar Filtros
+				</Button>
+				<Button variant="outline" onClick={clearFilters} className="w-full">
+					Limpar Filtros
+				</Button>
+			</div>
+		</div>
+	);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			{/* Search Header */}
+			<div className="mb-8">
+				<form onSubmit={handleSearch} className="mb-4">
+					<div className="flex gap-2">
+						<Input
+							type="text"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							placeholder="O que você está procurando?"
+							className="flex-1"
+						/>
+						<Button type="submit">Buscar</Button>
+					</div>
+				</form>
+
+				{searchQuery && (
+					<div className="flex items-center justify-between">
+						<h1 className="font-bold text-2xl text-gray-900">
+							Resultados para "{searchQuery}"
+						</h1>
+						<p className="text-gray-600">
+							{searchResults?.totalCount || 0} serviços encontrados
+						</p>
+					</div>
+				)}
+			</div>
+
+			<div className="flex gap-8">
+				{/* Desktop Filters Sidebar */}
+				<aside className="hidden w-80 lg:block">
+					<div className="sticky top-4">
+						<Card>
+							<CardContent className="p-6">
+								<h2 className="mb-4 font-semibold text-lg">Filtros</h2>
+								<FiltersContent />
+							</CardContent>
+						</Card>
+					</div>
+				</aside>
+
+				{/* Main Content */}
+				<div className="flex-1">
+					{/* Mobile Filters */}
+					<div className="mb-4 lg:hidden">
+						<Sheet>
+							<SheetTrigger asChild>
+								<Button variant="outline" className="w-full">
+									<Filter className="mr-2 h-4 w-4" />
+									Filtros
+								</Button>
+							</SheetTrigger>
+							<SheetContent side="left" className="w-80">
+								<div className="py-6">
+									<h2 className="mb-4 font-semibold text-lg">Filtros</h2>
+									<FiltersContent />
+								</div>
+							</SheetContent>
+						</Sheet>
+					</div>
+
+					{/* Loading State */}
+					{isLoading && (
+						<div className="grid gap-6 md:grid-cols-2">
+							{Array.from({ length: 6 }).map(() => (
+								<Card key={crypto.randomUUID()} className="animate-pulse">
+									<div className="aspect-video bg-gray-200" />
+									<CardContent className="p-4">
+										<div className="mb-2 h-4 rounded bg-gray-200" />
+										<div className="mb-2 h-3 w-3/4 rounded bg-gray-200" />
+										<div className="h-3 w-1/2 rounded bg-gray-200" />
+									</CardContent>
+								</Card>
+							))}
+						</div>
+					)}
+
+					{/* Results Grid */}
+					{!isLoading &&
+						searchResults?.services &&
+						Array.isArray(searchResults.services) && (
+							<div className="grid gap-6 md:grid-cols-2">
+								{searchResults.services.map((service) => (
+									<Link key={service.id} href={`/services/${service.id}`}>
+										<Card className="group hover:-translate-y-1 transition-all hover:shadow-lg">
+											<div className="relative aspect-video overflow-hidden rounded-t-lg">
+												{service.images?.[0] ? (
+													<Image
+														src={service.images[0].url}
+														alt={service.title}
+														fill
+														className="object-cover transition-transform group-hover:scale-105"
+													/>
+												) : (
+													<div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+														<span className="font-semibold text-2xl text-indigo-600">
+															{service.category.name.charAt(0)}
+														</span>
+													</div>
+												)}
+												<div className="absolute top-2 right-2 rounded-full bg-white px-2 py-1 font-medium text-gray-900 text-sm shadow-sm">
+													R$ {service.price.toFixed(2)}
+													{service.priceType === "hourly" && "/h"}
+												</div>
+											</div>
+
+											<CardContent className="p-6">
+												<div className="mb-2 flex items-center justify-between">
+													<span className="rounded-full bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs">
+														{service.category.name}
+													</span>
+													<div className="flex items-center space-x-1">
+														<Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+														<span className="font-medium text-sm">
+															{service.avgRating?.toFixed(1) || "5.0"}
+														</span>
+													</div>
+												</div>
+
+												<h3 className="mb-2 line-clamp-2 font-semibold text-gray-900 text-lg">
+													{service.title}
+												</h3>
+
+												<p className="mb-4 line-clamp-2 text-gray-600 text-sm">
+													{service.description}
+												</p>
+
+												<div className="flex items-center justify-between">
+													<div className="flex items-center space-x-2">
+														{service.provider.image ? (
+															<Image
+																src={service.provider.image}
+																alt={service.provider.name || ""}
+																width={32}
+																height={32}
+																className="rounded-full"
+															/>
+														) : (
+															<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+																<span className="font-medium text-gray-600 text-xs">
+																	{service.provider.name?.charAt(0) || "?"}
+																</span>
+															</div>
+														)}
+														<span className="font-medium text-gray-900 text-sm">
+															{service.provider.name}
+														</span>
+													</div>
+
+													{service.location && (
+														<div className="flex items-center space-x-1 text-gray-500">
+															<MapPin className="h-4 w-4" />
+															<span className="text-xs">
+																{service.location.split(",")[0]}
+															</span>
+														</div>
+													)}
+												</div>
+											</CardContent>
+										</Card>
+									</Link>
+								))}
+							</div>
+						)}
+
+					{/* No Results */}
+					{!isLoading &&
+						searchResults?.services &&
+						Array.isArray(searchResults.services) &&
+						searchResults.services.length === 0 && (
+							<div className="py-12 text-center">
+								<h3 className="mb-2 font-semibold text-gray-900 text-lg">
+									Nenhum serviço encontrado
+								</h3>
+								<p className="text-gray-600">
+									Tente ajustar seus filtros ou usar palavras-chave diferentes.
+								</p>
+							</div>
+						)}
+				</div>
+			</div>
+		</div>
+	);
+}
