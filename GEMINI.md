@@ -54,4 +54,4 @@ Gemini-cli always commits to a branch comming from main, with the convention pr/
 
 ### Documentation
 
-During the development process, always update the `docs` folder first, validate it, and then move to the implementation. The diagrams must be consistent and feasible.
+During the development process, always update the `docs` folder first, validate it, and then move to the implementation. The diagrams must be consistent and feasible. Ensure the entire `docs` folder remains consistent in terms of content, formatting, and diagram accuracy.
