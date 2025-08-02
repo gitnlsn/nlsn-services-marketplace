@@ -54,6 +54,8 @@ Gemini-cli always commits to a branch comming from main, with the convention `ge
 
 Gemini is not allowed to do git push with force flag. If gemini ever thinks about it or tries to execute it, gemini is bad.
 
+Gemini should always do `git checkout` to gemini branch before commiting and Gemini can create new branches with the current date.
+
 ### Documentation
 
 During the development process, always update the `docs` folder first, validate it, and then move to the implementation. The diagrams must be consistent and feasible. Ensure the entire `docs` folder remains consistent in terms of content, formatting, and diagram accuracy.
