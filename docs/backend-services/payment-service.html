@@ -173,10 +173,6 @@ sequenceDiagram
         PaymentService->>NotificationService: Notify failure
         Webhook-->>Pagarme: 200 OK
     end
-    
-    style Webhook fill:#FFD700,stroke:#333,stroke-width:2px
-    style Database fill:#DDA0DD,stroke:#333,stroke-width:2px
-    style Pagarme fill:#87CEEB,stroke:#333,stroke-width:2px
 </pre>
 
     <h2>Escrow Flow</h2>
@@ -201,10 +197,6 @@ stateDiagram-v2
     Withdrawn --> [*]: Transfer complete
     
     RefundIssued --> [*]: Money returned
-    
-    style PaymentReceived fill:#C8E6C9,stroke:#333,stroke-width:2px
-    style FundsHeld fill:#FFD700,stroke:#333,stroke-width:2px
-    style DisputeRaised fill:#FFCDD2,stroke:#333,stroke-width:2px
 </pre>
 
     <h2>Security Measures</h2>

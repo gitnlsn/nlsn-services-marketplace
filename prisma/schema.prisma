@@ -92,6 +92,11 @@ model User {
     withdrawals    Withdrawal[]
     images         Image[]
     bankAccounts   BankAccount[]
+    
+    // Messaging relations
+    conversationsAsParticipantOne Conversation[] @relation("ConversationParticipantOne")
+    conversationsAsParticipantTwo Conversation[] @relation("ConversationParticipantTwo")
+    sentMessages                  Message[]      @relation("SentMessages")
 }
 
 model VerificationToken {
@@ -172,6 +177,7 @@ model Booking {
     client       User      @relation("ClientBookings", fields: [clientId], references: [id])
     provider     User      @relation("ProfessionalBookings", fields: [providerId], references: [id])
     payment      Payment?
+    conversation Conversation?
     
     @@index([serviceId])
     @@index([clientId])
@@ -304,4 +310,45 @@ model BankAccount {
     
     @@index([userId])
     @@unique([userId, accountNumber, agencyNumber])
+}
+
+model Conversation {
+    id          String    @id @default(cuid())
+    bookingId   String?   @unique // Optional - conversations can exist without bookings
+    participantOneId String
+    participantTwoId String
+    lastMessageAt    DateTime @default(now())
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    
+    // Relations
+    booking         Booking?  @relation(fields: [bookingId], references: [id])
+    participantOne  User      @relation("ConversationParticipantOne", fields: [participantOneId], references: [id])
+    participantTwo  User      @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id])
+    messages        Message[]
+    
+    @@unique([participantOneId, participantTwoId])
+    @@index([participantOneId])
+    @@index([participantTwoId])
+    @@index([lastMessageAt])
+}
+
+model Message {
+    id             String       @id @default(cuid())
+    conversationId String
+    senderId       String
+    content        String       @db.Text
+    messageType    String       @default("text") // text, image, file
+    isRead         Boolean      @default(false)
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @updatedAt
+    
+    // Relations
+    conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+    
+    @@index([conversationId])
+    @@index([senderId])
+    @@index([createdAt])
+    @@index([isRead])
 }
