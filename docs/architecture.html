@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <h1>Service Marketplace Architecture</h1>
+
+    <h2>Project Description</h2>
+    <p>
+        This document outlines the architecture for a peer-to-peer service marketplace designed to connect professionals who are both offering and seeking services. The platform facilitates the entire process from service discovery to payment and communication. A key feature is the use of semantic search via embeddings to provide a more intuitive and accurate matching of users with services.
+    </p>
+
+    <h2>Core Systems Explained</h2>
+
+    <h3>1. Authentication</h3>
+    <p>
+        Authentication is handled via NextAuth.js, configured to use Google as the primary OAuth provider. This simplifies the registration and login process, as users can sign in with their existing Google accounts. The system does not store passwords, relying on Google's secure authentication. Upon successful login, NextAuth creates a session and a JSON Web Token (JWT) that is used to authorize subsequent API requests.
+    </p>
+
+    <h3>2. Service Creation and Management</h3>
+    <p>
+        A user can create multiple, distinct service pages. Each service has a title, a detailed description, a price, and a gallery for photos and videos. When a user creates or updates a service, the backend generates a vector embedding from the service description using a machine learning model. This embedding is a numerical representation of the text's meaning and is stored in the database alongside the service data.
+    </p>
+
+    <h3>3. Service Discovery (Semantic Search)</h3>
+    <p>
+        Clients find services through a search interface. When a user types a search query, the frontend sends the query to the backend. The backend converts the search query into an embedding using the same model. It then performs a vector similarity search against the stored service embeddings in the database. This returns the most semantically relevant services, rather than just those with exact keyword matches. The results are displayed to the user, who can then view the service pages.
+    </p>
+
+    <h3>4. Payment and Withdrawal Flow</h3>
+    <p>
+        The payment system is built around Pagarme to act as a central payment gateway and escrow service.
+        <ul>
+            <li><b>Booking:</b> When a user decides to book a service, they pay the full amount to the platform via Pagarme.</li>
+            <li><b>Escrow:</b> The funds are held by the platform. This action triggers a notification to the service provider and opens a communication channel between the two users.</li>
+            <li><b>Payout:</b> Once the service is marked as complete by the client, the funds are released to the professional's platform account, minus a service fee.</li>
+            <li><b>Withdrawal:</b> Professionals can view their balance and request a withdrawal at any time. The backend processes this request and initiates a transfer to their registered bank account via the Pagarme API.</li>
+        </ul>
+    </p>
+
+    <h2>High-Level Overview</h2>
+    <pre class="mermaid">
+        graph TD
+            A[User] -->|Searches/Books Service| B(React Frontend);
+            B -->|tRPC API Calls| C(Next.js API Routes);
+            C -->|Database Queries| D(Prisma ORM);
+            D --> E(PostgreSQL Database with pgvector);
+            C -->|Payment Processing| F(Pagarme API);
+            C -->|File Uploads| G(Cloud Storage);
+            C -->|Embedding Generation| H(Embedding Model);
+    </pre>
+
+    <h2>User Use Cases</h2>
+    <pre class="mermaid">
+        graph TD
+            subgraph "User"
+                U[ ]
+            end
+
+            subgraph "System"
+                UC1(Manage Profile)
+                UC2(Search for Services)
+                UC3(View Service/Portfolio)
+                UC4(Book a Service)
+                UC5(Pay for Service)
+                UC6(Communicate with other Users)
+                UC7(Leave a Review)
+                UC8(Create/Edit Service Listing)
+                UC9(Upload Photos/Videos)
+                UC10(Manage Bookings)
+                UC11(View Earnings & Request Withdrawal)
+            end
+
+            U -- manages --> UC1
+            U -- can --> UC2
+            UC2 --> UC3
+            UC3 --> UC4
+            UC4 --> UC5
+            UC5 --> UC6
+            UC6 --> UC7
+            U -- can --> UC8
+            UC8 -- includes --> UC9
+            U -- can --> UC10
+            U -- can --> UC11
+    </pre>
+
+    <h2>Service Discovery (Semantic Search)</h2>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant User
+            participant Frontend
+            participant Backend
+            participant EmbeddingModel
+            participant Database
+
+            User->>Frontend: Enters search query (e.g., "logo design for my new coffee shop")
+            Frontend->>Backend: Sends search query
+            Backend->>EmbeddingModel: Generates embedding for the query
+            EmbeddingModel-->>Backend: Returns query embedding
+            Backend->>Database: Performs vector similarity search for services
+            Database-->>Backend: Returns ranked list of matching services
+            Backend-->>Frontend: Sends service results
+            Frontend-->>User: Displays relevant services
+    </pre>
+
+    <h2>Service Booking and Payment Flow</h2>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant "User (as Client)"
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
+            participant Pagarme
+
+            "User (as Client)"->>Frontend: Selects a service to book
+            Frontend->>Backend: POST /api/bookings (serviceId)
+            Backend->>Pagarme: Create Charge
+            Pagarme-->>Backend: Returns payment details (e.g., Pix code, Boleto link)
+            Backend-->>Frontend: Displays payment instructions
+            "User (as Client)"->>Pagarme: Completes payment
+            Pagarme->>Backend: Webhook notification (payment success)
+            Backend->>Backend: Update booking status to "Paid", credit professional's account balance (minus platform fee)
+            Backend->>Frontend: Notify client of success
+            Backend-->>"User (as Professional)": Notify of new booking and updated balance
+    </pre>
+
+    <h2>Withdrawal Flow</h2>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
+            participant Pagarme
+
+            "User (as Professional)"->>Frontend: Requests withdrawal
+            Frontend->>Backend: POST /api/withdrawals (amount)
+            Backend->>Backend: Verify user balance and process request
+            Backend->>Pagarme: Initiate Transfer to user's bank account
+            Pagarme-->>Backend: Confirmation of transfer
+            Backend->>Backend: Update user's balance
+            Backend-->>Frontend: Notify user of successful withdrawal
+    </pre>
+
+</body>
+</html>
