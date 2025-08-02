@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Bookings - Backend Service</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        pre.mermaid { background: #e9ecef; border: 1px solid #ddd; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>View Bookings</h1>
+        <pre class="mermaid">
+graph TD
+    A[Frontend Request: View Bookings]:::frontend --> B{Authentication & Authorization Check}:::auth
+    B -- Success --> C[Validate User Permissions]:::validation
+    B -- Failure --> D[Return 401/403 Error]:::error
+    C -- Valid --> E[Call Prisma: Fetch Booking Details]:::prisma
+    C -- Invalid --> F[Return 400 Error: Invalid Permissions]:::error
+    E -- Success --> G[Return 200 OK: Booking Details]:::success
+    E -- Failure --> H[Return 404 Error: Not Found or 500 Error: Database Error]:::error
+
+    classDef frontend fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    classDef auth fill:#FFD700,stroke:#333,stroke-width:2px;
+    classDef validation fill:#90EE90,stroke:#333,stroke-width:2px;
+    classDef prisma fill:#DDA0DD,stroke:#333,stroke-width:2px;
+    classDef success fill:#C8E6C9,stroke:#333,stroke-width:2px;
+    classDef error fill:#FFCDD2,stroke:#333,stroke-width:2px;
+</pre>
+    </div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

@@ -32,61 +32,22 @@
     <h2>Navigation</h2>
 
     <ul>
-        <li><a href="./authentication.html"><strong>Authentication</strong></a>: How users sign in and manage their accounts.</li>
+        </ul>
+        
+    <li><a href="./authentication.html"><strong>Authentication</strong></a>: How users sign in and manage their accounts.</li>
         <li><a href="./services.html"><strong>Services</strong></a>: How services are created, updated, and displayed.</li>
         <li><a href="./search.html"><strong>Search</strong></a>: A look under the hood of our semantic search engine.</li>
         <li><a href="./payments.html"><strong>Payments</strong></a>: The complete lifecycle of a transaction, from booking to withdrawal.</li>
         <li><a href="./notifications.html"><strong>Notifications</strong></a>: How we keep users informed with timely alerts.</li>
         <li><a href="./user-journeys.html"><strong>User Journeys</strong></a>: Detailed user flows and interactions.</li>
-        <li><strong>Backend Services</strong>:
-            <ul>
-                <li><a href="./backend-services/manage-profile.html">Manage Profile</a></li>
-                <li><a href="./backend-services/search-for-services.html">Search for Services</a></li>
-                <li><a href="./backend-services/view-service-portfolio.html">View Service/Portfolio</a></li>
-                <li><a href="./backend-services/book-a-service.html">Book a Service</a></li>
-                <li><a href="./backend-services/pay-for-service.html">Pay for Service</a></li>
-                <li><a href="./backend-services/leave-a-review.html">Leave a Review</a></li>
-                <li><a href="./backend-services/create-edit-service-listing.html">Create/Edit Service Listing</a></li>
-                <li><a href="./backend-services/upload-photos.html">Upload Photos</a></li>
-                <li><a href="./backend-services/manage-bookings.html">Manage Bookings</a></li>
-                <li><a href="./backend-services/view-earnings-request-withdrawal.html">View Earnings & Request Withdrawal</a></li>
-                <li><a href="./backend-services/manage-notification-preferences.html">Manage Notification Preferences</a></li>
-            </ul>
-        </li>
-        <li><a href="./frontend-screens.html"><strong>Frontend Screens</strong></a>: Overview of application screens and navigation flow.</li>
-        
+        <li><a href="./backend-services/index.html"><strong>Backend Services</strong></a>: Documentation for backend services and their operations.</li>
+        <li><a href="./database/index.html"><strong>Database Schema</strong></a>: Overview of the database models and relationships.</li>
+    </ul>
+        <li><a href="./frontend-screens/index.html"><strong>Frontend Screens</strong></a></li>
     </ul>
 
-    <h2>High-Level System Architecture</h2>
-    <pre class="mermaid">
-        graph TD
-            A[User] -->|Interacts with| B[React Frontend];
-            B -->|tRPC API Calls| C[Next.js API Routes];
-            C -->|Database Queries| D[Prisma ORM];
-            D --> E[PostgreSQL Database with pgvector];
-            C -->|Payment Processing| F[Pagarme API];
-            C -->|File Uploads| G[Cloud Storage];
-            C -->|Embedding Generation| H[Embedding Model];
-            C -->|Notifications| I[Twilio API];
+    
 
-            style A fill:#ADD8E6,stroke:#333,stroke-width:2px
-            style B fill:#90EE90,stroke:#333,stroke-width:2px
-            style C fill:#FFD700,stroke:#333,stroke-width:2px
-            style D fill:#FFB6C1,stroke:#333,stroke-width:2px
-            style E fill:#DDA0DD,stroke:#333,stroke-width:2px
-            style F fill:#87CEEB,stroke:#333,stroke-width:2px
-            style G fill:#F0E68C,stroke:#333,stroke-width:2px
-            style H fill:#98FB98,stroke:#333,stroke-width:2px
-            style I fill:#FFA07A,stroke:#333,stroke-width:2px
-
-            linkStyle 0 stroke:#333,stroke-width:1px;
-            linkStyle 1 stroke:#333,stroke-width:1px;
-            linkStyle 2 stroke:#333,stroke-width:1px;
-            linkStyle 3 stroke:#333,stroke-width:1px;
-            linkStyle 4 stroke:#333,stroke-width:1px;
-            linkStyle 5 stroke:#333,stroke-width:1px;
-            linkStyle 6 stroke:#333,stroke-width:1px;
-            linkStyle 7 stroke:#333,stroke-width:1px;
-    </pre>
+    
 </body>
 </html>

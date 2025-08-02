@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Bookings - Backend Service</title>
+    <title>Cancel Booking - Backend Service</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
         .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -13,20 +13,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>Manage Bookings</h1>
+        <h1>Cancel Booking</h1>
         <pre class="mermaid">
 graph TD
-    A[Frontend Request: View/Update Booking]:::frontend --> B{Authentication & Authorization Check}:::auth
+    A[Frontend Request: Cancel Booking]:::frontend --> B{Authentication & Authorization Check}:::auth
     B -- Success --> C[Validate Booking ID & User Permissions]:::validation
     B -- Failure --> D[Return 401/403 Error]:::error
-    C -- Valid --> E{Action: View, Accept, Decline, Cancel}
+    C -- Valid --> E[Call Prisma: Update Booking Status to Cancelled]:::prisma
     C -- Invalid --> F[Return 400 Error: Invalid Booking ID/Permissions]:::error
-    E -- View --> G[Call Prisma: Fetch Booking Details]:::prisma
-    E -- Accept/Decline/Cancel --> H[Call Prisma: Update Booking Status]:::prisma
-    G -- Success --> I[Return 200 OK: Booking Details]:::success
-    G -- Failure --> J[Return 404 Error: Not Found or 500 Error: Database Error]:::error
-    H -- Success --> K[Return 200 OK: Booking Status Updated]:::success
-    H -- Failure --> J
+    E -- Success --> G[Return 200 OK: Booking Cancelled]:::success
+    E -- Failure --> H[Return 500 Error: Database Error]:::error
 
     classDef frontend fill:#ADD8E6,stroke:#333,stroke-width:2px;
     classDef auth fill:#FFD700,stroke:#333,stroke-width:2px;

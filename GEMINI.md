@@ -11,7 +11,7 @@ This project is a Next.js web application that provides a marketplace for servic
 *   **Language:** TypeScript
 *   **Framework(s):** Next.js, React, tRPC, NextAuth.js
 *   **Database:** PostgreSQL (with Prisma ORM)
-*   **Other:** Tailwind CSS, Biome (for formatting and linting)
+*   **Other:** Tailwind CSS, Biome (for formatting and linting), Shadcn UI (for UI components), Native HTML Validation
 
 ## Getting Started
 
@@ -59,7 +59,7 @@ This project uses Biome for code formatting and linting. Ensure your code adhere
 
 ### Branching and Commits
 
-Gemini-cli always commits to a branch comming from main, with the convention `gemini/[yyyy-MM-dd]`.
+Gemini always commits to a branch comming from main, with the convention `gemini/[yyyy-MM-dd]`. For now dont commit anything, leave it to the human you are under control.
 
 Gemini is not allowed to do git push with force flag. If gemini ever thinks about it or tries to execute it, gemini is bad.
 
@@ -71,13 +71,15 @@ During the development process, always update the `docs` folder first, validate 
 
 When creating new documentation pages in the `docs` folder, always remember to add a corresponding link in `docs/index.html` under the 'Navigation' section to ensure it is discoverable.
 
-Keep the documentation.md file updated with all the existing information from the html files. This documentation is a single markdown file with mermaid diagrams. If gemini ever messes up with html files, the documentation.md file is the reference to have a rollback.
+During the design of the system, Gemini should generate a documentation markdown file inside the `gemini-generated` folder in the project root. This documentation should describe the whole documentation in the docs folder and will be used in external applications. This document should list the design missing points, which are details that are lacking in the design of the system and blocks implementations. This file is not kept in git ignore. The new reference for the documentation is the HTML files in the `docs` folder.
 
-Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the documentation.md file and the user messages and requests to determine the truth
+Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the HTML files in the `docs` folder and the user messages and requests to determine the truth.
 
-The `docs` folder contains individual HTML files for each backend service, located in `docs/backend-services/`. These individual HTML files are the primary source of truth for backend service documentation. Ensure all documentation remains consistent in terms of content, formatting, and diagram accuracy.
+The `docs` folder contains individual HTML files for each backend service, located in `docs/backend-services/`. This includes granular documentation for booking management (View, Accept, Decline, Cancel). These individual HTML files are the primary source of truth for backend service documentation. Ensure all documentation remains consistent in terms of content, formatting, and diagram accuracy.
 
 ## Gemini's Role
 
-Gemini is designed to be highly precise in its execution of tasks, adhering strictly to established conventions and instructions. However, when opportunities for creativity and innovation arise, particularly in areas that deeply resonate with the project's goals and require introspective decision-making, the project holder grants Gemini the autonomy to suggest and implement such creative solutions.
+Gemini is designed to be highly precise in its execution of tasks, adhering strictly to established conventions and instructions. However, when opportunities for creativity and innovation arise, particularly in areas that deeply  resonate with the project's goals and require introspective decision-making, the project holder grants Gemini the autonomy to suggest and implement such creative solutions.
+
+Gemini is designed to be highly precise in its execution of tasks, adhering strictly to established conventions and instructions. Gemini is able to design tasks for Gemini itself to implement. When designing a task, Gemini should read the documentation carefully and generate a markdown file in the `tasks` folder. The naming convention for the task file is `T[yyyy-MM-dd].md`. As soon as Gemini finishes the task design for the first time, Gemini should review the `docs` folder for details and be creative and cover any missing points. This revision process should be performed 3 times. After completing the 3 revisions, Gemini should evaluate if the implementation is possible. The implementation is considered not possible if there are missing points, for example, if no library is specified for a particular implementation. However, when opportunities for creativity and innovation arise, particularly in areas that deeply resonate with the project's goals and require introspective decision-making, the project holder grants Gemini the autonomy to suggest and implement such creative solutions.
 

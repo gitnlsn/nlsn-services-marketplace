@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Documentation</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        pre.mermaid { background: #e9ecef; border: 1px solid #ddd; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Database Schema Documentation</h1>
+        <p>This document outlines the database schema for the NLSN Services Marketplace, including existing models from <code>schema.prisma</code> and inferred models necessary for a complete service marketplace system. The schema is designed to support user management, service listings, booking, payments, reviews, and notifications.</p>
+
+        <h2>Entity-Relationship Diagram (ERD)</h2>
+        <pre class="mermaid">
+erDiagram
+    User {
+        String id PK
+        String name
+        String email UK
+        DateTime emailVerified
+        String image
+    }
+
+    Account {
+        String id PK
+        String userId FK
+        String type
+        String provider
+        String providerAccountId
+        String refresh_token
+        String access_token
+        Int expires_at
+        String token_type
+        String scope
+        String id_token
+        String session_state
+        Int refresh_token_expires_in
+    }
+
+    Session {
+        String id PK
+        String sessionToken UK
+        String userId FK
+        DateTime expires
+    }
+
+    VerificationToken {
+        String identifier
+        String token UK
+        DateTime expires
+    }
+
+    
+
+    Service {
+        String id PK
+        String title
+        String description
+        Float price
+        String priceType
+        String categoryId FK
+        String providerId FK
+        DateTime createdAt
+        DateTime updatedAt
+        String status
+        Float[] embedding
+    }
+
+    Category {
+        String id PK
+        String name UK
+    }
+
+    Booking {
+        String id PK
+        String serviceId FK
+        String clientId FK
+        String providerId FK
+        DateTime bookingDate
+        String status
+        Float totalPrice
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Review {
+        String id PK
+        String serviceId FK
+        String clientId FK
+        String providerId FK
+        Int rating
+        String comment
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Payment {
+        String id PK
+        String bookingId FK
+        Float amount
+        String status
+        String paymentGatewayId
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Notification {
+        String id PK
+        String userId FK
+        String type
+        String message
+        Boolean read
+        DateTime createdAt
+    }
+
+    Withdrawal {
+        String id PK
+        String userId FK
+        Float amount
+        String status
+        String bankAccountId
+        DateTime createdAt
+        DateTime updatedAt
+    }
+
+    Image {
+        String id PK
+        String url
+        String serviceId FK
+        String userId FK
+        DateTime createdAt
+    }
+
+    User ||--o{ Account : has
+    User ||--o{ Session : has
+    
+    User ||--o{ Service : provides
+    User ||--o{ Booking : books
+    User ||--o{ Review : leaves
+    User ||--o{ Notification : receives
+    User ||--o{ Withdrawal : requests
+    User ||--o{ Image : uploads
+
+    Service ||--o{ Booking : has
+    Service ||--o{ Review : receives
+    Service ||--o{ Image : has
+    Category ||--o{ Service : categorizes
+    Booking ||--o{ Payment : has
+        </pre>
+
+        <h2>Model Descriptions</h2>
+
+        <h3>User</h3>
+        <p>Represents a user of the platform. A user can be both a client and a service provider. Stores basic profile information and links to authentication-related models.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the user.</li>
+            <li><code>name</code>: User's display name.</li>
+            <li><code>email</code>: User's email address (unique).</li>
+            <li><code>emailVerified</code>: Timestamp of email verification.</li>
+            <li><code>image</code>: URL to the user's profile picture.</li>
+        </ul>
+
+        <h3>Account (NextAuth.js)</h3>
+        <p>Stores information about a user's linked accounts from various authentication providers (e.g., Google).</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the account.</li>
+            <li><code>userId</code>: Foreign key linking to the <code>User</code> model.</li>
+            <li><code>type</code>: Type of account (e.g., "oauth").</li>
+            <li><code>provider</code>: Authentication provider (e.g., "google").</li>
+            <li><code>providerAccountId</code>: Unique ID from the authentication provider.</li>
+            <li><code>refresh_token</code>, <code>access_token</code>, <code>expires_at</code>, <code>token_type</code>, <code>scope</code>, <code>id_token</code>, <code>session_state</code>, <code>refresh_token_expires_in</code>: OAuth-related tokens and metadata.</li>
+        </ul>
+
+        <h3>Session (NextAuth.js)</h3>
+        <p>Manages user sessions for authentication.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the session.</li>
+            <li><code>sessionToken</code>: Unique token for the session.</li>
+            <li><code>userId</code>: Foreign key linking to the <code>User</code> model.</li>
+            <li><code>expires</code>: Session expiration timestamp.</li>
+        </ul>
+
+        <h3>VerificationToken (NextAuth.js)</h3>
+        <p>Used for email verification and password reset flows.</p>
+        <ul>
+            <li><code>identifier</code>: User identifier (e.g., email).</li>
+            <li><code>token</code>: Unique verification token.</li>
+            <li><code>expires</code>: Token expiration timestamp.</li>
+        </ul>
+
+        
+
+        <h3>Service (Inferred)</h3>
+        <p>Represents a service offered by a professional on the marketplace.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the service.</li>
+            <li><code>title</code>: Title of the service.</li>
+            <li><code>description</code>: Detailed description of the service.</li>
+            <li><code>price</code>: Price of the service.</li>
+            <li><code>priceType</code>: Type of pricing (e.g., 'fixed', 'hourly').</li>
+            <li><code>categoryId</code>: Foreign key linking to the <code>Category</code> model.</li>
+            <li><code>providerId</code>: Foreign key linking to the <code>User</code> who provides this service.</li>
+            <li><code>createdAt</code>, <code>updatedAt</code>: Timestamps.</li>
+            <li><code>status</code>: Current status of the service (e.g., 'active', 'inactive').</li>
+            <li><code>embedding</code>: Vector embedding of the service description for semantic search.</li>
+        </ul>
+
+        <h3>Category (Inferred)</h3>
+        <p>Defines categories for organizing services.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the category.</li>
+            <li><code>name</code>: Name of the category (unique).</li>
+        </ul>
+
+        <h3>Booking (Inferred)</h3>
+        <p>Represents a booking of a service by a client.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the booking.</li>
+            <li><code>serviceId</code>: Foreign key linking to the <code>Service</code> being booked.</li>
+            <li><code>clientId</code>: Foreign key linking to the <code>User</code> who made the booking.</li>
+            <li><code>providerId</code>: Foreign key linking to the <code>User</code> who provides the service (redundant but useful for direct access).</li>
+            <li><code>bookingDate</code>: Date and time of the booking.</li>
+            <li><code>status</code>: Current status of the booking (e.g., 'pending', 'accepted', 'declined', 'completed', 'cancelled').</li>
+            <li><code>totalPrice</code>: Total price of the booking.</li>
+            <li><code>createdAt</code>, <code>updatedAt</code>: Timestamps.</li>
+        </ul>
+
+        <h3>Review (Inferred)</h3>
+        <p>Allows clients to leave reviews for completed services or providers.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the review.</li>
+            <li><code>serviceId</code>: Foreign key linking to the <code>Service</code> being reviewed.</li>
+            <li><code>clientId</code>: Foreign key linking to the <code>User</code> who left the review.</li>
+            <li><code>providerId</code>: Foreign key linking to the <code>User</code> who received the review.</li>
+            <li><code>rating</code>: Rating given (e.g., 1-5 stars).</li>
+            <li><code>comment</code>: Textual comment for the review.</li>
+            <li><code>createdAt</code>, <code>updatedAt</code>: Timestamps.</li>
+        </ul>
+
+        <h3>Payment (Inferred)</h3>
+        <p>Records payment transactions for bookings.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the payment.</li>
+            <li><code>bookingId</code>: Foreign key linking to the associated <code>Booking</code>.</li>
+            <li><code>amount</code>: Amount of the payment.</li>
+            <li><code>status</code>: Status of the payment (e.g., 'pending', 'paid', 'failed', 'refunded').</li>
+            <li><code>paymentGatewayId</code>: Transaction ID from the payment gateway (e.g., Pagarme).</li>
+            <li><code>createdAt</code>, <code>updatedAt</code>: Timestamps.</li>
+        </ul>
+
+        <h3>Notification (Inferred)</h3>
+        <p>Stores system notifications for users.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the notification.</li>
+            <li><code>userId</code>: Foreign key linking to the <code>User</code> who receives the notification.</li>
+            <li><code>type</code>: Type of notification (e.g., 'new_booking', 'booking_accepted').</li>
+            <li><code>message</code>: Content of the notification.</li>
+            <li><code>read</code>: Boolean indicating if the notification has been read.</li>
+            <li><code>createdAt</code>: Timestamp of notification creation.</li>
+        </ul>
+
+        <h3>Withdrawal (Inferred)</h3>
+        <p>Records requests from professionals to withdraw their earnings.</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the withdrawal request.</li>
+            <li><code>userId</code>: Foreign key linking to the <code>User</code> (professional) requesting the withdrawal.</li>
+            <li><code>amount</code>: Amount requested for withdrawal.</li>
+            <li><code>status</code>: Status of the withdrawal (e.g., 'pending', 'processed', 'failed').</li>
+            <li><code>bankAccountId</code>: Identifier for the bank account where funds are to be transferred.</li>
+            <li><code>createdAt</code>, <code>updatedAt</code>: Timestamps.</li>
+        </ul>
+
+        <h3>Image (Inferred)</h3>
+        <p>Stores URLs and metadata for images uploaded to the platform (e.g., service photos, profile pictures).</p>
+        <ul>
+            <li><code>id</code>: Unique identifier for the image.</li>
+            <li><code>url</code>: URL of the stored image.</li>
+            <li><code>serviceId</code>: Optional foreign key linking to the <code>Service</code> the image belongs to.</li>
+            <li><code>userId</code>: Optional foreign key linking to the <code>User</code> the image belongs to (e.g., profile picture).</li>
+            <li><code>createdAt</code>: Timestamp of image upload.</li>
+        </ul>
+    </div>
+</body>
+</html>

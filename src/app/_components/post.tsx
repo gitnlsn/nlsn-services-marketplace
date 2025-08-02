@@ -9,10 +9,12 @@ export function LatestPost() {
 
 	const utils = api.useUtils();
 	const [name, setName] = useState("");
+	const [description, setDescription] = useState("");
 	const createPost = api.post.create.useMutation({
 		onSuccess: async () => {
 			await utils.post.invalidate();
 			setName("");
+			setDescription("");
 		},
 	});
 
@@ -26,7 +28,7 @@ export function LatestPost() {
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
-					createPost.mutate({ name });
+					createPost.mutate({ name, description });
 				}}
 				className="flex flex-col gap-2"
 			>
@@ -35,6 +37,13 @@ export function LatestPost() {
 					placeholder="Title"
 					value={name}
 					onChange={(e) => setName(e.target.value)}
+					className="w-full rounded-full bg-white/10 px-4 py-2 text-white"
+				/>
+				<input
+					type="text"
+					placeholder="Description"
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
 					className="w-full rounded-full bg-white/10 px-4 py-2 text-white"
 				/>
 				<button
