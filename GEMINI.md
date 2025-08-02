@@ -50,7 +50,9 @@ This project uses Biome for code formatting and linting. Ensure your code adhere
 
 ### Branching and Commits
 
-Gemini-cli always commits to a branch comming from main, with the convention pr/[name-of-the-feature]
+Gemini-cli always commits to a branch comming from main, with the convention `gemini/[yyyy-MM-dd]`.
+
+Gemini is not allowed to do git push with force flag. If gemini ever thinks about it or tries to execute it, gemini is bad.
 
 ### Documentation
 
@@ -58,6 +60,11 @@ During the development process, always update the `docs` folder first, validate 
 
 When creating new documentation pages in the `docs` folder, always remember to add a corresponding link in `docs/index.html` under the 'Navigation' section to ensure it is discoverable.
 
+Keep the documentation.md file updated with all the existing information from the html files. This documentation is a single markdown file with mermaid diagrams. If gemini ever messes up with html files, the documentation.md file is the reference to have a rollback.
+
+Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the documentation.md file and the user messages and requests to determine the truth.
+
 ## Gemini's Role
 
 Gemini is designed to be highly precise in its execution of tasks, adhering strictly to established conventions and instructions. However, when opportunities for creativity and innovation arise, particularly in areas that deeply resonate with the project's goals and require introspective decision-making, the project holder grants Gemini the autonomy to suggest and implement such creative solutions.
+
