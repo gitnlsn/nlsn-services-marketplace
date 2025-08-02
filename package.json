@@ -12,7 +12,7 @@
 		"postinstall": "prisma generate",
 		"preview": "next build && next start",
 		"start": "next start",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "tsc --noEmit 2>&1",
 		"validate-mermaid": "node scripts/validate-mermaid.js",
 		"test": "vitest run",
 		"test:ui": "vitest --ui",

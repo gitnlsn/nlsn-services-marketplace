@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
     <title>User Journeys - Platform Documentation</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
@@ -37,6 +38,10 @@
                 UC8[Create/Edit Service Listing]
                 UC9[Upload Photos]
                 UC10[Manage Bookings]
+                UC10A[View Bookings]
+                UC10B[Accept Booking]
+                UC10C[Decline Booking]
+                UC10D[Cancel Booking]
                 UC11[View Earnings & Request Withdrawal]
                 UC12[Manage Notification Preferences]
             end
@@ -51,9 +56,14 @@
             P -- can --> UC8
             UC8 -- includes --> UC9
             P -- can --> UC10
+            UC10 -- includes --> UC10A
+            UC10 -- includes --> UC10B
+            UC10 -- includes --> UC10C
+            UC10 -- includes --> UC10D
             P -- can --> UC11
             C -- can --> UC12
             P -- can --> UC12
+            C -- can --> UC10D
 
             style C fill:#ADD8E6,stroke:#333,stroke-width:2px
             style P fill:#90EE90,stroke:#333,stroke-width:2px
@@ -66,6 +76,10 @@
             style UC8 fill:#FFD700,stroke:#333,stroke-width:2px
             style UC9 fill:#FFD700,stroke:#333,stroke-width:2px
             style UC10 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC10A fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10B fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10C fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10D fill:#DDA0DD,stroke:#333,stroke-width:2px
             style UC11 fill:#FFD700,stroke:#333,stroke-width:2px
             style UC12 fill:#FFD700,stroke:#333,stroke-width:2px
             linkStyle 0 stroke:#ADD8E6,stroke-width:2px;
@@ -78,9 +92,14 @@
             linkStyle 7 stroke:#90EE90,stroke-width:2px;
             linkStyle 8 stroke:#FFD700,stroke-width:2px;
             linkStyle 9 stroke:#90EE90,stroke-width:2px;
-            linkStyle 10 stroke:#90EE90,stroke-width:2px;
-            linkStyle 11 stroke:#ADD8E6,stroke-width:2px;
-            linkStyle 12 stroke:#90EE90,stroke-width:2px;
+            linkStyle 10 stroke:#FFD700,stroke-width:2px;
+            linkStyle 11 stroke:#FFD700,stroke-width:2px;
+            linkStyle 12 stroke:#FFD700,stroke-width:2px;
+            linkStyle 13 stroke:#FFD700,stroke-width:2px;
+            linkStyle 14 stroke:#90EE90,stroke-width:2px;
+            linkStyle 15 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 16 stroke:#90EE90,stroke-width:2px;
+            linkStyle 17 stroke:#ADD8E6,stroke-width:2px;
     </pre>
 
         <h2>Example Journey: Service Discovery & Hiring</h2>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Edit Service Screen - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>Edit Service Screen</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The Edit Service Screen allows professionals to modify existing service listings to improve performance, update pricing, or reflect changes in service delivery. This interface provides comprehensive editing capabilities while preserving service history and maintaining active bookings.</p>
+            <p><strong>Primary Purpose:</strong> Enable professionals to keep their service listings current, competitive, and accurate while providing safeguards to prevent disruptions to existing bookings and customer expectations.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Service Header:</strong>
+                    <ul>
+                        <li>Current service title and status</li>
+                        <li>Service ID and creation date</li>
+                        <li>Performance metrics summary</li>
+                        <li>Active bookings warning</li>
+                    </ul>
+                </li>
+                <li><strong>Edit Form Sections:</strong>
+                    <ul>
+                        <li>Basic Information (title, description, category)</li>
+                        <li>Pricing and payment options</li>
+                        <li>Service details and requirements</li>
+                        <li>Media gallery management</li>
+                        <li>Availability and scheduling</li>
+                    </ul>
+                </li>
+                <li><strong>Change Impact Indicators:</strong>
+                    <ul>
+                        <li>Warning for changes affecting active bookings</li>
+                        <li>Preview of customer-visible changes</li>
+                        <li>SEO impact assessment</li>
+                        <li>Performance prediction</li>
+                    </ul>
+                </li>
+                <li><strong>Version History:</strong>
+                    <ul>
+                        <li>Previous versions of the service</li>
+                        <li>Change log with timestamps</li>
+                        <li>Revert to previous version option</li>
+                    </ul>
+                </li>
+                <li><strong>Advanced Options:</strong>
+                    <ul>
+                        <li>Duplicate service option</li>
+                        <li>Archive/deactivate service</li>
+                        <li>Transfer to different category</li>
+                        <li>Bulk edit multiple services</li>
+                    </ul>
+                </li>
+                <li><strong>Action Buttons:</strong> Save Changes, Preview, Publish Updates, Cancel</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>services.getById(serviceId)</code> - Load existing service data</li>
+                <li><code>services.update(serviceId, changes)</code> - Save service modifications</li>
+                <li><code>bookings.getActiveByService(serviceId)</code> - Check for active bookings</li>
+                <li><code>services.validateChanges(serviceId, changes)</code> - Validate proposed changes</li>
+                <li><code>services.getVersionHistory(serviceId)</code> - Fetch service edit history</li>
+                <li><code>services.duplicate(serviceId)</code> - Create copy of existing service</li>
+                <li><code>services.archive(serviceId)</code> - Deactivate service listing</li>
+                <li><code>analytics.getServicePerformance(serviceId)</code> - Get performance metrics</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Professional Clicks Edit Service] --> B[Load Service Data]
+    B --> C[Display Edit Form]
+    
+    C --> D{User Action}
+    
+    D -->|Modify Basic Info| E[Edit Title/Description]
+    E --> F[Validate Changes]
+    F --> G{Valid Changes?}
+    G -->|No| H[Show Validation Errors]
+    G -->|Yes| I[Update Form]
+    
+    D -->|Change Pricing| J[Modify Price Settings]
+    J --> K[Check Active Bookings]
+    K --> L{Impact Active Bookings?}
+    L -->|Yes| M[Show Warning Dialog]
+    M --> N{Proceed Anyway?}
+    N -->|No| O[Cancel Changes]
+    N -->|Yes| P[Apply Changes]
+    L -->|No| P
+    
+    D -->|Update Media| Q[Manage Images/Videos]
+    Q --> R[Upload/Delete Media]
+    R --> S[Update Gallery]
+    
+    D -->|Modify Availability| T[Edit Schedule]
+    T --> U[Check Booking Conflicts]
+    U --> V{Conflicts Found?}
+    V -->|Yes| W[Show Conflict Resolution]
+    V -->|No| X[Update Availability]
+    
+    D -->|Preview Changes| Y[Show Live Preview]
+    Y --> Z[Compare With Current]
+    
+    D -->|Save Changes| AA[Validate All Changes]
+    AA --> BB{All Valid?}
+    BB -->|No| CC[Show All Errors]
+    BB -->|Yes| DD[Save to Database]
+    DD --> EE[Update Search Index]
+    EE --> FF[Show Success Message]
+    
+    D -->|Archive Service| GG[Confirm Archive]
+    GG --> HH[Check Dependencies]
+    HH --> II[Archive Service]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#FFD700,stroke:#333,stroke-width:2px
+    style G fill:#FFD700,stroke:#333,stroke-width:2px
+    style L fill:#FFD700,stroke:#333,stroke-width:2px
+    style N fill:#FFD700,stroke:#333,stroke-width:2px
+    style V fill:#FFD700,stroke:#333,stroke-width:2px
+    style BB fill:#FFD700,stroke:#333,stroke-width:2px
+    style FF fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style II fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style H fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style M fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style W fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style CC fill:#FFCDD2,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Change Management</h2>
+        <ul>
+            <li><strong>Impact Assessment:</strong>
+                <ul>
+                    <li>Active bookings affected by changes</li>
+                    <li>Customer notification requirements</li>
+                    <li>SEO ranking impact</li>
+                    <li>Service visibility changes</li>
+                </ul>
+            </li>
+            <li><strong>Change Approval:</strong>
+                <ul>
+                    <li>Major changes require confirmation</li>
+                    <li>Price increases trigger customer notifications</li>
+                    <li>Category changes need admin approval</li>
+                    <li>Immediate vs. scheduled changes</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>Business Rules</h2>
+        <ul>
+            <li><strong>Pricing Changes:</strong> Cannot decrease existing booking prices, can only apply to new bookings</li>
+            <li><strong>Availability Changes:</strong> Cannot remove slots with confirmed bookings</li>
+            <li><strong>Service Deactivation:</strong> Must complete all active bookings before archiving</li>
+            <li><strong>Description Changes:</strong> Significant changes may trigger review process</li>
+        </ul>
+
+        <h2>Performance Optimization</h2>
+        <ul>
+            <li><strong>A/B Testing:</strong> Test different versions of service listings</li>
+            <li><strong>Performance Insights:</strong> Recommendations based on service analytics</li>
+            <li><strong>Market Positioning:</strong> Competitive analysis and positioning suggestions</li>
+            <li><strong>Conversion Optimization:</strong> Tips for improving booking conversion rates</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Simplified edit interface</li>
+                        <li>Section-by-section editing</li>
+                        <li>Touch-optimized controls</li>
+                        <li>Quick action shortcuts</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Side-by-side edit and preview</li>
+                        <li>Expandable form sections</li>
+                        <li>Drag-and-drop media management</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Full-featured edit interface</li>
+                        <li>Live preview with change highlighting</li>
+                        <li>Advanced batch editing tools</li>
+                        <li>Comprehensive analytics integration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

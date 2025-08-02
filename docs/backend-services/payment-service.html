@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../styles.css">
+    <title>Payment Service - Backend</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+    <a href="index.html" class="back-link">← Back to Backend Services</a>
+    
+    <h1>Payment Service</h1>
+    
+    <h2>Overview</h2>
+    <p>The Payment Service handles all payment-related operations through integration with Pagarme's API. It manages checkout link generation, webhook processing, payment status tracking, and refunds. The service uses a checkout link approach where customers are redirected to Pagarme's hosted payment page, eliminating the need to handle sensitive payment data directly.</p>
+    
+    <h2>Key Features</h2>
+    <ul>
+        <li><strong>Checkout Link Generation:</strong> Creates unique payment links for each booking</li>
+        <li><strong>Webhook Processing:</strong> Handles payment notifications from Pagarme</li>
+        <li><strong>Payment Status Tracking:</strong> Monitors and updates payment states</li>
+        <li><strong>Escrow Management:</strong> Holds funds until service completion</li>
+        <li><strong>Withdrawal Processing:</strong> Transfers funds to professionals after holding period</li>
+        <li><strong>Refund Handling:</strong> Processes full or partial refunds when needed</li>
+    </ul>
+
+    <h2>Service Architecture</h2>
+    <pre class="mermaid">
+flowchart TB
+    subgraph "Payment Service"
+        PS[Payment Service]
+        CL[Checkout Link Generator]
+        WH[Webhook Handler]
+        ST[Status Tracker]
+        ES[Escrow Manager]
+        WP[Withdrawal Processor]
+    end
+    
+    subgraph "External Services"
+        PG[Pagarme API]
+        WB[Webhook Endpoint]
+    end
+    
+    subgraph "Internal Services"
+        BS[Booking Service]
+        NS[Notification Service]
+        US[User Service]
+    end
+    
+    subgraph "Data Store"
+        DB[(PostgreSQL)]
+        CACHE[(Redis Cache)]
+    end
+    
+    PS --> CL
+    PS --> WH
+    PS --> ST
+    PS --> ES
+    PS --> WP
+    
+    CL --> PG
+    WH --> DB
+    ST --> CACHE
+    ES --> DB
+    WP --> PG
+    
+    BS --> PS
+    PS --> NS
+    PS --> US
+    
+    PG --> WB
+    WB --> WH
+    
+    style PS fill:#FFD700,stroke:#333,stroke-width:2px
+    style PG fill:#87CEEB,stroke:#333,stroke-width:2px
+    style DB fill:#DDA0DD,stroke:#333,stroke-width:2px
+</pre>
+
+    <h2>API Endpoints</h2>
+    
+    <h3>Create Checkout Link</h3>
+    <pre><code>POST /api/trpc/payment.createCheckoutLink
+Content-Type: application/json
+
+{
+  "bookingId": "booking_123",
+  "amount": 15000, // in cents (R$ 150.00)
+  "customer": {
+    "name": "João Silva",
+    "email": "joao@example.com",
+    "document": "12345678900",
+    "phone": "+5511999999999"
+  },
+  "items": [{
+    "name": "House Cleaning Service",
+    "quantity": 1,
+    "unitPrice": 15000
+  }],
+  "successUrl": "https://platform.com/bookings/booking_123/success",
+  "cancelUrl": "https://platform.com/bookings/booking_123/cancel"
+}
+
+Response:
+{
+  "checkoutUrl": "https://checkout.pagarme.com/checkout/abc123",
+  "checkoutId": "checkout_abc123",
+  "expiresAt": "2025-01-10T15:00:00Z"
+}</code></pre>
+
+    <h3>Get Payment Status</h3>
+    <pre><code>GET /api/trpc/payment.getStatus?paymentId=payment_123
+
+Response:
+{
+  "paymentId": "payment_123",
+  "status": "paid",
+  "amount": 15000,
+  "paidAt": "2025-01-09T14:30:00Z",
+  "paymentMethod": "credit_card",
+  "lastFourDigits": "1234"
+}</code></pre>
+
+    <h3>Process Withdrawal</h3>
+    <pre><code>POST /api/trpc/payment.requestWithdrawal
+Content-Type: application/json
+
+{
+  "userId": "user_456",
+  "amount": 12750, // after 15% platform fee
+  "bankAccount": {
+    "bankCode": "001",
+    "agency": "1234",
+    "account": "12345-6",
+    "type": "checking"
+  }
+}
+
+Response:
+{
+  "withdrawalId": "withdrawal_789",
+  "status": "processing",
+  "estimatedDate": "2025-01-11T00:00:00Z"
+}</code></pre>
+
+    <h2>Webhook Processing</h2>
+    <pre class="mermaid">
+sequenceDiagram
+    participant Pagarme
+    participant Webhook
+    participant PaymentService
+    participant Database
+    participant BookingService
+    participant NotificationService
+    
+    Pagarme->>Webhook: POST /api/webhooks/pagarme
+    Webhook->>Webhook: Verify signature
+    Webhook->>PaymentService: Process event
+    
+    alt Payment Success
+        PaymentService->>Database: Update payment status
+        PaymentService->>BookingService: Confirm booking payment
+        PaymentService->>Database: Credit professional account
+        PaymentService->>NotificationService: Send confirmations
+        Webhook-->>Pagarme: 200 OK
+    else Payment Failed
+        PaymentService->>Database: Mark payment failed
+        PaymentService->>BookingService: Cancel booking
+        PaymentService->>NotificationService: Notify failure
+        Webhook-->>Pagarme: 200 OK
+    end
+    
+    style Webhook fill:#FFD700,stroke:#333,stroke-width:2px
+    style Database fill:#DDA0DD,stroke:#333,stroke-width:2px
+    style Pagarme fill:#87CEEB,stroke:#333,stroke-width:2px
+</pre>
+
+    <h2>Escrow Flow</h2>
+    <pre class="mermaid">
+stateDiagram-v2
+    [*] --> PaymentReceived: Customer pays
+    PaymentReceived --> FundsHeld: Credit professional account
+    FundsHeld --> ServiceInProgress: Booking confirmed
+    
+    ServiceInProgress --> ServiceCompleted: Either party confirms
+    ServiceInProgress --> DisputeRaised: Issue reported
+    
+    ServiceCompleted --> HoldingPeriod: Start 15-day hold
+    HoldingPeriod --> FundsAvailable: 15 days elapsed
+    HoldingPeriod --> DisputeRaised: Dispute within 15 days
+    
+    DisputeRaised --> DisputeResolved: Admin decision
+    DisputeResolved --> FundsAvailable: Professional wins
+    DisputeResolved --> RefundIssued: Customer wins
+    
+    FundsAvailable --> Withdrawn: Professional requests
+    Withdrawn --> [*]: Transfer complete
+    
+    RefundIssued --> [*]: Money returned
+    
+    style PaymentReceived fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style FundsHeld fill:#FFD700,stroke:#333,stroke-width:2px
+    style DisputeRaised fill:#FFCDD2,stroke:#333,stroke-width:2px
+</pre>
+
+    <h2>Security Measures</h2>
+    <ul>
+        <li><strong>Webhook Signature Verification:</strong> All webhooks validated using HMAC-SHA256</li>
+        <li><strong>Idempotency Keys:</strong> Prevent duplicate payment processing</li>
+        <li><strong>Rate Limiting:</strong> API endpoints protected against abuse</li>
+        <li><strong>Encryption:</strong> All sensitive data encrypted at rest</li>
+        <li><strong>Audit Logging:</strong> Complete transaction history maintained</li>
+        <li><strong>PCI Compliance:</strong> No card data stored; all handled by Pagarme</li>
+    </ul>
+
+    <h2>Configuration</h2>
+    <pre><code>// Environment variables
+PAGARME_API_KEY=sk_live_xxxxxxxxxxxxx
+PAGARME_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+PLATFORM_FEE_PERCENTAGE=15
+ESCROW_HOLD_DAYS=15
+CHECKOUT_EXPIRY_HOURS=24
+
+// Pagarme SDK initialization
+import { PagarmeClient } from '@pagarme/sdk';
+
+const pagarme = new PagarmeClient({
+  apiKey: process.env.PAGARME_API_KEY,
+  webhookSecret: process.env.PAGARME_WEBHOOK_SECRET
+});</code></pre>
+
+    <h2>Error Handling</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Error Type</th>
+                <th>Handling Strategy</th>
+                <th>User Impact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Checkout generation failed</td>
+                <td>Retry with exponential backoff</td>
+                <td>Show retry button</td>
+            </tr>
+            <tr>
+                <td>Webhook processing error</td>
+                <td>Queue for reprocessing</td>
+                <td>None (async process)</td>
+            </tr>
+            <tr>
+                <td>Payment status unknown</td>
+                <td>Poll Pagarme API</td>
+                <td>Show pending status</td>
+            </tr>
+            <tr>
+                <td>Withdrawal failed</td>
+                <td>Notify admin, retry later</td>
+                <td>Email notification</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li><strong>Caching:</strong> Payment status cached for 5 minutes</li>
+        <li><strong>Async Processing:</strong> Webhooks processed in background queues</li>
+        <li><strong>Database Indexes:</strong> Optimized for payment and booking lookups</li>
+        <li><strong>Connection Pooling:</strong> Reuse Pagarme API connections</li>
+        <li><strong>Batch Processing:</strong> Group withdrawals for efficiency</li>
+    </ul>
+
+    <h2>Monitoring</h2>
+    <ul>
+        <li><strong>Payment Success Rate:</strong> Track successful vs failed payments</li>
+        <li><strong>Webhook Latency:</strong> Monitor processing time</li>
+        <li><strong>Checkout Conversion:</strong> Users who complete payment</li>
+        <li><strong>Withdrawal Processing Time:</strong> Time to transfer funds</li>
+        <li><strong>Error Rates:</strong> Track API failures and retries</li>
+    </ul>
+    </div>
+</body>
+</html>

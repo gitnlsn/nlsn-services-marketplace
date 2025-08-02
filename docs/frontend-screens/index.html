@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Screens and Navigation Flow</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <style>
+        /* Additional custom styles for screen cards */
+        .screen-links { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin: 20px 0; 
+        }
+        .screen-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+        .screen-card:hover {
+            background: #e7f3ff;
+            border-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .screen-card h3 {
+            color: #0056b3;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .screen-card p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .user-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .customer-badge {
+            background: #d4edda;
+            color: #155724;
+        }
+        .professional-badge {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .both-badge {
+            background: #fff3cd;
+            color: #856404;
+        }
+        pre.mermaid { background: #e9ecef; border: 1px solid #ddd; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .back-link { 
+            display: inline-block; 
+            margin-bottom: 20px; 
+            color: #0056b3; 
+            text-decoration: none; 
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">← Back to Documentation Index</a>
+        
+        <h1>Frontend Screens Documentation</h1>
+
+        <p>This section provides detailed documentation for each frontend screen in the services marketplace application. Each screen includes descriptions, UI elements, user interaction flows, and technical implementation details.</p>
+
+        <h2>Customer Screens</h2>
+        <div class="screen-links">
+            <a href="home-screen.html" class="screen-card">
+                <h3>Home Screen</h3>
+                <p>Main landing page with featured services, search functionality, and service categories. Entry point for discovering services.</p>
+                <span class="user-type-badge both-badge">Customer & Professional</span>
+            </a>
+            
+            <a href="search-results-screen.html" class="screen-card">
+                <h3>Search Results Screen</h3>
+                <p>Displays filtered and sorted service listings based on search queries or category selection with advanced filtering options.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="service-detail-screen.html" class="screen-card">
+                <h3>Service Detail Screen</h3>
+                <p>Comprehensive service information including photos, pricing, availability, reviews, and booking options.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="professional-profile-screen.html" class="screen-card">
+                <h3>Professional Profile Screen</h3>
+                <p>Public view of a professional's profile showcasing their services, ratings, and credentials.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="booking-confirmation-screen.html" class="screen-card">
+                <h3>Booking Confirmation Screen</h3>
+                <p>Review and confirm booking details before proceeding to payment, with options to modify selections.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="payment-screen.html" class="screen-card">
+                <h3>Payment Screen</h3>
+                <p>Secure payment interface supporting multiple payment methods including credit cards, Pix, and boleto.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="my-bookings-customer-screen.html" class="screen-card">
+                <h3>My Bookings Screen (Customer)</h3>
+                <p>Manage all bookings with filters for upcoming, past, and cancelled services. Access booking details and actions.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+            
+            <a href="reviews-screen.html" class="screen-card">
+                <h3>Reviews Screen</h3>
+                <p>Leave detailed reviews and ratings for completed services, including photos and category-specific ratings.</p>
+                <span class="user-type-badge customer-badge">Customer</span>
+            </a>
+        </div>
+
+        <h2>Professional Screens</h2>
+        <div class="screen-links">
+            <a href="professional-dashboard.html" class="screen-card">
+                <h3>Professional Dashboard</h3>
+                <p>Central hub for professionals showing key metrics, recent activity, and quick access to management tools.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="my-services-screen.html" class="screen-card">
+                <h3>My Services Screen</h3>
+                <p>Manage all service listings with performance metrics, status controls, and editing capabilities.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="create-service-screen.html" class="screen-card">
+                <h3>Create Service Screen</h3>
+                <p>Multi-step form for creating new service listings with pricing, photos, and availability settings.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="edit-service-screen.html" class="screen-card">
+                <h3>Edit Service Screen</h3>
+                <p>Modify existing service listings including details, pricing, photos, and availability schedules.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="my-bookings-professional-screen.html" class="screen-card">
+                <h3>My Bookings Screen (Professional)</h3>
+                <p>Manage incoming booking requests and confirmed appointments with accept/decline functionality.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="earnings-withdrawal-screen.html" class="screen-card">
+                <h3>Earnings & Withdrawal Screen</h3>
+                <p>Track earnings, view transaction history, and request withdrawals with detailed financial reporting.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+            
+            <a href="professional-profile-edit-screen.html" class="screen-card">
+                <h3>Professional Profile Edit Screen</h3>
+                <p>Edit professional profile information including bio, certifications, portfolio, and business details.</p>
+                <span class="user-type-badge professional-badge">Professional</span>
+            </a>
+        </div>
+
+        <h2>Navigation Flow Overview</h2>
+        <p>The diagram below illustrates the primary navigation paths between screens for both customer and professional user journeys:</p>
+        
+        <pre class="mermaid">
+            graph TD
+                LOGIN_SIGNUP["Login/Signup Screen"]
+
+                subgraph Customer Flow
+                    C_HOME["Home Screen"] --> C_SEARCH["Search Results Screen"]
+                    C_SEARCH --> C_SERVICE_DETAIL["Service Detail Screen"]
+                    C_SERVICE_DETAIL --> C_PROF_PROFILE["Professional Profile Screen"]
+                    C_SERVICE_DETAIL --> C_BOOKING_CONFIRM["Booking Confirmation Screen"]
+                    C_BOOKING_CONFIRM --> C_PAYMENT["Payment Screen"]
+                    C_PAYMENT --> C_MY_BOOKINGS["My Bookings (Customer)"]
+                    C_MY_BOOKINGS --> C_REVIEWS["Reviews Screen"]
+                    C_HOME --> C_MY_BOOKINGS
+                end
+
+                subgraph Professional Flow
+                    P_DASH["Professional Dashboard"] --> P_MY_SERVICES["My Services Screen"]
+                    P_MY_SERVICES --> P_CREATE_SERVICE["Create Service Screen"]
+                    P_MY_SERVICES --> P_EDIT_SERVICE["Edit Service Screen"]
+                    P_DASH --> P_MY_BOOKINGS["My Bookings (Professional)"]
+                    P_DASH --> P_EARNINGS["Earnings & Withdrawal Screen"]
+                    P_DASH --> P_PROF_PROFILE_EDIT["Professional Profile (Edit)"]
+                end
+
+                %% Authentication Flow
+                LOGIN_SIGNUP -- "Successful Login (Customer)" --> C_HOME
+                LOGIN_SIGNUP -- "Successful Login (Professional)" --> P_DASH
+
+                %% Cross-role interactions
+                C_SERVICE_DETAIL -- "View Professional Services" --> P_PROF_PROFILE_EDIT
+                P_MY_BOOKINGS -- "Service Completed" --> C_REVIEWS
+                C_PAYMENT -- "Payment Success" --> P_MY_BOOKINGS
+
+                style C_HOME fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_SEARCH fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_SERVICE_DETAIL fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_PROF_PROFILE fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_BOOKING_CONFIRM fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_PAYMENT fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_MY_BOOKINGS fill:#ADD8E6,stroke:#333,stroke-width:2px
+                style C_REVIEWS fill:#ADD8E6,stroke:#333,stroke-width:2px
+                
+                style P_DASH fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_MY_SERVICES fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_CREATE_SERVICE fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_EDIT_SERVICE fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_MY_BOOKINGS fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_EARNINGS fill:#90EE90,stroke:#333,stroke-width:2px
+                style P_PROF_PROFILE_EDIT fill:#90EE90,stroke:#333,stroke-width:2px
+                
+                style LOGIN_SIGNUP fill:#FFD700,stroke:#333,stroke-width:2px
+        </pre>
+
+        <h2>Key Navigation Patterns</h2>
+        <ul>
+            <li><strong>Discovery Flow:</strong> Home → Search → Service Detail → Booking → Payment</li>
+            <li><strong>Management Flow:</strong> Dashboard → My Services/Bookings → Individual Management Screens</li>
+            <li><strong>Profile Flow:</strong> Any Screen → Profile View/Edit → Update Information</li>
+            <li><strong>Review Flow:</strong> My Bookings → Completed Service → Leave Review</li>
+        </ul>
+
+        <h2>Implementation Notes</h2>
+        <ul>
+            <li>All screens should maintain consistent navigation elements (header, footer, breadcrumbs)</li>
+            <li>Mobile versions should use bottom navigation for primary actions</li>
+            <li>Deep linking should be supported for all major screens</li>
+            <li>Browser back button should work intuitively throughout the flow</li>
+            <li>Loading states and error handling should be consistent across all screens</li>
+        </ul>
+    </div>
+</body>
+</html>

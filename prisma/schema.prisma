@@ -14,18 +14,7 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    description String @default("")
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
 
 // Necessary for Next auth
 model Account {
@@ -61,9 +50,48 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+    
+    // Profile fields
+    phone         String?
+    cpf           String?   @unique // Brazilian tax ID
+    bio           String?   @db.Text
+    address       String?
+    city          String?
+    state         String?
+    zipCode       String?
+    
+    // Professional fields
+    isProfessional Boolean   @default(false)
+    professionalSince DateTime?
+    accountBalance    Float     @default(0) // Available balance for withdrawal
+    
+    // Notification preferences
+    notificationEmail    Boolean   @default(true)
+    notificationSms      Boolean   @default(true)
+    notificationWhatsapp Boolean   @default(true)
+    
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+    
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    
+    // Service provider relations
+    services       Service[]    @relation("ServiceProvider")
+    
+    // Client relations
+    bookings       Booking[]    @relation("ClientBookings")
+    reviews        Review[]     @relation("ClientReviews")
+    
+    // Professional relations
+    professionalBookings Booking[]    @relation("ProfessionalBookings")
+    professionalReviews  Review[]     @relation("ProfessionalReviews")
+    
+    // Other relations
+    notifications  Notification[]
+    withdrawals    Withdrawal[]
+    images         Image[]
+    bankAccounts   BankAccount[]
 }
 
 model VerificationToken {
@@ -72,4 +100,208 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+// Service marketplace models
+
+model Category {
+    id       String    @id @default(cuid())
+    name     String    @unique
+    services Service[]
+}
+
+model Service {
+    id          String    @id @default(cuid())
+    title       String
+    description String    @db.Text
+    price       Float
+    priceType   String    @default("fixed") // fixed, hourly
+    categoryId  String
+    providerId  String
+    status      String    @default("active") // active, inactive
+    
+    // Additional service details
+    duration    Int?      // Service duration in minutes
+    location    String?   // Service location (address or "remote")
+    maxBookings Int?      // Maximum bookings per day
+    
+    // Metrics
+    viewCount   Int       @default(0)
+    bookingCount Int      @default(0)
+    avgRating   Float?    // Cached average rating
+    
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    embedding   Float[]   // For semantic search
+    
+    // Relations
+    category    Category  @relation(fields: [categoryId], references: [id])
+    provider    User      @relation("ServiceProvider", fields: [providerId], references: [id], onDelete: Cascade)
+    bookings    Booking[]
+    reviews     Review[]
+    images      Image[]
+    
+    @@index([categoryId])
+    @@index([providerId])
+    @@index([status])
+    @@index([avgRating])
+}
+
+model Booking {
+    id           String    @id @default(cuid())
+    serviceId    String
+    clientId     String
+    providerId   String
+    bookingDate  DateTime
+    endDate      DateTime? // For duration-based services
+    status       String    @default("pending") // pending, accepted, declined, completed, cancelled
+    totalPrice   Float
+    
+    // Additional booking details
+    notes        String?   @db.Text // Customer notes for the professional
+    address      String?   // Service location if different from default
+    cancellationReason String? @db.Text
+    cancelledBy  String?   // userId of who cancelled
+    completedAt  DateTime? // When service was marked complete
+    
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+    
+    // Relations
+    service      Service   @relation(fields: [serviceId], references: [id])
+    client       User      @relation("ClientBookings", fields: [clientId], references: [id])
+    provider     User      @relation("ProfessionalBookings", fields: [providerId], references: [id])
+    payment      Payment?
+    
+    @@index([serviceId])
+    @@index([clientId])
+    @@index([providerId])
+    @@index([status])
+    @@index([bookingDate])
+}
+
+model Review {
+    id         String    @id @default(cuid())
+    serviceId  String
+    clientId   String
+    providerId String
+    rating     Int       // 1-5 stars
+    comment    String?   @db.Text
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    
+    // Relations
+    service    Service   @relation(fields: [serviceId], references: [id])
+    client     User      @relation("ClientReviews", fields: [clientId], references: [id])
+    provider   User      @relation("ProfessionalReviews", fields: [providerId], references: [id])
+    
+    @@index([serviceId])
+    @@index([clientId])
+    @@index([providerId])
+    @@unique([serviceId, clientId]) // One review per service per client
+}
+
+model Payment {
+    id               String    @id @default(cuid())
+    bookingId        String    @unique
+    amount           Float
+    status           String    @default("pending") // pending, paid, failed, refunded
+    paymentMethod    String?   // credit_card, pix, boleto
+    paymentGatewayId String?   // Transaction ID from Pagarme
+    
+    // Payment details
+    serviceFee       Float     @default(0) // Platform fee
+    netAmount        Float     @default(0) // Amount after fees
+    refundAmount     Float?    // Partial or full refund amount
+    refundedAt       DateTime? // Refund timestamp
+    
+    // Pix specific fields
+    pixCode          String?   @db.Text
+    pixQrCode        String?   @db.Text
+    pixExpiresAt     DateTime?
+    
+    // Boleto specific fields
+    boletoUrl        String?
+    boletoBarcode    String?
+    boletoDueDate    DateTime?
+    
+    createdAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
+    
+    // Escrow fields
+    escrowReleaseDate DateTime? // Date when funds can be released to professional (15 days after completion)
+    releasedAt        DateTime? // Actual release date
+    
+    // Relations
+    booking          Booking   @relation(fields: [bookingId], references: [id])
+    
+    @@index([status])
+    @@index([paymentMethod])
+}
+
+model Notification {
+    id        String    @id @default(cuid())
+    userId    String
+    type      String    // new_booking, booking_accepted, booking_declined, payment_received, etc
+    title     String
+    message   String    @db.Text
+    read      Boolean   @default(false)
+    createdAt DateTime  @default(now())
+    
+    // Relations
+    user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    @@index([userId])
+    @@index([read])
+}
+
+model Withdrawal {
+    id            String    @id @default(cuid())
+    userId        String
+    amount        Float
+    status        String    @default("pending") // pending, processing, completed, failed
+    bankAccountId String?   // Reference to user's bank account
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+    
+    // Relations
+    user          User      @relation(fields: [userId], references: [id])
+    
+    @@index([userId])
+    @@index([status])
+}
+
+model Image {
+    id        String    @id @default(cuid())
+    url       String
+    serviceId String?
+    userId    String?
+    createdAt DateTime  @default(now())
+    
+    // Relations
+    service   Service?  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+    user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    @@index([serviceId])
+    @@index([userId])
+}
+
+model BankAccount {
+    id            String    @id @default(cuid())
+    userId        String
+    bankName      String
+    accountType   String    // checking, savings
+    accountNumber String
+    agencyNumber  String
+    holderName    String
+    holderCpf     String    // Brazilian tax ID
+    isDefault     Boolean   @default(false)
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+    
+    // Relations
+    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
+    @@index([userId])
+    @@unique([userId, accountNumber, agencyNumber])
 }

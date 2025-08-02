@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>My Services Screen - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>My Services Screen</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The My Services Screen provides professionals with a comprehensive overview of all their service listings, enabling efficient management of their marketplace portfolio. This interface serves as the central hub for service administration, performance monitoring, and optimization activities.</p>
+            <p><strong>Primary Purpose:</strong> Enable professionals to effectively manage their service portfolio, monitor performance metrics, and take actions to optimize their marketplace presence and earnings.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Header Actions:</strong>
+                    <ul>
+                        <li>"Create New Service" primary button</li>
+                        <li>Bulk actions dropdown</li>
+                        <li>View toggle (grid/list)</li>
+                        <li>Sort options (date, performance, status)</li>
+                    </ul>
+                </li>
+                <li><strong>Service Status Filters:</strong>
+                    <ul>
+                        <li>All Services</li>
+                        <li>Active</li>
+                        <li>Inactive/Paused</li>
+                        <li>Draft</li>
+                        <li>Under Review</li>
+                        <li>Archived</li>
+                    </ul>
+                </li>
+                <li><strong>Service Cards/List Items:</strong>
+                    <ul>
+                        <li>Service thumbnail image</li>
+                        <li>Service title and category</li>
+                        <li>Status indicator and badge</li>
+                        <li>Performance metrics (views, bookings, rating)</li>
+                        <li>Last updated timestamp</li>
+                        <li>Earnings summary</li>
+                        <li>Quick action buttons</li>
+                    </ul>
+                </li>
+                <li><strong>Quick Actions:</strong>
+                    <ul>
+                        <li>Edit service</li>
+                        <li>View analytics</li>
+                        <li>Duplicate service</li>
+                        <li>Pause/unpause</li>
+                        <li>Archive service</li>
+                        <li>Share service link</li>
+                    </ul>
+                </li>
+                <li><strong>Performance Summary:</strong>
+                    <ul>
+                        <li>Total services count</li>
+                        <li>Total monthly earnings</li>
+                        <li>Average service rating</li>
+                        <li>Conversion rate</li>
+                    </ul>
+                </li>
+                <li><strong>Search and Filter:</strong>
+                    <ul>
+                        <li>Service name search</li>
+                        <li>Category filter</li>
+                        <li>Date range picker</li>
+                        <li>Performance filters</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>services.getByProfessional(professionalId, filters)</code> - Fetch professional's services</li>
+                <li><code>services.updateStatus(serviceId, status)</code> - Change service status</li>
+                <li><code>services.duplicate(serviceId)</code> - Create copy of existing service</li>
+                <li><code>services.archive(serviceId)</code> - Archive service</li>
+                <li><code>analytics.getServiceSummary(professionalId)</code> - Get performance overview</li>
+                <li><code>analytics.getServiceMetrics(serviceId)</code> - Individual service performance</li>
+                <li><code>services.bulkUpdate(serviceIds, updates)</code> - Bulk operations</li>
+                <li><code>bookings.getCountByService(serviceIds)</code> - Get booking counts</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Professional Accesses My Services] --> B[Load Services List]
+    B --> C[Display Services Overview]
+    
+    C --> D{User Action}
+    
+    D -->|Create New Service| E[Click Create Button]
+    E --> F[Navigate to Create Service]
+    
+    D -->|Edit Service| G[Click Edit Button]
+    G --> H[Navigate to Edit Service]
+    
+    D -->|View Analytics| I[Click Analytics]
+    I --> J[Show Service Performance]
+    
+    D -->|Duplicate Service| K[Click Duplicate]
+    K --> L[Confirm Duplication]
+    L --> M[Create Service Copy]
+    M --> N[Navigate to Edit Copy]
+    
+    D -->|Change Status| O[Toggle Status]
+    O --> P{Confirm Action?}
+    P -->|Yes| Q[Update Service Status]
+    P -->|No| R[Cancel Action]
+    
+    D -->|Archive Service| S[Click Archive]
+    S --> T[Show Archive Warning]
+    T --> U{Confirm Archive?}
+    U -->|Yes| V[Archive Service]
+    U -->|No| W[Cancel Archive]
+    
+    D -->|Bulk Actions| X[Select Multiple Services]
+    X --> Y[Choose Bulk Action]
+    Y --> Z[Apply to Selected]
+    
+    D -->|Filter Services| AA[Apply Filters]
+    AA --> BB[Update Services List]
+    
+    D -->|Search Services| CC[Enter Search Query]
+    CC --> DD[Filter by Search]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#FFD700,stroke:#333,stroke-width:2px
+    style P fill:#FFD700,stroke:#333,stroke-width:2px
+    style U fill:#FFD700,stroke:#333,stroke-width:2px
+    style F fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style H fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style N fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style Q fill:#90EE90,stroke:#333,stroke-width:2px
+    style V fill:#90EE90,stroke:#333,stroke-width:2px
+    style Z fill:#90EE90,stroke:#333,stroke-width:2px
+    style BB fill:#90EE90,stroke:#333,stroke-width:2px
+    style DD fill:#90EE90,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Service Management Features</h2>
+        <ul>
+            <li><strong>Status Management:</strong>
+                <ul>
+                    <li>Active: Visible to customers, accepting bookings</li>
+                    <li>Paused: Hidden from search, existing bookings maintained</li>
+                    <li>Draft: Unpublished, still being created</li>
+                    <li>Under Review: Pending platform approval</li>
+                    <li>Archived: No longer available, historical data preserved</li>
+                </ul>
+            </li>
+            <li><strong>Performance Tracking:</strong>
+                <ul>
+                    <li>View counts and click-through rates</li>
+                    <li>Booking conversion metrics</li>
+                    <li>Customer rating trends</li>
+                    <li>Revenue per service</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>Optimization Tools</h2>
+        <ul>
+            <li><strong>Performance Insights:</strong> AI-powered suggestions for improving service visibility and bookings</li>
+            <li><strong>Competitive Analysis:</strong> Compare service performance against category averages</li>
+            <li><strong>A/B Testing:</strong> Test different versions of service listings</li>
+            <li><strong>SEO Recommendations:</strong> Suggestions for improving search ranking</li>
+        </ul>
+
+        <h2>Bulk Operations</h2>
+        <ul>
+            <li><strong>Status Changes:</strong> Pause/unpause multiple services</li>
+            <li><strong>Pricing Updates:</strong> Apply percentage increases across services</li>
+            <li><strong>Category Migration:</strong> Move services to different categories</li>
+            <li><strong>Template Application:</strong> Apply consistent formatting/policies</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Card-based service layout</li>
+                        <li>Swipe gestures for quick actions</li>
+                        <li>Simplified performance metrics</li>
+                        <li>Touch-friendly action buttons</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Grid layout with 2-3 columns</li>
+                        <li>Expanded service details</li>
+                        <li>Side panel for filters</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Data table with comprehensive metrics</li>
+                        <li>Advanced filtering and sorting</li>
+                        <li>Bulk selection and operations</li>
+                        <li>Detailed analytics integration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

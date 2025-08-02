@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to the Marketplace Documentation</title>
+    <link rel="stylesheet" href="./styles.css">
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: true });
     </script>
 </head>
 <body>
+    <div class="container">
     <h1>Welcome to the Marketplace Documentation</h1>
 
     <p>This documentation provides a comprehensive overview of the architecture, features, and flows of the peer-to-peer service marketplace.</p>
@@ -31,23 +33,20 @@
 
     <h2>Navigation</h2>
 
-    <ul>
+    <nav>
+        <ul class="nav-list">
+            <li><a href="./authentication.html"><strong>Authentication</strong></a>: How users sign in and manage their accounts.</li>
+            <li><a href="./services.html"><strong>Services</strong></a>: How services are created, updated, and displayed.</li>
+            <li><a href="./search.html"><strong>Search</strong></a>: A look under the hood of our semantic search engine.</li>
+            <li><a href="./payments.html"><strong>Payments</strong></a>: The complete lifecycle of a transaction, from booking to withdrawal.</li>
+            <li><a href="./notifications.html"><strong>Notifications</strong></a>: How we keep users informed with timely alerts.</li>
+            <li><a href="./user-journeys.html"><strong>User Journeys</strong></a>: Detailed user flows and interactions.</li>
+            <li><a href="./backend-services/index.html"><strong>Backend Services</strong></a>: Documentation for backend services and their operations.</li>
+            <li><a href="./database/index.html"><strong>Database Schema</strong></a>: Overview of the database models and relationships.</li>
+            <li><a href="./frontend-screens/index.html"><strong>Frontend Screens</strong></a>: User interface documentation and screen flows.</li>
         </ul>
-        
-    <li><a href="./authentication.html"><strong>Authentication</strong></a>: How users sign in and manage their accounts.</li>
-        <li><a href="./services.html"><strong>Services</strong></a>: How services are created, updated, and displayed.</li>
-        <li><a href="./search.html"><strong>Search</strong></a>: A look under the hood of our semantic search engine.</li>
-        <li><a href="./payments.html"><strong>Payments</strong></a>: The complete lifecycle of a transaction, from booking to withdrawal.</li>
-        <li><a href="./notifications.html"><strong>Notifications</strong></a>: How we keep users informed with timely alerts.</li>
-        <li><a href="./user-journeys.html"><strong>User Journeys</strong></a>: Detailed user flows and interactions.</li>
-        <li><a href="./backend-services/index.html"><strong>Backend Services</strong></a>: Documentation for backend services and their operations.</li>
-        <li><a href="./database/index.html"><strong>Database Schema</strong></a>: Overview of the database models and relationships.</li>
-    </ul>
-        <li><a href="./frontend-screens/index.html"><strong>Frontend Screens</strong></a></li>
-    </ul>
+    </nav>
 
-    
-
-    
+    </div>
 </body>
 </html>
