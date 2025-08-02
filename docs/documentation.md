@@ -38,12 +38,16 @@ sequenceDiagram
     Backend->>Google: Redirects user to Google
     Google->>User: Presents consent screen
     User->>Google: Grants permission
-    Google->>Backend: Sends authorization code
-    Backend->>Google: Exchanges code for tokens
     Google-->>Backend: Returns access and refresh tokens
     Backend->>NextAuth: Creates session
     NextAuth-->>Frontend: Sets session cookie
     Frontend-->>User: User is logged in
+
+    style User fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style Frontend fill:#90EE90,stroke:#333,stroke-width:2px
+    style Backend fill:#FFD700,stroke:#333,stroke-width:2px
+    style NextAuth fill:#FFB6C1,stroke:#333,stroke-width:2px
+    style Google fill:#DDA0DD,stroke:#333,stroke-width:2px
 ```
 
 # Notifications: Keeping Users Informed
@@ -79,6 +83,10 @@ sequenceDiagram
     Backend->>Twilio: API call with notification details (channel, recipient, message)
     Twilio->>User: Delivers message via SMS, WhatsApp, or Email
     Twilio-->>Backend: Returns delivery status
+
+    style Backend fill:#FFD700,stroke:#333,stroke-width:2px
+    style Twilio fill:#87CEEB,stroke:#333,stroke-width:2px
+    style User fill:#ADD8E6,stroke:#333,stroke-width:2px
 ```
 
 # Payments: The Engine of Commerce
@@ -132,6 +140,13 @@ We want to make it as easy as possible for our users to access their earnings.
             "User (as Client)"->>Backend: (Optional) Notifies service complete
             Backend->>Backend: Funds held for 15 days
             Backend->>"User (as Professional)": Funds available for withdrawal after 15 days
+
+            style "User (as Client)" fill:#ADD8E6,stroke:#333,stroke-width:2px
+            style "User (as Professional)" fill:#90EE90,stroke:#333,stroke-width:2px
+            style Frontend fill:#FFB6C1,stroke:#333,stroke-width:2px
+            style Backend fill:#FFD700,stroke:#333,stroke-width:2px
+            style Pagarme fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style Twilio fill:#87CEEB,stroke:#333,stroke-width:2px
 ```
 
 ### Withdrawal Flow
@@ -151,6 +166,12 @@ We want to make it as easy as possible for our users to access their earnings.
             Backend->>Backend: Update user's balance
             Backend->>Twilio: Send withdrawal confirmation to Professional
             Backend-->>Frontend: Notify user of successful withdrawal
+
+            style "User (as Professional)" fill:#90EE90,stroke:#333,stroke-width:2px
+            style Frontend fill:#FFB6C1,stroke:#333,stroke-width:2px
+            style Backend fill:#FFD700,stroke:#333,stroke-width:2px
+            style Pagarme fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style Twilio fill:#87CEEB,stroke:#333,stroke-width:2px
 ```
 
 # Search: The Art of Discovery
@@ -195,6 +216,12 @@ With semantic search, our users can find what they're looking for, even if they 
             Database-->>Backend: Returns ranked list of matching services
             Backend-->>Frontend: Sends service results
             Frontend-->>User: Displays relevant services
+
+            style User fill:#ADD8E6,stroke:#333,stroke-width:2px
+            style Frontend fill:#90EE90,stroke:#333,stroke-width:2px
+            style Backend fill:#FFD700,stroke:#333,stroke-width:2px
+            style EmbeddingModel fill:#FFB6C1,stroke:#333,stroke-width:2px
+            style Database fill:#DDA0DD,stroke:#333,stroke-width:2px
 ```
 
 # Services Page
@@ -217,25 +244,25 @@ This document outlines the key user journeys and interactions within the platfor
 ```mermaid
         graph TD
             subgraph "Customer"
-                C[ ]
+                C[Customer]
             end
 
             subgraph "Professional"
-                P[ ]
+                P[Professional]
             end
 
             subgraph "System"
-                UC1(Manage Profile)
-                UC2(Search for Services)
-                UC3(View Service/Portfolio)
-                UC4(Book a Service)
-                UC5(Pay for Service)
-                UC7(Leave a Review)
-                UC8(Create/Edit Service Listing)
-                UC9(Upload Photos/Videos)
-                UC10(Manage Bookings)
-                UC11(View Earnings & Request Withdrawal)
-                UC12(Manage Notification Preferences)
+                UC1[Manage Profile]
+                UC2[Search for Services]
+                UC3[View Service/Portfolio]
+                UC4[Book a Service]
+                UC5[Pay for Service]
+                UC7[Leave a Review]
+                UC8[Create/Edit Service Listing]
+                UC9[Upload Photos/Videos]
+                UC10[Manage Bookings]
+                UC11[View Earnings & Request Withdrawal]
+                UC12[Manage Notification Preferences]
             end
 
             C -- can --> UC1
@@ -251,6 +278,33 @@ This document outlines the key user journeys and interactions within the platfor
             P -- can --> UC11
             C -- can --> UC12
             P -- can --> UC12
+
+            style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+            style P fill:#90EE90,stroke:#333,stroke-width:2px
+            style UC1 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC2 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC3 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC4 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC5 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC7 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC8 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC9 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC10 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC11 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC12 fill:#FFD700,stroke:#333,stroke-width:2px
+            linkStyle 0 stroke:#333,stroke-width:2px;
+            linkStyle 1 stroke:#333,stroke-width:2px;
+            linkStyle 2 stroke:#333,stroke-width:2px;
+            linkStyle 3 stroke:#FFD700,stroke-width:2px;
+            linkStyle 4 stroke:#FFD700,stroke-width:2px;
+            linkStyle 5 stroke:#FFD700,stroke-width:2px;
+            linkStyle 6 stroke:#FFD700,stroke-width:2px;
+            linkStyle 7 stroke:#90EE90,stroke-width:2px;
+            linkStyle 8 stroke:#FFD700,stroke-width:2px;
+            linkStyle 9 stroke:#90EE90,stroke-width:2px;
+            linkStyle 10 stroke:#90EE90,stroke-width:2px;
+            linkStyle 11 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 12 stroke:#90EE90,stroke-width:2px;
 ```
 
 ## Example Journey: Service Discovery & Hiring
@@ -262,7 +316,7 @@ flowchart TD
 
     C --> E{Ready to Hire?}
     E -- Yes --> F[User 1: Initiate Hiring Process]
-    E -- No --> G[User 1: Contact Provider / Save for Later]
+    E -- No --> G[User: Contact Provider / Save for Later]
 
     F --> H[Platform: Process Payment & Booking]
     H --> I[User 2: Receive Notification of New Booking]
@@ -297,6 +351,124 @@ flowchart TD
         N
     end
 
-        A -- "User 1 is a client looking for a service." --> A;
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style B fill:#FFD700,stroke:#333,stroke-width:2px
+    style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style E fill:#FFD700,stroke:#333,stroke-width:2px
+    style F fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style G fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style H fill:#90EE90,stroke:#333,stroke-width:2px
+    style I fill:#90EE90,stroke:#333,stroke-width:2px
+    style J fill:#FFD700,stroke:#333,stroke-width:2px
+    style K fill:#90EE90,stroke:#333,stroke-width:2px
+    style L fill:#90EE90,stroke:#333,stroke-width:2px
+    style M fill:#90EE90,stroke:#333,stroke-width:2px
+    style N fill:#90EE90,stroke:#333,stroke-width:2px
+
+    linkStyle 0 stroke:#333,stroke-width:1px;
+    linkStyle 1 stroke:#333,stroke-width:1px;
+    linkStyle 2 stroke:#333,stroke-width:1px;
+    linkStyle 3 stroke:#333,stroke-width:1px;
+    linkStyle 4 stroke:#333,stroke-width:1px;
+    linkStyle 5 stroke:#333,stroke-width:1px;
+    linkStyle 6 stroke:#333,stroke-width:1px;
+    linkStyle 7 stroke:#333,stroke-width:1px;
+    linkStyle 8 stroke:#333,stroke-width:1px;
+    linkStyle 9 stroke:#333,stroke-width:1px;
+    linkStyle 10 stroke:#333,stroke-width:1px;
+    linkStyle 11 stroke:#333,stroke-width:1px;
+    linkStyle 12 stroke:#333,stroke-width:1px;
+
+    classDef user1 fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    classDef user2 fill:#90EE90,stroke:#333,stroke-width:2px;
+    classDef platform fill:#FFD700,stroke:#333,stroke-width:2px;
+
+    class A,C,D,F,G user1;
+    class I,J,K,L user2;
+    class B,E,H,M,N platform;
+
+    A -- "User 1 is a client looking for a service." --> A;
     I -- "User 2 is the service provider." --> I;
 ```
+
+# Frontend Screens and Navigation Flow
+
+This document outlines the key frontend screens of the application and illustrates the navigation flow between them, distinguishing between customer and professional user experiences.
+
+## 1. Customer Screens
+<ul>
+    <li><strong>Home Screen:</strong> Landing page with featured services, search bar, and categories.</li>
+    <li><strong>Search Results Screen:</strong> Displays services based on search queries or category selection.</li>
+    <li><strong>Service Detail Screen:</strong> Detailed view of a specific service, including description, pricing, photos, and professional's profile link.</li>
+    <li><strong>Professional Profile Screen:</strong> Displays the professional's public profile, including all their services and reviews.</li>
+    <li><strong>Booking Confirmation Screen:</strong> Summary of a booked service before payment.</li>
+    <li><strong>Payment Screen:</strong> Interface for completing the payment for a booked service.</li>
+    <li><strong>My Bookings Screen (Customer):</strong> Lists all services booked by the customer.</li>
+    <li><strong>Reviews Screen:</strong> Allows customers to leave reviews for completed services.</li>
+</ul>
+
+<h2>2. Professional Screens</h2>
+<ul>
+    <li><strong>Professional Dashboard:</strong> Overview for professionals, showing active services, pending bookings, and earnings.</li>
+    <li><strong>My Services Screen:</strong> Lists all services created by the professional, with options to edit or deactivate.</li>
+    <li><strong>Create Service Screen:</strong> Form for professionals to create new service listings.</li>
+    <li><strong>Edit Service Screen:</strong> Form for professionals to modify existing service listings.</li>
+    <li><strong>My Bookings Screen (Professional):</strong> Lists all bookings received by the professional.</li>
+    <li><strong>Earnings & Withdrawal Screen:</strong> Displays earnings, available balance, and allows withdrawal requests.</li>
+    <li><strong>Professional Profile Screen (Edit):</strong> Allows professionals to edit their public profile information.</li>
+</ul>
+
+<h2>3. Navigation Flow Diagram</h2>
+<pre class="mermaid">
+    graph TD
+        subgraph Customer Flow
+            C_HOME[Home Screen] --> C_SEARCH[Search Results Screen]
+            C_SEARCH --> C_SERVICE_DETAIL[Service Detail Screen]
+            C_SERVICE_DETAIL --> C_PROF_PROFILE[Professional Profile Screen]
+            C_SERVICE_DETAIL --> C_BOOKING_CONFIRM[Booking Confirmation Screen]
+            C_BOOKING_CONFIRM --> C_PAYMENT[Payment Screen]
+            C_PAYMENT --> C_MY_BOOKINGS[My Bookings (Customer)]
+            C_MY_BOOKINGS --> C_REVIEWS[Reviews Screen]
+            C_HOME --> C_MY_BOOKINGS
+        end
+
+        subgraph Professional Flow
+            P_DASH[Professional Dashboard] --> P_MY_SERVICES[My Services Screen]
+            P_MY_SERVICES --> P_CREATE_SERVICE[Create Service Screen]
+            P_MY_SERVICES --> P_EDIT_SERVICE[Edit Service Screen]
+            P_DASH --> P_MY_BOOKINGS[My Bookings (Professional)]
+            P_DASH --> P_EARNINGS[Earnings & Withdrawal Screen]
+            P_DASH --> P_PROF_PROFILE_EDIT[Professional Profile (Edit)]
+        end
+
+        %% Cross-role interactions
+        C_SERVICE_DETAIL -- View Professional's Services --> P_PROF_PROFILE_EDIT
+        P_MY_BOOKINGS -- Service Completed --> C_REVIEWS
+        C_PAYMENT -- Payment Success --> P_MY_BOOKINGS
+</pre>
+
+# Backend Service Operations
+
+This section details the backend operations for each high-level user use case, visualized with Mermaid flowcharts. The diagrams use a color-coding scheme to represent different layers and states:
+
+*   **Frontend Request**: <span style="color:#ADD8E6;">Light Blue</span>
+*   **Authentication & Authorization**: <span style="color:#FFD700;">Gold</span>
+*   **Validation (Zod)**: <span style="color:#90EE90;">Light Green</span>
+*   **Prisma (ORM) Operations**: <span style="color:#DDA0DD;">Plum</span>
+*   **External API Calls**: <span style="color:#87CEEB;">Sky Blue</span>
+*   **Success State**: <span style="color:#C8E6C9;">Mint Green</span>
+*   **Error State**: <span style="color:#FFCDD2;">Light Red</span>
+
+
+*   [Manage Profile](./backend-services/manage-profile.html)
+*   [Search for Services](./backend-services/search-for-services.html)
+*   [View Service/Portfolio](./backend-services/view-service-portfolio.html)
+*   [Book a Service](./backend-services/book-a-service.html)
+*   [Pay for Service](./backend-services/pay-for-service.html)
+*   [Leave a Review](./backend-services/leave-a-review.html)
+*   [Create/Edit Service Listing](./backend-services/create-edit-service-listing.html)
+*   [Upload Photos](./backend-services/upload-photos.html)
+*   [Manage Bookings](./backend-services/manage-bookings.html)
+*   [View Earnings & Request Withdrawal](./backend-services/view-earnings-request-withdrawal.html)
+*   [Manage Notification Preferences](./backend-services/manage-notification-preferences.html)

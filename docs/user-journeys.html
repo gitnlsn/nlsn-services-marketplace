@@ -20,25 +20,25 @@
         <pre class="mermaid">
         graph TD
             subgraph "Customer"
-                C[ ]
+                C[Customer]
             end
 
             subgraph "Professional"
-                P[ ]
+                P[Professional]
             end
 
             subgraph "System"
-                UC1(Manage Profile)
-                UC2(Search for Services)
-                UC3(View Service/Portfolio)
-                UC4(Book a Service)
-                UC5(Pay for Service)
-                UC7(Leave a Review)
-                UC8(Create/Edit Service Listing)
-                UC9(Upload Photos)
-                UC10(Manage Bookings)
-                UC11(View Earnings & Request Withdrawal)
-                UC12(Manage Notification Preferences)
+                UC1[Manage Profile]
+                UC2[Search for Services]
+                UC3[View Service/Portfolio]
+                UC4[Book a Service]
+                UC5[Pay for Service]
+                UC7[Leave a Review]
+                UC8[Create/Edit Service Listing]
+                UC9[Upload Photos]
+                UC10[Manage Bookings]
+                UC11[View Earnings & Request Withdrawal]
+                UC12[Manage Notification Preferences]
             end
 
             C -- can --> UC1
@@ -54,6 +54,33 @@
             P -- can --> UC11
             C -- can --> UC12
             P -- can --> UC12
+
+            style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+            style P fill:#90EE90,stroke:#333,stroke-width:2px
+            style UC1 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC2 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC3 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC4 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC5 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC7 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC8 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC9 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC10 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC11 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC12 fill:#FFD700,stroke:#333,stroke-width:2px
+            linkStyle 0 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 1 stroke:#90EE90,stroke-width:2px;
+            linkStyle 2 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 3 stroke:#FFD700,stroke-width:2px;
+            linkStyle 4 stroke:#FFD700,stroke-width:2px;
+            linkStyle 5 stroke:#FFD700,stroke-width:2px;
+            linkStyle 6 stroke:#FFD700,stroke-width:2px;
+            linkStyle 7 stroke:#90EE90,stroke-width:2px;
+            linkStyle 8 stroke:#FFD700,stroke-width:2px;
+            linkStyle 9 stroke:#90EE90,stroke-width:2px;
+            linkStyle 10 stroke:#90EE90,stroke-width:2px;
+            linkStyle 11 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 12 stroke:#90EE90,stroke-width:2px;
     </pre>
 
         <h2>Example Journey: Service Discovery & Hiring</h2>
@@ -65,7 +92,7 @@ flowchart TD
 
     C --> E{Ready to Hire?}
     E -- Yes --> F[User 1: Initiate Hiring Process]
-    E -- No --> G[User 1: Contact Provider / Save for Later]
+    E -- No --> G[User: Contact Provider / Save for Later]
 
     F --> H[Platform: Process Payment & Booking]
     H --> I[User 2: Receive Notification of New Booking]
@@ -100,7 +127,44 @@ flowchart TD
         N
     end
 
-        A -- "User 1 is a client looking for a service." --> A;
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style B fill:#FFD700,stroke:#333,stroke-width:2px
+    style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style E fill:#FFD700,stroke:#333,stroke-width:2px
+    style F fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style G fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style H fill:#90EE90,stroke:#333,stroke-width:2px
+    style I fill:#90EE90,stroke:#333,stroke-width:2px
+    style J fill:#FFD700,stroke:#333,stroke-width:2px
+    style K fill:#90EE90,stroke:#333,stroke-width:2px
+    style L fill:#90EE90,stroke:#333,stroke-width:2px
+    style M fill:#90EE90,stroke:#333,stroke-width:2px
+    style N fill:#90EE90,stroke:#333,stroke-width:2px
+
+    linkStyle 0 stroke:#333,stroke-width:1px;
+    linkStyle 1 stroke:#333,stroke-width:1px;
+    linkStyle 2 stroke:#333,stroke-width:1px;
+    linkStyle 3 stroke:#333,stroke-width:1px;
+    linkStyle 4 stroke:#333,stroke-width:1px;
+    linkStyle 5 stroke:#333,stroke-width:1px;
+    linkStyle 6 stroke:#333,stroke-width:1px;
+    linkStyle 7 stroke:#333,stroke-width:1px;
+    linkStyle 8 stroke:#333,stroke-width:1px;
+    linkStyle 9 stroke:#333,stroke-width:1px;
+    linkStyle 10 stroke:#333,stroke-width:1px;
+    linkStyle 11 stroke:#333,stroke-width:1px;
+    linkStyle 12 stroke:#333,stroke-width:1px;
+
+    classDef user1 fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    classDef user2 fill:#90EE90,stroke:#333,stroke-width:2px;
+    classDef platform fill:#FFD700,stroke:#333,stroke-width:2px;
+
+    class A,C,D,F,G user1;
+    class I,J,K,L user2;
+    class B,E,H,M,N platform;
+
+    A -- "User 1 is a client looking for a service." --> A;
     I -- "User 2 is the service provider." --> I;
 </pre>
 

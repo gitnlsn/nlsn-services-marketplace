@@ -41,7 +41,15 @@ This project is a Next.js web application that provides a marketplace for servic
 ### Mermaid Diagram Validation
 
 *   Validate Mermaid diagrams in documentation: `npm run validate-mermaid`
-*   When creating Mermaid diagrams, leverage CSS and styling, including colors, to enhance visualization and clarity.
+*   When creating Mermaid diagrams, leverage CSS and styling, including colors, to enhance visualization and clarity. Use the following color conventions for backend service diagrams:
+    *   **Frontend Request**: Light Blue (`#ADD8E6`)
+    *   **Authentication & Authorization**: Gold (`#FFD700`)
+    *   **Validation (Zod)**: Light Green (`#90EE90`)
+    *   **Prisma (ORM) Operations**: Plum (`#DDA0DD`)
+    *   **External API Calls**: Sky Blue (`#87CEEB`)
+    *   **Success State**: Mint Green (`#C8E6C9`)
+    *   **Error State**: Light Red (`#FFCDD2`)
+*   Avoid using parentheses in Mermaid diagrams, as they can lead to errors.
 
 ## Development Conventions
 
@@ -65,7 +73,9 @@ When creating new documentation pages in the `docs` folder, always remember to a
 
 Keep the documentation.md file updated with all the existing information from the html files. This documentation is a single markdown file with mermaid diagrams. If gemini ever messes up with html files, the documentation.md file is the reference to have a rollback.
 
-Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the documentation.md file and the user messages and requests to determine the truth.
+Always keep the whole docs folder consistent. Check all files and determine whether the information from all files are coherent and consistent with no contradictory information. Resonate over the documentation.md file and the user messages and requests to determine the truth
+
+The `docs` folder contains individual HTML files for each backend service, located in `docs/backend-services/`. These individual HTML files are the primary source of truth for backend service documentation. Ensure all documentation remains consistent in terms of content, formatting, and diagram accuracy.
 
 ## Gemini's Role
 

@@ -57,7 +57,7 @@
             Backend-->>Frontend: Displays payment instructions
             "User (as Client)"->>Pagarme: Completes payment
             Pagarme->>Backend: Webhook notification (payment success)
-            Backend->>Backend: Update booking status to "Paid", credit professional's account balance
+            Backend->>Backend: Update booking status to "Paid", credit professionals account balance
             Backend->>Twilio: Send booking confirmation to Client
             Backend->>Twilio: Send new booking alert to Professional
             Backend->>Frontend: Notify client of success
@@ -65,6 +65,10 @@
             "User (as Client)"->>Backend: (Optional) Notifies service complete
             Backend->>Backend: Funds held for 15 days
             Backend->>"User (as Professional)": Funds available for withdrawal after 15 days
+
+            
+
+            
     </pre>
 
     <h3>Withdrawal Flow</h3>
@@ -79,11 +83,13 @@
             "User (as Professional)"->>Frontend: Requests withdrawal
             Frontend->>Backend: POST /api/withdrawals (amount)
             Backend->>Backend: Verify user balance and process request
-            Backend->>Pagarme: Initiate Transfer to user's bank account
+            Backend->>Pagarme: Initiate Transfer to user\'s bank account
             Pagarme-->>Backend: Confirmation of transfer
-            Backend->>Backend: Update user's balance
+            Backend->>Backend: Update user\'s balance
             Backend->>Twilio: Send withdrawal confirmation to Professional
             Backend-->>Frontend: Notify user of successful withdrawal
+
+            
     </pre>
 </body>
 </html>
