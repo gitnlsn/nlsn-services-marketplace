@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recurring Booking - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Recurring Booking Service</h1>
+        
+        <p>The Recurring Booking service enables users to schedule regular, repeating appointments for ongoing services like weekly cleaning, monthly maintenance, or daily tutoring sessions.</p>
+
+        <h2>Service Overview</h2>
+        <ul>
+            <li><strong>Flexible Frequencies:</strong> Daily, weekly, bi-weekly, and monthly recurring patterns</li>
+            <li><strong>Smart Scheduling:</strong> Automatic generation of individual bookings based on patterns</li>
+            <li><strong>Pause/Resume:</strong> Temporary suspension without losing the recurring pattern</li>
+            <li><strong>Subscription Management:</strong> Long-term booking relationships with providers</li>
+        </ul>
+
+        <h2>Recurring Booking Flow</h2>
+        <div class="mermaid">
+        graph TD
+            A[Client Creates Recurring Booking] --> B[Define Pattern & Schedule]
+            B --> C[Provider Accepts Recurring Terms]
+            C --> D[Generate Individual Bookings]
+            D --> E[Process Upcoming Bookings]
+            E --> F{Continue Pattern?}
+            F -->|Yes| G[Generate Next Booking]
+            F -->|No| H[Series Complete]
+            G --> E
+            
+            I[Client Requests Pause] --> J[Mark as Paused]
+            J --> K[Stop Generating New Bookings]
+            L[Client Resumes] --> M[Resume from Date]
+            M --> E
+            
+            style A fill:#ADD8E6
+            style C fill:#FFD700
+            style D fill:#90EE90
+            style E fill:#DDA0DD
+            style H fill:#C8E6C9
+        </div>
+
+        <h2>API Endpoints</h2>
+
+        <h3>Create Recurring Booking</h3>
+        <pre><code>POST /api/trpc/recurringBooking.create
+{
+  "serviceId": "service_id",
+  "frequency": "weekly",
+  "interval": 1,
+  "startDate": "2024-03-15",
+  "endDate": "2024-12-15",
+  "daysOfWeek": [1, 3, 5],
+  "timeSlot": "09:00",
+  "duration": 60,
+  "notes": "Regular cleaning service"
+}</code></pre>
+
+        <h3>Pause Recurring Booking</h3>
+        <pre><code>POST /api/trpc/recurringBooking.pause
+{
+  "id": "recurring_booking_id"
+}</code></pre>
+
+        <h3>Resume Recurring Booking</h3>
+        <pre><code>POST /api/trpc/recurringBooking.resume
+{
+  "id": "recurring_booking_id",
+  "fromDate": "2024-04-01"
+}</code></pre>
+
+        <h2>Frequency Patterns</h2>
+        <div class="mermaid">
+        graph LR
+            A[Daily] --> A1[Every N Days]
+            B[Weekly] --> B1[Specific Days of Week]
+            C[Bi-weekly] --> C1[Every 2 Weeks]
+            D[Monthly] --> D1[Same Day Each Month]
+            
+            A1 --> E[Generate Individual Bookings]
+            B1 --> E
+            C1 --> E
+            D1 --> E
+        </div>
+
+        <h2>Recurring Booking States</h2>
+        <div class="mermaid">
+        stateDiagram-v2
+            [*] --> Pending: Created
+            Pending --> Active: Provider Accepts
+            Pending --> Cancelled: Provider Declines
+            Active --> Paused: Client Pauses
+            Paused --> Active: Client Resumes
+            Active --> Completed: End Date Reached
+            Active --> Cancelled: Manually Cancelled
+            Cancelled --> [*]
+            Completed --> [*]
+            
+            note right of Active : Generating bookings
+            note right of Paused : Temporarily stopped
+            note right of Completed : Series finished
+        </div>
+
+        <h2>Booking Generation Logic</h2>
+        <h3>Generation Rules</h3>
+        <ul>
+            <li><strong>Advance Generation:</strong> Bookings created 2 weeks in advance</li>
+            <li><strong>Provider Availability:</strong> Check provider calendar before generation</li>
+            <li><strong>Holiday Handling:</strong> Skip or reschedule for holidays/provider time-off</li>
+            <li><strong>Automatic Confirmation:</strong> Generated bookings auto-confirmed for trusted relationships</li>
+        </ul>
+
+        <h3>Frequency Examples</h3>
+        <pre><code>// Weekly - Every Monday and Wednesday
+{
+  "frequency": "weekly",
+  "interval": 1,
+  "daysOfWeek": [1, 3]
+}
+
+// Bi-weekly - Every other Friday
+{
+  "frequency": "biweekly", 
+  "interval": 1,
+  "daysOfWeek": [5]
+}
+
+// Monthly - 15th of each month
+{
+  "frequency": "monthly",
+  "interval": 1,
+  "dayOfMonth": 15
+}</code></pre>
+
+        <h2>Payment Integration</h2>
+        <ul>
+            <li><strong>Payment Schedule:</strong> Charge per occurrence or monthly billing</li>
+            <li><strong>Auto-billing:</strong> Automatic payment processing for confirmed bookings</li>
+            <li><strong>Payment Failures:</strong> Pause series on failed payments with retry logic</li>
+            <li><strong>Prorated Billing:</strong> Adjusted billing for partial months</li>
+        </ul>
+
+        <h2>Provider Management</h2>
+        <ul>
+            <li><strong>Availability Integration:</strong> Respect provider availability settings</li>
+            <li><strong>Bulk Actions:</strong> Accept/decline entire recurring series</li>
+            <li><strong>Schedule Conflicts:</strong> Automatic conflict detection and resolution</li>
+            <li><strong>Provider Notifications:</strong> Alerts for new recurring booking requests</li>
+        </ul>
+
+        <h2>Error Handling</h2>
+        <ul>
+            <li><strong>Invalid Patterns:</strong> Validate frequency and date combinations</li>
+            <li><strong>Provider Unavailability:</strong> Handle provider schedule conflicts</li>
+            <li><strong>Payment Failures:</strong> Graceful handling of billing issues</li>
+            <li><strong>End Date Validation:</strong> Ensure logical start/end date relationships</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Backend Services</a>
+        </nav>
+    </div>
+</body>
+</html>

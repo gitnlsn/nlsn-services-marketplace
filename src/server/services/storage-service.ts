@@ -97,15 +97,15 @@ export function generateSignedUploadUrl(folder = "marketplace"): {
 
 	const signature = cloudinary.utils.api_sign_request(
 		params,
-		env.CLOUDINARY_API_SECRET,
+		env.CLOUDINARY_API_SECRET || "",
 	);
 
 	return {
 		url: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/upload`,
 		signature,
 		timestamp,
-		apiKey: env.CLOUDINARY_API_KEY,
-		cloudName: env.CLOUDINARY_CLOUD_NAME,
+		apiKey: env.CLOUDINARY_API_KEY || "",
+		cloudName: env.CLOUDINARY_CLOUD_NAME || "",
 	};
 }
 

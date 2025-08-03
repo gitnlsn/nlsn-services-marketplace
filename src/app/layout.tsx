@@ -1,32 +1,38 @@
 import "~/styles/globals.css";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 
+import { AppLayout } from "~/components/navigation/app-layout";
 import { Providers } from "~/components/providers";
 import { PWAProvider } from "~/components/pwa/pwa-provider";
+import { Toaster } from "~/components/ui/toaster";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-	title: "NLSN Services Marketplace",
+	title: "Savoir Link",
 	description:
-		"A modern peer-to-peer services marketplace where professionals showcase their skills and connect with clients",
+		"Savoir Link - A modern peer-to-peer services marketplace where professionals showcase their skills and connect with clients",
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 	manifest: "/manifest.json",
-	themeColor: "#3b82f6",
-	viewport: "width=device-width, initial-scale=1, shrink-to-fit=no",
 	appleWebApp: {
 		capable: true,
 		statusBarStyle: "default",
-		title: "Services Marketplace",
+		title: "Savoir Link",
 	},
 	openGraph: {
-		title: "NLSN Services Marketplace",
+		title: "Savoir Link",
 		description:
-			"A modern peer-to-peer services marketplace where professionals showcase their skills and connect with clients",
+			"Savoir Link - A modern peer-to-peer services marketplace where professionals showcase their skills and connect with clients",
 		type: "website",
-		siteName: "Services Marketplace",
+		siteName: "Savoir Link",
 	},
+};
+
+export const viewport: Viewport = {
+	width: "device-width",
+	initialScale: 1,
+	themeColor: "#3b82f6",
 };
 
 const geist = Geist({
@@ -42,7 +48,10 @@ export default function RootLayout({
 			<body>
 				<TRPCReactProvider>
 					<Providers>
-						<PWAProvider>{children}</PWAProvider>
+						<PWAProvider>
+							<AppLayout>{children}</AppLayout>
+							<Toaster />
+						</PWAProvider>
 					</Providers>
 				</TRPCReactProvider>
 			</body>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Features - Savoir Link</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Real-time Features</h1>
+        
+        <p>Savoir Link provides real-time communication and updates through WebSocket connections, enabling instant notifications, live booking updates, and seamless user experiences.</p>
+
+        <h2>WebSocket Architecture</h2>
+        <div class="mermaid">
+        graph TD
+            A[Client Applications] --> B[WebSocket Connection]
+            B --> C[Authentication Layer]
+            C --> D[WebSocket Server]
+            D --> E[Message Router]
+            E --> F[Notification Service]
+            E --> G[Booking Service]
+            E --> H[Payment Service]
+            
+            I[Database Events] --> J[Event Triggers]
+            J --> E
+            
+            K[External APIs] --> L[Webhook Handlers]
+            L --> E
+            
+            style B fill:#ADD8E6
+            style C fill:#FFD700
+            style D fill:#90EE90
+            style E fill:#DDA0DD
+            style F fill:#87CEEB
+        </div>
+
+        <h2>Real-time Features</h2>
+
+        <h3>1. Live Notifications</h3>
+        <ul>
+            <li><strong>Booking Updates:</strong> Instant alerts for booking confirmations, cancellations, and changes</li>
+            <li><strong>Payment Status:</strong> Real-time payment processing updates</li>
+            <li><strong>Message Notifications:</strong> New message alerts for provider-client communication</li>
+            <li><strong>System Alerts:</strong> Service updates, maintenance notifications, and platform news</li>
+        </ul>
+
+        <h3>2. Live Booking Management</h3>
+        <div class="mermaid">
+        sequenceDiagram
+            participant C as Client
+            participant W as WebSocket
+            participant B as Booking Service
+            participant P as Provider
+            
+            C->>B: Create Booking Request
+            B->>W: Broadcast booking created
+            W->>P: Notify new booking request
+            P->>B: Accept/Decline booking
+            B->>W: Broadcast booking status
+            W->>C: Notify booking confirmed
+            W->>C: Update booking status in UI
+        </div>
+
+        <h3>3. Real-time Payment Updates</h3>
+        <ul>
+            <li><strong>Payment Processing:</strong> Live updates during payment transactions</li>
+            <li><strong>Escrow Status:</strong> Real-time escrow fund management</li>
+            <li><strong>Withdrawal Updates:</strong> Instant notifications for withdrawal processing</li>
+            <li><strong>Failed Payment Alerts:</strong> Immediate notification of payment failures</li>
+        </ul>
+
+        <h2>WebSocket Connection Management</h2>
+
+        <h3>Client-side Integration</h3>
+        <pre><code>// useWebSocket Hook
+import { useWebSocket } from '@/hooks/use-websocket';
+
+const MyComponent = () => {
+  const { 
+    isConnected, 
+    sendMessage, 
+    lastMessage,
+    connectionState 
+  } = useWebSocket({
+    url: '/api/ws',
+    onMessage: (message) => {
+      handleRealtimeUpdate(message);
+    }
+  });
+
+  return (
+    &lt;div&gt;
+      {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+      {lastMessage && (
+        &lt;NotificationToast message={lastMessage} /&gt;
+      )}
+    &lt;/div&gt;
+  );
+};</code></pre>
+
+        <h3>Server-side WebSocket Server</h3>
+        <pre><code>// WebSocket Server Features
+class RealtimeWebSocketServer {
+  // Multi-device support
+  sendToUser(userId: string, message: WebSocketMessage)
+  
+  // Broadcast capabilities
+  broadcast(message: WebSocketMessage)
+  sendToUsers(userIds: string[], message: WebSocketMessage)
+  
+  // Specialized notifications
+  sendBookingUpdate(userId: string, bookingData: BookingUpdate)
+  sendPaymentUpdate(userId: string, paymentData: PaymentUpdate)
+  
+  // Connection health
+  checkHeartbeats()
+  getConnectedUsersCount()
+}</code></pre>
+
+        <h2>Message Types</h2>
+        <div class="mermaid">
+        graph LR
+            A[WebSocket Messages] --> B[System Messages]
+            A --> C[Business Messages]
+            A --> D[Health Messages]
+            
+            B --> E[Connection Confirmed]
+            B --> F[Error Notifications]
+            B --> G[Maintenance Alerts]
+            
+            C --> H[Booking Updates]
+            C --> I[Payment Updates]
+            C --> J[Notifications]
+            C --> K[Message Alerts]
+            
+            D --> L[Ping/Pong]
+            D --> M[Heartbeat]
+            D --> N[Connection Status]
+        </div>
+
+        <h3>Message Structure</h3>
+        <pre><code>interface WebSocketMessage {
+  type: 'ping' | 'pong' | 'notification' | 'booking_update' | 'payment_update';
+  data?: {
+    message?: string;
+    timestamp?: string;
+    // Type-specific data
+    bookingId?: string;
+    paymentId?: string;
+    userId?: string;
+  };
+}</code></pre>
+
+        <h2>Authentication & Security</h2>
+        <ul>
+            <li><strong>Session-based Auth:</strong> WebSocket connections authenticated via session tokens</li>
+            <li><strong>Connection Validation:</strong> Verify user identity before establishing connection</li>
+            <li><strong>Message Authorization:</strong> Ensure users only receive messages they're authorized for</li>
+            <li><strong>Rate Limiting:</strong> Prevent message spam and abuse</li>
+        </ul>
+
+        <h3>Security Flow</h3>
+        <div class="mermaid">
+        sequenceDiagram
+            participant C as Client
+            participant A as Auth Service
+            participant W as WebSocket Server
+            
+            C->>A: Request WebSocket token
+            A->>A: Validate session
+            A->>C: Return signed token
+            C->>W: Connect with token
+            W->>A: Verify token
+            A->>W: Token valid
+            W->>C: Connection established
+        </div>
+
+        <h2>Performance Optimizations</h2>
+
+        <h3>Message Compression</h3>
+        <ul>
+            <li><strong>Per-message Deflate:</strong> Automatic message compression for large payloads</li>
+            <li><strong>Configurable Compression:</strong> Tuned compression settings for optimal performance</li>
+            <li><strong>Threshold-based:</strong> Only compress messages above certain size threshold</li>
+        </ul>
+
+        <h3>Connection Management</h3>
+        <ul>
+            <li><strong>Heartbeat Monitoring:</strong> 30-second ping/pong cycles to detect dead connections</li>
+            <li><strong>Automatic Cleanup:</strong> Remove dead connections to free resources</li>
+            <li><strong>Multi-device Support:</strong> Users can connect from multiple devices simultaneously</li>
+            <li><strong>Graceful Shutdown:</strong> Proper connection closure during server maintenance</li>
+        </ul>
+
+        <h2>Real-time UI Components</h2>
+
+        <h3>Live Notification Toast</h3>
+        <pre><code>// Real-time notification component
+&lt;RealtimeNotifications&gt;
+  {notifications.map(notification =&gt; (
+    &lt;Toast 
+      key={notification.id}
+      type={notification.type}
+      message={notification.message}
+      timestamp={notification.timestamp}
+      onDismiss={() =&gt; dismissNotification(notification.id)}
+    /&gt;
+  ))}
+&lt;/RealtimeNotifications&gt;</code></pre>
+
+        <h3>Live Booking Status</h3>
+        <pre><code>// Real-time booking status updates
+&lt;BookingCard booking={booking}&gt;
+  &lt;StatusBadge 
+    status={booking.status}
+    isLive={isConnected}
+    lastUpdate={lastStatusUpdate}
+  /&gt;
+  
+  {booking.status === 'pending' && (
+    &lt;LiveStatusIndicator 
+      message="Waiting for provider response..."
+      animated={true}
+    /&gt;
+  )}
+&lt;/BookingCard&gt;</code></pre>
+
+        <h2>Integration Points</h2>
+
+        <h3>Booking Workflow Integration</h3>
+        <ul>
+            <li><strong>Create Booking:</strong> Instant notification to provider</li>
+            <li><strong>Provider Response:</strong> Real-time update to client</li>
+            <li><strong>Payment Processing:</strong> Live payment status updates</li>
+            <li><strong>Service Completion:</strong> Automatic completion notifications</li>
+        </ul>
+
+        <h3>Notification Service Integration</h3>
+        <ul>
+            <li><strong>Multi-channel Sync:</strong> WebSocket notifications complement SMS/email</li>
+            <li><strong>Delivery Confirmation:</strong> Track which notifications were delivered via WebSocket</li>
+            <li><strong>Fallback Strategy:</strong> Use traditional channels if WebSocket unavailable</li>
+        </ul>
+
+        <h2>Development Tools</h2>
+
+        <h3>WebSocket Testing</h3>
+        <pre><code>// Development WebSocket connection testing
+if (process.env.NODE_ENV === 'development') {
+  // Test WebSocket connection
+  const ws = new WebSocket('ws://localhost:3000/api/ws?token=test_token');
+  
+  ws.onopen = () => console.log('WebSocket connected');
+  ws.onmessage = (event) => console.log('Message:', JSON.parse(event.data));
+  ws.onerror = (error) => console.error('WebSocket error:', error);
+}</code></pre>
+
+        <h3>Monitoring & Debugging</h3>
+        <ul>
+            <li><strong>Connection Metrics:</strong> Track active connections and message throughput</li>
+            <li><strong>Error Logging:</strong> Comprehensive logging for connection and message errors</li>
+            <li><strong>Performance Monitoring:</strong> Track message delivery times and connection health</li>
+        </ul>
+
+        <h2>Scalability Considerations</h2>
+        <ul>
+            <li><strong>Horizontal Scaling:</strong> Multiple WebSocket server instances with load balancing</li>
+            <li><strong>Message Broadcasting:</strong> Redis pub/sub for cross-server message distribution</li>
+            <li><strong>Connection Limits:</strong> Per-server connection limits with overflow handling</li>
+            <li><strong>Resource Management:</strong> Memory and CPU monitoring for optimal performance</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Documentation Home</a>
+        </nav>
+    </div>
+</body>
+</html>

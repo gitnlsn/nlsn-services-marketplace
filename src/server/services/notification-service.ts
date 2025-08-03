@@ -308,7 +308,7 @@ export class NotificationService {
 		type: NotificationType,
 		recipient: NotificationRecipient,
 		data: NotificationData = {},
-		channels: ("sms" | "whatsapp" | "email")[] = ["sms", "email"],
+		channels: ("sms" | "whatsapp" | "email")[] = ["email"],
 	): Promise<{
 		success: boolean;
 		results: {
@@ -615,3 +615,43 @@ export const sendNotificationSchema = z.object({
 });
 
 export type SendNotificationInput = z.infer<typeof sendNotificationSchema>;
+
+// Additional schemas for notification router
+export const listNotificationsSchema = z.object({
+	limit: z.number().min(1).max(100).default(20),
+	cursor: z.string().optional(),
+	status: z.enum(["read", "unread", "all"]).default("all"),
+});
+
+export const markAsReadSchema = z.object({
+	notificationId: z.string().cuid(),
+});
+
+export const bulkUpdateSchema = z.object({
+	notificationIds: z.array(z.string().cuid()),
+	action: z.enum(["read", "unread", "delete"]),
+});
+
+export const createNotificationSchema = z.object({
+	userId: z.string().cuid(),
+	type: z.string(),
+	title: z.string(),
+	message: z.string(),
+	data: z.record(z.unknown()).optional(),
+	status: z.enum(["read", "unread"]).default("unread"),
+});
+
+export const deleteNotificationSchema = z.object({
+	notificationId: z.string().cuid(),
+});
+
+export const getStatsSchema = z.object({
+	userId: z.string().cuid().optional(),
+});
+
+export const updatePreferencesSchema = z.object({
+	email: z.boolean().optional(),
+	sms: z.boolean().optional(),
+	whatsapp: z.boolean().optional(),
+	push: z.boolean().optional(),
+});

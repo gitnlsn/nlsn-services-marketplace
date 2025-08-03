@@ -5,6 +5,7 @@ import {
 	publicProcedure,
 } from "~/server/api/trpc";
 import {
+	type NotificationType,
 	NotificationTypes,
 	type SendNotificationInput,
 	notificationService,
@@ -19,10 +20,10 @@ export const notificationsRouter = createTRPCRouter({
 		.input(sendNotificationSchema)
 		.mutation(async ({ input }) => {
 			const result = await notificationService.sendNotification(
-				input.type,
+				input.type as NotificationType,
 				input.recipient,
 				input.data || {},
-				input.channels || ["sms", "email"],
+				input.channels || ["email"],
 			);
 			return result;
 		}),
@@ -59,7 +60,7 @@ export const notificationsRouter = createTRPCRouter({
 					price: input.price,
 					address: input.address || "Local a combinar",
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -94,7 +95,7 @@ export const notificationsRouter = createTRPCRouter({
 					date: input.date,
 					price: input.price,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -123,7 +124,7 @@ export const notificationsRouter = createTRPCRouter({
 					customerName: input.customerName,
 					serviceName: input.serviceName,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -153,7 +154,7 @@ export const notificationsRouter = createTRPCRouter({
 					serviceName: input.serviceName,
 					date: input.date,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -183,7 +184,7 @@ export const notificationsRouter = createTRPCRouter({
 					serviceName: input.serviceName,
 					amount: input.amount,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -213,7 +214,7 @@ export const notificationsRouter = createTRPCRouter({
 					serviceName: input.serviceName,
 					amount: input.amount,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -241,7 +242,7 @@ export const notificationsRouter = createTRPCRouter({
 				{
 					serviceName: input.serviceName,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -300,7 +301,7 @@ export const notificationsRouter = createTRPCRouter({
 					rating: input.rating,
 					comment: input.comment,
 				},
-				["email", "sms", "whatsapp"],
+				["email"],
 			);
 			return result;
 		}),
@@ -340,7 +341,7 @@ export const notificationsRouter = createTRPCRouter({
 			};
 
 			const result = await notificationService.sendNotification(
-				input.type,
+				input.type as NotificationType,
 				{
 					email: input.email || ctx.session.user.email || undefined,
 					phone: input.phone,

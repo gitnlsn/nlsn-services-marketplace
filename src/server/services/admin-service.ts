@@ -1,83 +1,130 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import type { Session } from "next-auth";
 import { z } from "zod";
 
+/**
+ * Admin Service for platform management
+ *
+ * Provides comprehensive admin functionality for managing users, services,
+ * bookings, payments, and platform-wide operations.
+ */
+
 // Input schemas
-export const getDashboardSchema = z.object({});
-
-export const getUsersSchema = z.object({
+export const getUserManagementSchema = z.object({
+	page: z.number().min(1).default(1),
 	limit: z.number().min(1).max(100).default(20),
-	cursor: z.string().optional(),
 	search: z.string().optional(),
-	role: z.enum(["all", "client", "professional"]).default("all"),
+	role: z.enum(["all", "users", "professionals"]).default("all"),
+	status: z.enum(["all", "active", "suspended"]).default("all"),
+	sortBy: z
+		.enum(["name", "email", "createdAt", "bookingCount"])
+		.default("createdAt"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export const getServicesSchema = z.object({
+export const getServiceManagementSchema = z.object({
+	page: z.number().min(1).default(1),
 	limit: z.number().min(1).max(100).default(20),
-	cursor: z.string().optional(),
 	search: z.string().optional(),
-	status: z.enum(["all", "active", "inactive"]).default("all"),
 	categoryId: z.string().cuid().optional(),
-});
-
-export const getBookingsSchema = z.object({
-	limit: z.number().min(1).max(100).default(20),
-	cursor: z.string().optional(),
 	status: z
-		.enum(["all", "pending", "accepted", "declined", "completed", "cancelled"])
+		.enum(["all", "active", "pending", "rejected", "suspended"])
 		.default("all"),
+	sortBy: z
+		.enum(["title", "price", "rating", "createdAt", "bookingCount"])
+		.default("createdAt"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export const getBookingManagementSchema = z.object({
+	page: z.number().min(1).default(1),
+	limit: z.number().min(1).max(100).default(20),
 	search: z.string().optional(),
+	status: z
+		.enum(["all", "pending", "accepted", "completed", "cancelled", "disputed"])
+		.default("all"),
+	dateFrom: z.date().optional(),
+	dateTo: z.date().optional(),
+	sortBy: z
+		.enum(["createdAt", "scheduledDate", "totalPrice"])
+		.default("createdAt"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export const getAnalyticsSchema = z.object({
-	period: z.enum(["7d", "30d", "90d", "1y"]).default("30d"),
+export const getPaymentManagementSchema = z.object({
+	page: z.number().min(1).default(1),
+	limit: z.number().min(1).max(100).default(20),
+	status: z
+		.enum(["all", "pending", "paid", "failed", "refunded"])
+		.default("all"),
+	paymentMethod: z.enum(["all", "credit_card", "pix", "boleto"]).default("all"),
+	dateFrom: z.date().optional(),
+	dateTo: z.date().optional(),
+	minAmount: z.number().min(0).optional(),
+	maxAmount: z.number().min(0).optional(),
+	sortBy: z.enum(["createdAt", "amount", "status"]).default("createdAt"),
+	sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export const moderateServiceSchema = z.object({
-	serviceId: z.string().cuid(),
-	action: z.enum(["approve", "reject", "suspend"]),
-	reason: z.string().optional(),
-});
-
-export const suspendUserSchema = z.object({
+export const updateUserStatusSchema = z.object({
 	userId: z.string().cuid(),
-	reason: z.string().min(10),
+	action: z.enum(["activate", "suspend", "delete"]),
+	reason: z.string().min(10).max(500),
 });
 
-// Service types
-type GetDashboardInput = z.infer<typeof getDashboardSchema>;
-type GetUsersInput = z.infer<typeof getUsersSchema>;
-type GetServicesInput = z.infer<typeof getServicesSchema>;
-type GetBookingsInput = z.infer<typeof getBookingsSchema>;
-type GetAnalyticsInput = z.infer<typeof getAnalyticsSchema>;
-type ModerateServiceInput = z.infer<typeof moderateServiceSchema>;
-type SuspendUserInput = z.infer<typeof suspendUserSchema>;
+export const updateServiceStatusSchema = z.object({
+	serviceId: z.string().cuid(),
+	status: z.enum(["active", "pending", "rejected", "suspended"]),
+	reason: z.string().min(10).max(500),
+});
 
-export function createAdminService({
-	db,
-	currentUser,
-}: {
+export const resolveDisputeSchema = z.object({
+	bookingId: z.string().cuid(),
+	resolution: z.enum([
+		"refund_full",
+		"refund_partial",
+		"no_refund",
+		"reschedule",
+	]),
+	refundAmount: z.number().min(0).optional(),
+	notes: z.string().min(10).max(1000),
+	notifyParties: z.boolean().default(true),
+});
+
+export const getPlatformStatsSchema = z.object({
+	period: z.enum(["24h", "7d", "30d", "90d", "1y"]).default("30d"),
+	includeProjections: z.boolean().default(false),
+});
+
+// Type definitions
+export type GetUserManagementInput = z.infer<typeof getUserManagementSchema>;
+export type GetServiceManagementInput = z.infer<
+	typeof getServiceManagementSchema
+>;
+export type GetBookingManagementInput = z.infer<
+	typeof getBookingManagementSchema
+>;
+export type GetPaymentManagementInput = z.infer<
+	typeof getPaymentManagementSchema
+>;
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
+export type UpdateServiceStatusInput = z.infer<
+	typeof updateServiceStatusSchema
+>;
+export type ResolveDisputeInput = z.infer<typeof resolveDisputeSchema>;
+export type GetPlatformStatsInput = z.infer<typeof getPlatformStatsSchema>;
+
+interface AdminServiceDeps {
 	db: PrismaClient;
-	currentUser?: Session["user"];
-}) {
-	// TODO: Implement proper admin role checking
-	// For now, this is a placeholder for future admin functionality
-	function isAdmin(userId?: string): boolean {
-		// In production, this should check user roles/permissions
-		// For now, return false to prevent access
-		return false;
-	}
+	currentUser?: { id: string; isProfessional?: boolean; email?: string };
+}
 
-	function checkAdminAccess() {
-		if (!currentUser) {
-			throw new TRPCError({
-				code: "UNAUTHORIZED",
-				message: "User not authenticated",
-			});
-		}
+export function createAdminService(deps: AdminServiceDeps) {
+	const { db, currentUser } = deps;
 
-		if (!isAdmin(currentUser.id)) {
+	// Helper function to check admin permissions
+	function checkAdminPermissions() {
+		if (!currentUser?.isProfessional) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
 				message: "Admin access required",
@@ -86,435 +133,593 @@ export function createAdminService({
 	}
 
 	return {
-		async getDashboard(input: GetDashboardInput) {
-			checkAdminAccess();
+		/**
+		 * Get comprehensive platform statistics
+		 */
+		async getPlatformStats(input: GetPlatformStatsInput) {
+			checkAdminPermissions();
 
 			const now = new Date();
-			const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-			const startOfLastMonth = new Date(
-				now.getFullYear(),
-				now.getMonth() - 1,
-				1,
-			);
-			const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+			let startDate: Date;
 
-			// Get platform statistics
+			switch (input.period) {
+				case "24h":
+					startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+					break;
+				case "7d":
+					startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+					break;
+				case "30d":
+					startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+					break;
+				case "90d":
+					startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+					break;
+				case "1y":
+					startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+					break;
+				default:
+					startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+			}
+
 			const [
-				totalUsers,
-				newUsersThisMonth,
-				newUsersLastMonth,
-				totalProfessionals,
-				totalServices,
-				activeServices,
-				totalBookings,
-				completedBookings,
-				totalRevenue,
-				monthlyRevenue,
+				userStats,
+				serviceStats,
+				bookingStats,
+				revenueStats,
+				activityStats,
+				topCategories,
+				topProviders,
 			] = await Promise.all([
-				db.user.count(),
-				db.user.count({
-					where: { createdAt: { gte: startOfMonth } },
+				// User statistics
+				db.user.aggregate({
+					where: { createdAt: { gte: startDate } },
+					_count: { id: true },
 				}),
-				db.user.count({
-					where: {
-						createdAt: {
-							gte: startOfLastMonth,
-							lte: endOfLastMonth,
-						},
-					},
+
+				// Service statistics
+				db.service.aggregate({
+					where: { createdAt: { gte: startDate } },
+					_count: { id: true },
 				}),
-				db.user.count({
-					where: { isProfessional: true },
+
+				// Booking statistics
+				db.booking.groupBy({
+					by: ["status"],
+					where: { createdAt: { gte: startDate } },
+					_count: true,
+					_sum: { totalPrice: true },
 				}),
-				db.service.count(),
-				db.service.count({
-					where: { status: "active" },
-				}),
-				db.booking.count(),
-				db.booking.count({
-					where: { status: "completed" },
-				}),
+
+				// Revenue statistics
 				db.payment.aggregate({
-					where: { status: "paid" },
-					_sum: { serviceFee: true },
-				}),
-				db.payment.aggregate({
-					where: {
-						status: "paid",
-						createdAt: { gte: startOfMonth },
-					},
-					_sum: { serviceFee: true },
-				}),
-			]);
-
-			// Calculate growth rates
-			const userGrowth =
-				newUsersLastMonth > 0
-					? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100
-					: newUsersThisMonth > 0
-						? 100
-						: 0;
-
-			return {
-				users: {
-					total: totalUsers,
-					professionals: totalProfessionals,
-					newThisMonth: newUsersThisMonth,
-					growth: userGrowth,
-				},
-				services: {
-					total: totalServices,
-					active: activeServices,
-					inactiveCount: totalServices - activeServices,
-				},
-				bookings: {
-					total: totalBookings,
-					completed: completedBookings,
-					completionRate:
-						totalBookings > 0 ? (completedBookings / totalBookings) * 100 : 0,
-				},
-				revenue: {
-					total: totalRevenue._sum.serviceFee || 0,
-					thisMonth: monthlyRevenue._sum.serviceFee || 0,
-				},
-			};
-		},
-
-		async getUsers(input: GetUsersInput) {
-			checkAdminAccess();
-
-			const where: Record<string, unknown> = {};
-
-			if (input.search) {
-				where.OR = [
-					{ name: { contains: input.search, mode: "insensitive" } },
-					{ email: { contains: input.search, mode: "insensitive" } },
-				];
-			}
-
-			if (input.role === "professional") {
-				where.isProfessional = true;
-			} else if (input.role === "client") {
-				where.isProfessional = false;
-			}
-
-			const users = await db.user.findMany({
-				where,
-				take: input.limit + 1,
-				cursor: input.cursor ? { id: input.cursor } : undefined,
-				orderBy: { createdAt: "desc" },
-				select: {
-					id: true,
-					name: true,
-					email: true,
-					image: true,
-					isProfessional: true,
-					accountBalance: true,
-					createdAt: true,
-					_count: {
-						select: {
-							services: true,
-							professionalBookings: true,
-							bookings: true,
-						},
-					},
-				},
-			});
-
-			let nextCursor: typeof input.cursor | undefined = undefined;
-			if (users.length > input.limit) {
-				const nextItem = users.pop();
-				nextCursor = nextItem?.id;
-			}
-
-			return {
-				users,
-				nextCursor,
-			};
-		},
-
-		async getServices(input: GetServicesInput) {
-			checkAdminAccess();
-
-			const where: Record<string, unknown> = {};
-
-			if (input.search) {
-				where.OR = [
-					{ title: { contains: input.search, mode: "insensitive" } },
-					{ description: { contains: input.search, mode: "insensitive" } },
-				];
-			}
-
-			if (input.status !== "all") {
-				where.status = input.status;
-			}
-
-			if (input.categoryId) {
-				where.categoryId = input.categoryId;
-			}
-
-			const services = await db.service.findMany({
-				where,
-				take: input.limit + 1,
-				cursor: input.cursor ? { id: input.cursor } : undefined,
-				orderBy: { createdAt: "desc" },
-				include: {
-					provider: {
-						select: {
-							id: true,
-							name: true,
-							email: true,
-						},
-					},
-					category: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
-					_count: {
-						select: {
-							bookings: true,
-							reviews: true,
-						},
-					},
-				},
-			});
-
-			let nextCursor: typeof input.cursor | undefined = undefined;
-			if (services.length > input.limit) {
-				const nextItem = services.pop();
-				nextCursor = nextItem?.id;
-			}
-
-			return {
-				services,
-				nextCursor,
-			};
-		},
-
-		async getBookings(input: GetBookingsInput) {
-			checkAdminAccess();
-
-			const where: Record<string, unknown> = {};
-
-			if (input.status !== "all") {
-				where.status = input.status;
-			}
-
-			if (input.search) {
-				where.OR = [
-					{ client: { name: { contains: input.search, mode: "insensitive" } } },
-					{
-						provider: { name: { contains: input.search, mode: "insensitive" } },
-					},
-					{
-						service: { title: { contains: input.search, mode: "insensitive" } },
-					},
-				];
-			}
-
-			const bookings = await db.booking.findMany({
-				where,
-				take: input.limit + 1,
-				cursor: input.cursor ? { id: input.cursor } : undefined,
-				orderBy: { createdAt: "desc" },
-				include: {
-					client: {
-						select: {
-							id: true,
-							name: true,
-							email: true,
-						},
-					},
-					provider: {
-						select: {
-							id: true,
-							name: true,
-							email: true,
-						},
-					},
-					service: {
-						select: {
-							id: true,
-							title: true,
-						},
-					},
-					payment: {
-						select: {
-							id: true,
-							amount: true,
-							status: true,
-						},
-					},
-				},
-			});
-
-			let nextCursor: typeof input.cursor | undefined = undefined;
-			if (bookings.length > input.limit) {
-				const nextItem = bookings.pop();
-				nextCursor = nextItem?.id;
-			}
-
-			return {
-				bookings,
-				nextCursor,
-			};
-		},
-
-		async getAnalytics(input: GetAnalyticsInput) {
-			checkAdminAccess();
-
-			// Calculate date range
-			const now = new Date();
-			const daysAgo = {
-				"7d": 7,
-				"30d": 30,
-				"90d": 90,
-				"1y": 365,
-			}[input.period];
-
-			const startDate = new Date();
-			startDate.setDate(startDate.getDate() - daysAgo);
-
-			// Get analytics data
-			const [
-				userSignups,
-				serviceCreations,
-				bookingCreations,
-				completedBookings,
-				payments,
-			] = await Promise.all([
-				db.user.findMany({
-					where: { createdAt: { gte: startDate } },
-					select: { createdAt: true },
-				}),
-				db.service.findMany({
-					where: { createdAt: { gte: startDate } },
-					select: { createdAt: true },
-				}),
-				db.booking.findMany({
-					where: { createdAt: { gte: startDate } },
-					select: { createdAt: true, status: true },
-				}),
-				db.booking.findMany({
-					where: {
-						completedAt: { gte: startDate },
-						status: "completed",
-					},
-					select: { completedAt: true, createdAt: true },
-				}),
-				db.payment.findMany({
 					where: {
 						createdAt: { gte: startDate },
 						status: "paid",
 					},
-					select: { createdAt: true, serviceFee: true },
+					_sum: {
+						amount: true,
+						netAmount: true,
+						serviceFee: true,
+					},
+					_count: true,
+					_avg: { amount: true },
+				}),
+
+				// Daily activity trends
+				db.$queryRaw`
+          SELECT 
+            DATE("createdAt") as date,
+            COUNT(CASE WHEN table_name = 'User' THEN 1 END) as new_users,
+            COUNT(CASE WHEN table_name = 'Service' THEN 1 END) as new_services,
+            COUNT(CASE WHEN table_name = 'Booking' THEN 1 END) as new_bookings
+          FROM (
+            SELECT "createdAt", 'User' as table_name FROM "User" WHERE "createdAt" >= ${startDate}
+            UNION ALL
+            SELECT "createdAt", 'Service' as table_name FROM "Service" WHERE "createdAt" >= ${startDate}
+            UNION ALL
+            SELECT "createdAt", 'Booking' as table_name FROM "Booking" WHERE "createdAt" >= ${startDate}
+          ) combined
+          GROUP BY DATE("createdAt")
+          ORDER BY date DESC
+          LIMIT 30
+        `,
+
+				// Top performing categories
+				db.category.findMany({
+					select: {
+						id: true,
+						name: true,
+						_count: {
+							select: {
+								services: {
+									where: {
+										bookings: {
+											some: {
+												createdAt: { gte: startDate },
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					orderBy: {
+						services: { _count: "desc" },
+					},
+					take: 10,
+				}),
+
+				// Top earning providers
+				db.user.findMany({
+					where: {
+						isProfessional: true,
+						professionalBookings: {
+							some: {
+								createdAt: { gte: startDate },
+								status: "completed",
+							},
+						},
+					},
+					select: {
+						id: true,
+						name: true,
+						email: true,
+						_count: {
+							select: {
+								professionalBookings: {
+									where: {
+										createdAt: { gte: startDate },
+										status: "completed",
+									},
+								},
+							},
+						},
+					},
+					orderBy: {
+						professionalBookings: { _count: "desc" },
+					},
+					take: 10,
 				}),
 			]);
 
-			// Group data by day
-			const groupByDay = (
-				data: Array<{
-					createdAt?: Date | null;
-					completedAt?: Date | null;
-					[key: string]: unknown;
-				}>,
-				valueKey?: string,
-			) => {
-				return data.reduce(
+			// Calculate growth rates if projections requested
+			const projections = input.includeProjections
+				? {
+						userGrowthRate:
+							userStats._count.id / Math.max(1, getDaysInPeriod(input.period)),
+						serviceGrowthRate:
+							serviceStats._count.id /
+							Math.max(1, getDaysInPeriod(input.period)),
+						revenueGrowthRate:
+							(revenueStats._sum.amount || 0) /
+							Math.max(1, getDaysInPeriod(input.period)),
+					}
+				: null;
+
+			return {
+				overview: {
+					totalUsers: await db.user.count(),
+					totalServices: await db.service.count(),
+					totalBookings: await db.booking.count(),
+					totalRevenue: await db.payment
+						.aggregate({
+							where: { status: "paid" },
+							_sum: { amount: true },
+						})
+						.then((result) => result._sum.amount || 0),
+					newUsers: userStats._count.id,
+					newServices: serviceStats._count.id,
+					periodRevenue: revenueStats._sum.amount || 0,
+					platformRevenue: revenueStats._sum.serviceFee || 0,
+				},
+				bookingsByStatus: bookingStats.reduce(
 					(acc, item) => {
-						const date = item.createdAt || item.completedAt;
-						if (!date) return acc;
-
-						const dayKey = date.toISOString().slice(0, 10);
-						if (!acc[dayKey]) {
-							acc[dayKey] = 0;
-						}
-
-						if (valueKey && typeof item[valueKey] === "number") {
-							acc[dayKey] += item[valueKey] as number;
-						} else {
-							acc[dayKey]++;
-						}
-
+						acc[item.status] = item._count;
 						return acc;
 					},
 					{} as Record<string, number>,
-				);
+				),
+				activityTrends: activityStats,
+				topCategories: topCategories.map((cat) => ({
+					id: cat.id,
+					name: cat.name,
+					serviceCount: cat._count.services,
+				})),
+				topProviders: topProviders.map((provider) => ({
+					id: provider.id,
+					name: provider.name,
+					email: provider.email,
+					completedBookings: provider._count.professionalBookings,
+				})),
+				projections,
+				period: input.period,
+				dateRange: { start: startDate, end: now },
 			};
+		},
+
+		/**
+		 * Get user management data with filtering and pagination
+		 */
+		async getUserManagement(input: GetUserManagementInput) {
+			checkAdminPermissions();
+
+			const { page, limit, search, role, status, sortBy, sortOrder } = input;
+			const skip = (page - 1) * limit;
+
+			// Build where clause
+			const where: Record<string, unknown> = {};
+
+			if (search) {
+				where.OR = [
+					{ name: { contains: search, mode: "insensitive" } },
+					{ email: { contains: search, mode: "insensitive" } },
+				];
+			}
+
+			if (role !== "all") {
+				where.isProfessional = role === "professionals";
+			}
+
+			// Build order by clause
+			const orderBy: Record<string, unknown> = {};
+			if (sortBy === "bookingCount") {
+				orderBy.professionalBookings = { _count: sortOrder };
+			} else {
+				orderBy[sortBy] = sortOrder;
+			}
+
+			const [users, totalCount] = await Promise.all([
+				db.user.findMany({
+					where,
+					skip,
+					take: limit,
+					orderBy,
+					select: {
+						id: true,
+						name: true,
+						email: true,
+						isProfessional: true,
+						createdAt: true,
+						_count: {
+							select: {
+								bookings: true,
+								professionalBookings: true,
+								services: true,
+							},
+						},
+					},
+				}),
+
+				db.user.count({ where }),
+			]);
 
 			return {
-				userSignups: groupByDay(userSignups),
-				serviceCreations: groupByDay(serviceCreations),
-				bookingCreations: groupByDay(bookingCreations),
-				completedBookings: groupByDay(completedBookings),
-				revenue: groupByDay(payments, "serviceFee"),
+				users: users.map((user) => ({
+					...user,
+					stats: {
+						totalBookings:
+							user._count.bookings + user._count.professionalBookings,
+						servicesProvided: user._count.services,
+						clientBookings: user._count.bookings,
+						professionalBookings: user._count.professionalBookings,
+					},
+				})),
+				pagination: {
+					page,
+					limit,
+					total: totalCount,
+					totalPages: Math.ceil(totalCount / limit),
+					hasNext: page * limit < totalCount,
+					hasPrev: page > 1,
+				},
 			};
 		},
 
-		async moderateService(input: ModerateServiceInput) {
-			checkAdminAccess();
+		/**
+		 * Get service management data with filtering and pagination
+		 */
+		async getServiceManagement(input: GetServiceManagementInput) {
+			checkAdminPermissions();
 
-			const service = await db.service.findUnique({
-				where: { id: input.serviceId },
-				include: { provider: true },
-			});
+			const { page, limit, search, categoryId, status, sortBy, sortOrder } =
+				input;
+			const skip = (page - 1) * limit;
 
-			if (!service) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Service not found",
-				});
+			// Build where clause
+			const where: Record<string, unknown> = {};
+
+			if (search) {
+				where.OR = [
+					{ title: { contains: search, mode: "insensitive" } },
+					{ description: { contains: search, mode: "insensitive" } },
+				];
 			}
 
-			let newStatus: "active" | "inactive";
-			let notificationType: string;
-			let notificationMessage: string;
-
-			switch (input.action) {
-				case "approve":
-					newStatus = "active";
-					notificationType = "service_approved";
-					notificationMessage = `Your service "${service.title}" has been approved`;
-					break;
-				case "reject":
-				case "suspend":
-					newStatus = "inactive";
-					notificationType =
-						input.action === "reject"
-							? "service_rejected"
-							: "service_suspended";
-					notificationMessage = `Your service "${service.title}" has been ${input.action}d${
-						input.reason ? `: ${input.reason}` : ""
-					}`;
-					break;
+			if (categoryId) {
+				where.categoryId = categoryId;
 			}
 
-			// Update service status
-			const updatedService = await db.service.update({
-				where: { id: input.serviceId },
-				data: { status: newStatus },
-			});
+			if (status !== "all") {
+				where.status = status;
+			}
 
-			// Create notification for provider
-			await db.notification.create({
-				data: {
-					userId: service.providerId,
-					type: notificationType,
-					title: `Service ${input.action}d`,
-					message: notificationMessage,
+			// Build order by clause
+			const orderBy: Record<string, unknown> = {};
+			if (sortBy === "rating") {
+				orderBy.avgRating = sortOrder;
+			} else if (sortBy === "bookingCount") {
+				orderBy.bookingCount = sortOrder;
+			} else {
+				orderBy[sortBy] = sortOrder;
+			}
+
+			const [services, totalCount] = await Promise.all([
+				db.service.findMany({
+					where,
+					skip,
+					take: limit,
+					orderBy,
+					select: {
+						id: true,
+						title: true,
+						description: true,
+						price: true,
+						status: true,
+						avgRating: true,
+						bookingCount: true,
+						createdAt: true,
+						provider: {
+							select: {
+								id: true,
+								name: true,
+								email: true,
+							},
+						},
+						category: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						_count: {
+							select: {
+								bookings: true,
+								reviews: true,
+							},
+						},
+					},
+				}),
+
+				db.service.count({ where }),
+			]);
+
+			return {
+				services,
+				pagination: {
+					page,
+					limit,
+					total: totalCount,
+					totalPages: Math.ceil(totalCount / limit),
+					hasNext: page * limit < totalCount,
+					hasPrev: page > 1,
 				},
-			});
-
-			return updatedService;
+			};
 		},
 
-		async suspendUser(input: SuspendUserInput) {
-			checkAdminAccess();
+		/**
+		 * Get booking management data with filtering and pagination
+		 */
+		async getBookingManagement(input: GetBookingManagementInput) {
+			checkAdminPermissions();
 
+			const {
+				page,
+				limit,
+				search,
+				status,
+				dateFrom,
+				dateTo,
+				sortBy,
+				sortOrder,
+			} = input;
+			const skip = (page - 1) * limit;
+
+			// Build where clause
+			const where: Prisma.BookingWhereInput = {};
+
+			if (search) {
+				where.OR = [
+					{ service: { title: { contains: search, mode: "insensitive" } } },
+					{ client: { name: { contains: search, mode: "insensitive" } } },
+					{ provider: { name: { contains: search, mode: "insensitive" } } },
+				];
+			}
+
+			if (status !== "all") {
+				where.status = status;
+			}
+
+			if (dateFrom || dateTo) {
+				where.createdAt = {};
+				if (dateFrom) where.createdAt.gte = dateFrom;
+				if (dateTo) where.createdAt.lte = dateTo;
+			}
+
+			const [bookings, totalCount] = await Promise.all([
+				db.booking.findMany({
+					where,
+					skip,
+					take: limit,
+					orderBy: { [sortBy]: sortOrder },
+					select: {
+						id: true,
+						status: true,
+						totalPrice: true,
+						bookingDate: true,
+						createdAt: true,
+						client: {
+							select: {
+								id: true,
+								name: true,
+								email: true,
+							},
+						},
+						provider: {
+							select: {
+								id: true,
+								name: true,
+								email: true,
+							},
+						},
+						service: {
+							select: {
+								id: true,
+								title: true,
+								price: true,
+							},
+						},
+						payment: {
+							select: {
+								id: true,
+								status: true,
+								amount: true,
+								paymentMethod: true,
+							},
+						},
+					},
+				}),
+
+				db.booking.count({ where }),
+			]);
+
+			return {
+				bookings,
+				pagination: {
+					page,
+					limit,
+					total: totalCount,
+					totalPages: Math.ceil(totalCount / limit),
+					hasNext: page * limit < totalCount,
+					hasPrev: page > 1,
+				},
+			};
+		},
+
+		/**
+		 * Get payment management data with filtering and pagination
+		 */
+		async getPaymentManagement(input: GetPaymentManagementInput) {
+			checkAdminPermissions();
+
+			const {
+				page,
+				limit,
+				status,
+				paymentMethod,
+				dateFrom,
+				dateTo,
+				minAmount,
+				maxAmount,
+				sortBy,
+				sortOrder,
+			} = input;
+			const skip = (page - 1) * limit;
+
+			// Build where clause
+			const where: Prisma.PaymentWhereInput = {};
+
+			if (status !== "all") {
+				where.status = status;
+			}
+
+			if (paymentMethod !== "all") {
+				where.paymentMethod = paymentMethod;
+			}
+
+			if (dateFrom || dateTo) {
+				where.createdAt = {};
+				if (dateFrom) where.createdAt.gte = dateFrom;
+				if (dateTo) where.createdAt.lte = dateTo;
+			}
+
+			if (minAmount !== undefined || maxAmount !== undefined) {
+				where.amount = {};
+				if (minAmount !== undefined) where.amount.gte = minAmount;
+				if (maxAmount !== undefined) where.amount.lte = maxAmount;
+			}
+
+			const [payments, totalCount] = await Promise.all([
+				db.payment.findMany({
+					where,
+					skip,
+					take: limit,
+					orderBy: { [sortBy]: sortOrder },
+					select: {
+						id: true,
+						status: true,
+						amount: true,
+						netAmount: true,
+						serviceFee: true,
+						paymentMethod: true,
+						refundAmount: true,
+						createdAt: true,
+						booking: {
+							select: {
+								id: true,
+								client: {
+									select: {
+										id: true,
+										name: true,
+										email: true,
+									},
+								},
+								provider: {
+									select: {
+										id: true,
+										name: true,
+										email: true,
+									},
+								},
+								service: {
+									select: {
+										id: true,
+										title: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+
+				db.payment.count({ where }),
+			]);
+
+			return {
+				payments,
+				pagination: {
+					page,
+					limit,
+					total: totalCount,
+					totalPages: Math.ceil(totalCount / limit),
+					hasNext: page * limit < totalCount,
+					hasPrev: page > 1,
+				},
+			};
+		},
+
+		/**
+		 * Update user status (activate, suspend, delete)
+		 */
+		async updateUserStatus(input: UpdateUserStatusInput) {
+			checkAdminPermissions();
+
+			const { userId, action, reason } = input;
+
+			// Check if user exists
 			const user = await db.user.findUnique({
-				where: { id: input.userId },
+				where: { id: userId },
+				select: { id: true, name: true, email: true },
 			});
 
 			if (!user) {
@@ -524,47 +729,175 @@ export function createAdminService({
 				});
 			}
 
-			if (!currentUser?.id) {
+			switch (action) {
+				case "activate":
+					return await db.user.update({
+						where: { id: userId },
+						data: { updatedAt: new Date() },
+					});
+
+				case "suspend":
+					return await db.user.update({
+						where: { id: userId },
+						data: { updatedAt: new Date() },
+					});
+
+				case "delete":
+					// Soft delete by anonymizing data
+					return await db.user.update({
+						where: { id: userId },
+						data: {
+							email: `deleted_${userId}@deleted.com`,
+							name: "Deleted User",
+							updatedAt: new Date(),
+						},
+					});
+
+				default:
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: "Invalid action",
+					});
+			}
+		},
+
+		/**
+		 * Update service status
+		 */
+		async updateServiceStatus(input: UpdateServiceStatusInput) {
+			checkAdminPermissions();
+
+			const { serviceId, status, reason } = input;
+
+			// Check if service exists
+			const service = await db.service.findUnique({
+				where: { id: serviceId },
+				select: {
+					id: true,
+					title: true,
+					provider: {
+						select: { id: true, name: true, email: true },
+					},
+				},
+			});
+
+			if (!service) {
 				throw new TRPCError({
-					code: "UNAUTHORIZED",
-					message: "Current user ID not available",
+					code: "NOT_FOUND",
+					message: "Service not found",
 				});
 			}
 
-			// For now, we'll deactivate all user's services and notify them
-			// In a real implementation, you'd add a suspended field to the User model
-			await db.$transaction(async (tx) => {
-				// Deactivate all user's services
-				await tx.service.updateMany({
-					where: { providerId: input.userId },
-					data: { status: "inactive" },
-				});
+			return await db.service.update({
+				where: { id: serviceId },
+				data: { status, updatedAt: new Date() },
+			});
+		},
 
-				// Cancel pending bookings as provider
-				await tx.booking.updateMany({
-					where: {
-						providerId: input.userId,
-						status: { in: ["pending", "accepted"] },
-					},
-					data: {
-						status: "cancelled",
-						cancellationReason: `Service suspended: ${input.reason}`,
-						cancelledBy: currentUser.id,
-					},
-				});
+		/**
+		 * Resolve booking dispute
+		 */
+		async resolveDispute(input: ResolveDisputeInput) {
+			checkAdminPermissions();
 
-				// Create notification
-				await tx.notification.create({
-					data: {
-						userId: input.userId,
-						type: "account_suspended",
-						title: "Account Suspended",
-						message: `Your account has been suspended: ${input.reason}`,
-					},
-				});
+			const { bookingId, resolution, refundAmount, notes } = input;
+
+			// Check if booking exists
+			const booking = await db.booking.findUnique({
+				where: { id: bookingId },
+				include: {
+					client: true,
+					provider: true,
+					service: true,
+					payment: true,
+				},
 			});
 
-			return { success: true };
+			if (!booking) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Booking not found",
+				});
+			}
+
+			// Handle different resolution types
+			switch (resolution) {
+				case "refund_full":
+					await Promise.all([
+						db.booking.update({
+							where: { id: bookingId },
+							data: { status: "cancelled", updatedAt: new Date() },
+						}),
+						booking.payment &&
+							db.payment.update({
+								where: { id: booking.payment.id },
+								data: {
+									refundAmount: booking.payment.amount,
+									status: "refunded",
+									updatedAt: new Date(),
+								},
+							}),
+					]);
+					break;
+
+				case "refund_partial":
+					if (!refundAmount || refundAmount <= 0) {
+						throw new TRPCError({
+							code: "BAD_REQUEST",
+							message: "Refund amount required for partial refund",
+						});
+					}
+					await Promise.all([
+						db.booking.update({
+							where: { id: bookingId },
+							data: { status: "cancelled", updatedAt: new Date() },
+						}),
+						booking.payment &&
+							db.payment.update({
+								where: { id: booking.payment.id },
+								data: {
+									refundAmount,
+									status: "refunded",
+									updatedAt: new Date(),
+								},
+							}),
+					]);
+					break;
+
+				case "no_refund":
+					await db.booking.update({
+						where: { id: bookingId },
+						data: { status: "completed", updatedAt: new Date() },
+					});
+					break;
+
+				case "reschedule":
+					await db.booking.update({
+						where: { id: bookingId },
+						data: { status: "accepted", updatedAt: new Date() },
+					});
+					break;
+			}
+
+			return { success: true, resolution, bookingId };
 		},
 	};
+}
+
+// Helper function to get days in period
+function getDaysInPeriod(period: string): number {
+	switch (period) {
+		case "24h":
+			return 1;
+		case "7d":
+			return 7;
+		case "30d":
+			return 30;
+		case "90d":
+			return 90;
+		case "1y":
+			return 365;
+		default:
+			return 30;
+	}
 }

@@ -9,7 +9,11 @@ import {
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { DateDisplay } from "~/components/ui/date-display";
 import { Loading } from "~/components/ui/loading";
+import { PriceDisplay } from "~/components/ui/price-display";
+import { StatusBadge } from "~/components/ui/status-badge";
+import { formatCurrency, formatDate, getStatusBadge } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 export default function EarningsPage() {
@@ -83,48 +87,6 @@ export default function EarningsPage() {
 		requestWithdrawal.mutate({ amount: parsedAmount });
 	};
 
-	const formatCurrency = (value: number) => `R$ ${value.toFixed(2)}`;
-
-	const formatDate = (date: string | Date) => {
-		return new Date(date).toLocaleDateString("pt-BR", {
-			day: "2-digit",
-			month: "2-digit",
-			year: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-		});
-	};
-
-	const getStatusBadge = (status: string) => {
-		const statusConfig = {
-			pending: { label: "Pendente", variant: "secondary" as const },
-			processing: { label: "Processando", variant: "secondary" as const },
-			completed: { label: "Concluído", variant: "default" as const },
-			failed: { label: "Falhou", variant: "destructive" as const },
-		};
-
-		const config = statusConfig[status as keyof typeof statusConfig] || {
-			label: status,
-			variant: "secondary" as const,
-		};
-
-		const variantClasses = {
-			default: "bg-green-100 text-green-800",
-			destructive: "bg-red-100 text-red-800",
-			secondary: "bg-gray-100 text-gray-800",
-		};
-
-		return (
-			<span
-				className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
-					variantClasses[config.variant] || "bg-gray-100 text-gray-800"
-				}`}
-			>
-				{config.label}
-			</span>
-		);
-	};
-
 	return (
 		<main className="min-h-screen bg-gray-50 py-8">
 			<div className="container mx-auto px-4">
@@ -171,7 +133,7 @@ export default function EarningsPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="font-bold text-2xl">
-								{formatCurrency(earnings.total)}
+								<PriceDisplay amount={earnings.total} />
 							</div>
 							<p className="text-muted-foreground text-xs">
 								No período selecionado

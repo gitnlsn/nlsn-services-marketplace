@@ -8,7 +8,11 @@ import { ReviewModal } from "~/components/review/review-modal";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { DateDisplay } from "~/components/ui/date-display";
+import { PriceDisplay } from "~/components/ui/price-display";
+import { StatusBadge } from "~/components/ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { formatDate } from "~/lib/utils";
 import { api } from "~/trpc/react";
 
 export function CustomerDashboard() {
@@ -47,39 +51,6 @@ export function CustomerDashboard() {
 				reason: reason || undefined,
 			});
 		}
-	};
-
-	const formatDate = (date: Date) => {
-		return new Intl.DateTimeFormat("pt-BR", {
-			day: "2-digit",
-			month: "2-digit",
-			year: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-		}).format(new Date(date));
-	};
-
-	const getStatusBadge = (status: string) => {
-		const statusConfig = {
-			pending: {
-				label: "Pendente",
-				className: "bg-yellow-100 text-yellow-800",
-			},
-			accepted: { label: "Aceito", className: "bg-blue-100 text-blue-800" },
-			declined: { label: "Recusado", className: "bg-red-100 text-red-800" },
-			completed: {
-				label: "Concluído",
-				className: "bg-green-100 text-green-800",
-			},
-			cancelled: { label: "Cancelado", className: "bg-gray-100 text-gray-800" },
-		};
-
-		const config = statusConfig[status as keyof typeof statusConfig] || {
-			label: status,
-			className: "bg-gray-100 text-gray-800",
-		};
-
-		return <Badge className={config.className}>{config.label}</Badge>;
 	};
 
 	const filterBookingsByStatus = (
@@ -168,13 +139,6 @@ export function CustomerDashboard() {
 		return <div className="flex flex-col space-y-2">{actions}</div>;
 	};
 
-	const formatPrice = (price: number) => {
-		return new Intl.NumberFormat("pt-BR", {
-			style: "currency",
-			currency: "BRL",
-		}).format(price);
-	};
-
 	if (bookingsLoading) {
 		return (
 			<div className="container mx-auto px-4 py-8">
@@ -259,12 +223,14 @@ export function CustomerDashboard() {
 							<CreditCard className="h-8 w-8 text-purple-600" />
 							<div>
 								<p className="font-bold text-2xl">
-									{formatPrice(
-										bookings?.bookings?.reduce(
-											(sum, b) => sum + (b.totalPrice || 0),
-											0,
-										) || 0,
-									)}
+									<PriceDisplay
+										amount={
+											bookings?.bookings?.reduce(
+												(sum, b) => sum + (b.totalPrice || 0),
+												0,
+											) || 0
+										}
+									/>
 								</p>
 								<p className="text-gray-600 text-sm">Total Gasto</p>
 							</div>
@@ -349,9 +315,12 @@ export function CustomerDashboard() {
 												<div className="flex items-center space-x-4">
 													<div className="text-right">
 														<p className="font-semibold text-gray-900">
-															{formatPrice(booking.totalPrice)}
+															<PriceDisplay amount={booking.totalPrice} />
 														</p>
-														{getStatusBadge(booking.status)}
+														<StatusBadge
+															status={booking.status}
+															type="booking"
+														/>
 													</div>
 													{renderBookingActions(booking)}
 												</div>
@@ -425,9 +394,12 @@ export function CustomerDashboard() {
 												<div className="flex items-center space-x-4">
 													<div className="text-right">
 														<p className="font-semibold text-gray-900">
-															{formatPrice(booking.totalPrice)}
+															<PriceDisplay amount={booking.totalPrice} />
 														</p>
-														{getStatusBadge(booking.status)}
+														<StatusBadge
+															status={booking.status}
+															type="booking"
+														/>
 													</div>
 													{renderBookingActions(booking)}
 												</div>
@@ -498,9 +470,12 @@ export function CustomerDashboard() {
 												<div className="flex items-center space-x-4">
 													<div className="text-right">
 														<p className="font-semibold text-gray-900">
-															{formatPrice(booking.totalPrice)}
+															<PriceDisplay amount={booking.totalPrice} />
 														</p>
-														{getStatusBadge(booking.status)}
+														<StatusBadge
+															status={booking.status}
+															type="booking"
+														/>
 													</div>
 													{renderBookingActions(booking)}
 												</div>

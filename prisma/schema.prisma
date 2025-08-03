@@ -90,11 +90,20 @@ model User {
   withdrawals   Withdrawal[]
   images        Image[]
   bankAccounts  BankAccount[]
+  availabilities Availability[]
+  timeSlots     TimeSlot[]
 
   // Messaging relations
   conversationsAsParticipantOne Conversation[] @relation("ConversationParticipantOne")
   conversationsAsParticipantTwo Conversation[] @relation("ConversationParticipantTwo")
   sentMessages                  Message[]      @relation("SentMessages")
+  
+  // Advanced booking relations
+  clientRecurringBookings        RecurringBooking[] @relation("ClientRecurringBookings")
+  professionalRecurringBookings  RecurringBooking[] @relation("ProfessionalRecurringBookings")
+  serviceBundles                 ServiceBundle[]
+  organizedGroupBookings         GroupBooking[]
+  waitlists                      Waitlist[] @relation("ClientWaitlists")
 }
 
 model VerificationToken {
@@ -127,6 +136,12 @@ model Service {
   duration    Int? // Service duration in minutes
   location    String? // Service location (address or "remote")
   maxBookings Int? // Maximum bookings per day
+  
+  // Advanced booking features
+  allowRecurring Boolean @default(false) // Allow recurring bookings
+  bufferTime    Int?    @default(0) // Buffer time in minutes between appointments
+  cancellationHours Int? @default(24) // Hours before appointment to allow cancellation
+  reschedulingHours Int? @default(24) // Hours before appointment to allow rescheduling
 
   // Metrics
   viewCount    Int    @default(0)
@@ -143,11 +158,25 @@ model Service {
   bookings Booking[]
   reviews  Review[]
   images   Image[]
+  timeSlots TimeSlot[]
+  bundles ServiceBundle[] @relation("BundleServices")
+  addOns ServiceAddOn[]
+  policies BookingPolicy[]
+  groupBookingSettings GroupBookingSettings?
+  recurringBookings RecurringBooking[]
+  groupBookings GroupBooking[]
+  waitlists Waitlist[]
 
+  // Performance optimized indexes
   @@index([categoryId])
   @@index([providerId])
   @@index([status])
   @@index([avgRating])
+  // Composite indexes for common search patterns
+  @@index([status, categoryId, avgRating(sort: Desc), price])
+  @@index([providerId, status])
+  @@index([status, createdAt(sort: Desc)]) // For recent active services
+  @@index([location, status]) // For location-based search
 }
 
 model Booking {
@@ -169,6 +198,17 @@ model Booking {
   acceptedAt         DateTime? // When booking was accepted
   declinedAt         DateTime? // When booking was declined
   cancelledAt        DateTime? // When booking was cancelled
+  
+  // Google Calendar integration
+  googleCalendarEventId String? // Google Calendar event ID for syncing
+  
+  // Advanced booking features
+  recurringBookingId String? // Link to recurring booking if part of series
+  groupBookingId     String? // Link to group booking if part of group
+  waitlistPosition   Int?    // Position in waitlist (null if not on waitlist)
+  isRecurring        Boolean @default(false)
+  addOns             BookingAddOn[]
+  remindersSent      BookingReminder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -179,12 +219,24 @@ model Booking {
   provider     User          @relation("ProfessionalBookings", fields: [providerId], references: [id])
   payment      Payment?
   conversation Conversation?
+  timeSlot     TimeSlot?
+  recurringBooking RecurringBooking? @relation(fields: [recurringBookingId], references: [id])
+  groupBooking     GroupBooking? @relation(fields: [groupBookingId], references: [id])
 
+  // Performance optimized indexes
   @@index([serviceId])
   @@index([clientId])
   @@index([providerId])
   @@index([status])
   @@index([bookingDate])
+  @@index([recurringBookingId])
+  @@index([groupBookingId])
+  // Composite indexes for critical queries
+  @@index([serviceId, bookingDate, status]) // Booking conflict checking
+  @@index([providerId, status, bookingDate(sort: Desc)]) // Provider dashboard
+  @@index([clientId, status, createdAt(sort: Desc)]) // Client history
+  @@index([status, completedAt]) // Analytics queries
+  @@index([bookingDate, status]) // Date range queries
 }
 
 model Review {
@@ -244,6 +296,9 @@ model Payment {
 
   @@index([status])
   @@index([paymentMethod])
+  // Performance optimized composite indexes
+  @@index([status, escrowReleaseDate]) // Escrow processing
+  @@index([bookingId, status]) // Payment lookup by booking
 }
 
 model Notification {
@@ -260,6 +315,8 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+  // Performance optimized composite indexes
+  @@index([userId, read, createdAt(sort: Desc)]) // Unread notifications first
 }
 
 model Withdrawal {
@@ -291,6 +348,51 @@ model Image {
 
   @@index([serviceId])
   @@index([userId])
+}
+
+model Availability {
+  id         String   @id @default(cuid())
+  providerId String
+  dayOfWeek  Int      // 0-6 (Sunday-Saturday)
+  startTime  String   // HH:MM format
+  endTime    String   // HH:MM format
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider User @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek, startTime, endTime])
+  @@index([providerId])
+  @@index([dayOfWeek])
+}
+
+model TimeSlot {
+  id         String   @id @default(cuid())
+  providerId String
+  serviceId  String?
+  date       DateTime @db.Date
+  startTime  DateTime
+  endTime    DateTime
+  isBooked   Boolean  @default(false)
+  bookingId  String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  provider User     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service  Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  booking  Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@unique([providerId, date, startTime])
+  @@index([providerId])
+  @@index([serviceId])
+  @@index([date])
+  @@index([isBooked])
+  // Performance optimized composite indexes
+  @@index([providerId, date, isBooked]) // Availability checking
+  @@index([serviceId, date, isBooked]) // Service-specific availability
 }
 
 model BankAccount {
@@ -352,4 +454,216 @@ model Message {
   @@index([senderId])
   @@index([createdAt])
   @@index([isRead])
+  // Performance optimized composite indexes
+  @@index([conversationId, isRead, createdAt(sort: Desc)]) // Conversation messages with unread
+  @@index([senderId, createdAt(sort: Desc)]) // User message history
+}
+
+// Advanced booking models
+
+model RecurringBooking {
+  id              String   @id @default(cuid())
+  serviceId       String
+  clientId        String
+  providerId      String
+  frequency       String   // daily, weekly, biweekly, monthly
+  interval        Int      @default(1) // Every N days/weeks/months
+  startDate       DateTime
+  endDate         DateTime? // Optional end date for the series
+  occurrences     Int?     // Optional number of occurrences
+  daysOfWeek      Int[]    // For weekly: [0,2,4] = Sunday, Tuesday, Thursday
+  dayOfMonth      Int?     // For monthly: 15 = 15th of each month
+  timeSlot        String   // HH:MM format
+  duration        Int      // Duration in minutes
+  totalPrice      Float    // Price per occurrence
+  status          String   @default("active") // active, paused, cancelled
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  bookings Booking[]
+  service  Service @relation(fields: [serviceId], references: [id])
+  client   User    @relation("ClientRecurringBookings", fields: [clientId], references: [id])
+  provider User    @relation("ProfessionalRecurringBookings", fields: [providerId], references: [id])
+
+  @@index([serviceId])
+  @@index([clientId])
+  @@index([providerId])
+  @@index([status])
+  // Performance optimized composite indexes
+  @@index([clientId, status, startDate]) // Client recurring bookings
+  @@index([providerId, status, startDate]) // Provider recurring bookings
+  @@index([status, startDate]) // Active recurring bookings by date
+}
+
+model ServiceBundle {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  providerId  String
+  discount    Float    @default(0) // Percentage discount
+  validFrom   DateTime @default(now())
+  validUntil  DateTime?
+  maxUses     Int?     // Maximum number of times bundle can be purchased
+  currentUses Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  services Service[] @relation("BundleServices")
+  provider User      @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@index([isActive])
+  // Performance optimized composite indexes
+  @@index([isActive, validFrom, validUntil]) // Active bundles within date range
+  @@index([providerId, isActive]) // Provider's active bundles
+}
+
+model ServiceAddOn {
+  id          String   @id @default(cuid())
+  serviceId   String
+  name        String
+  description String?  @db.Text
+  price       Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  service Service        @relation(fields: [serviceId], references: [id])
+  bookings BookingAddOn[]
+
+  @@index([serviceId])
+  @@index([isActive])
+}
+
+model BookingAddOn {
+  id        String   @id @default(cuid())
+  bookingId String
+  addOnId   String
+  quantity  Int      @default(1)
+  price     Float    // Price at time of booking
+  createdAt DateTime @default(now())
+
+  // Relations
+  booking Booking      @relation(fields: [bookingId], references: [id])
+  addOn   ServiceAddOn @relation(fields: [addOnId], references: [id])
+
+  @@unique([bookingId, addOnId])
+  @@index([bookingId])
+  @@index([addOnId])
+}
+
+model BookingPolicy {
+  id                   String   @id @default(cuid())
+  serviceId            String
+  name                 String
+  type                 String   // cancellation, rescheduling, no-show
+  description          String   @db.Text
+  hoursBeforeBooking   Int      // Hours before booking when policy applies
+  penaltyType          String?  // none, percentage, fixed
+  penaltyValue         Float?   // Percentage or fixed amount
+  allowExceptions      Boolean  @default(false)
+  exceptionConditions  String?  @db.Text // JSON string of exception conditions
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId])
+  @@index([type])
+  @@index([isActive])
+}
+
+model GroupBooking {
+  id               String   @id @default(cuid())
+  serviceId        String
+  organizerId      String   // User who created the group booking
+  name             String
+  description      String?  @db.Text
+  maxParticipants  Int
+  minParticipants  Int      @default(1)
+  pricePerPerson   Float
+  status           String   @default("open") // open, confirmed, cancelled
+  bookingDate      DateTime
+  endDate          DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  bookings    Booking[]
+  service     Service  @relation(fields: [serviceId], references: [id])
+  organizer   User     @relation(fields: [organizerId], references: [id])
+
+  @@index([serviceId])
+  @@index([organizerId])
+  @@index([status])
+  @@index([bookingDate])
+}
+
+model GroupBookingSettings {
+  id              String   @id @default(cuid())
+  serviceId       String   @unique
+  enabled         Boolean  @default(false)
+  maxGroupSize    Int      @default(10)
+  minGroupSize    Int      @default(2)
+  groupDiscount   Float    @default(0) // Percentage discount for groups
+  requireApproval Boolean  @default(true) // Require provider approval for groups
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  service Service @relation(fields: [serviceId], references: [id])
+}
+
+model BookingReminder {
+  id         String   @id @default(cuid())
+  bookingId  String
+  type       String   // email, sms, whatsapp
+  scheduledFor DateTime // When to send the reminder
+  sentAt     DateTime? // When it was actually sent
+  status     String   @default("pending") // pending, sent, failed
+  retryCount Int      @default(0)
+  lastError  String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+model Waitlist {
+  id              String   @id @default(cuid())
+  serviceId       String
+  clientId        String
+  preferredDate   DateTime @db.Date
+  preferredTime   String?  // HH:MM format
+  alternativeDates DateTime[] @db.Date // Alternative acceptable dates
+  duration        Int?     // Desired duration in minutes
+  notes           String?  @db.Text
+  status          String   @default("active") // active, notified, booked, cancelled
+  priority        Int      @default(0) // Higher number = higher priority
+  notifiedAt      DateTime? // When user was notified of availability
+  expiresAt       DateTime? // When the notification expires
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  service Service @relation(fields: [serviceId], references: [id])
+  client  User    @relation("ClientWaitlists", fields: [clientId], references: [id])
+
+  @@unique([serviceId, clientId]) // One waitlist entry per service per client
+  @@index([serviceId])
+  @@index([clientId])
+  @@index([preferredDate])
+  @@index([status])
+  @@index([priority])
 }

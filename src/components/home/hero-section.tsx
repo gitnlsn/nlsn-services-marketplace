@@ -1,12 +1,8 @@
 "use client";
 
-import {
-	CalendarIcon,
-	MagnifyingGlassIcon,
-	MapPinIcon,
-} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Calendar, MapPin, Search } from "~/components/ui/icon";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -69,33 +65,36 @@ export function HeroSection() {
 	};
 
 	return (
-		<section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-20 lg:py-32">
+		<section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 sm:py-16 lg:py-24">
 			<div className="container relative mx-auto px-4">
 				<div className="mx-auto max-w-4xl text-center">
 					{/* Animated Headlines */}
-					<div className="mb-8">
-						<h1 className="mb-4 font-bold text-4xl text-gray-900 leading-tight md:text-6xl lg:text-7xl">
+					<div className="mb-6 sm:mb-8">
+						<h1 className="mb-4 font-bold text-3xl text-gray-900 leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
 							Encontre
 							<span className="block bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent transition-all duration-1000">
 								{animatedText}
 							</span>
 							de Confiança
 						</h1>
-						<p className="mx-auto max-w-2xl text-gray-600 text-xl md:text-2xl">
+						<p className="mx-auto max-w-2xl text-gray-600 text-lg sm:text-xl md:text-2xl">
 							Conecte-se com especialistas locais para todos os seus projetos.
-							<span className="mt-2 block font-medium text-indigo-600 text-lg">
+							<span className="mt-2 block font-medium text-base text-indigo-600 sm:text-lg">
 								Mais de 1000+ profissionais verificados
 							</span>
 						</p>
 					</div>
 
 					{/* Enhanced Search Bar */}
-					<form onSubmit={handleSearch} className="mx-auto mb-8 max-w-4xl">
-						<div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-2xl">
-							<div className="flex flex-col gap-2 md:flex-row">
+					<form
+						onSubmit={handleSearch}
+						className="mx-auto mb-6 max-w-4xl sm:mb-8"
+					>
+						<div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-2xl sm:p-2">
+							<div className="flex flex-col gap-3 sm:gap-2 md:flex-row">
 								{/* Search Input */}
 								<div className="relative flex-1">
-									<MagnifyingGlassIcon className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 transform text-gray-400" />
+									<Search className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 transform text-gray-400" />
 									<Input
 										type="text"
 										value={searchQuery}
@@ -108,7 +107,7 @@ export function HeroSection() {
 											setTimeout(() => setShowSuggestions(false), 200)
 										}
 										placeholder="O que você está procurando?"
-										className="rounded-xl border-0 py-4 pl-12 text-lg focus-visible:ring-2 focus-visible:ring-indigo-500"
+										className="rounded-xl border-0 py-3 pl-12 text-base focus-visible:ring-2 focus-visible:ring-indigo-500 sm:py-4 sm:text-lg"
 									/>
 
 									{/* Search Suggestions */}
@@ -137,7 +136,7 @@ export function HeroSection() {
 
 								{/* Location Input */}
 								<div className="relative flex-1">
-									<MapPinIcon className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 transform text-gray-400" />
+									<MapPin className="-translate-y-1/2 absolute top-1/2 left-4 h-5 w-5 transform text-gray-400" />
 									<Input
 										type="text"
 										value={location}
@@ -151,7 +150,7 @@ export function HeroSection() {
 										className="-translate-y-1/2 absolute top-1/2 right-2 transform p-2 text-indigo-600 hover:text-indigo-700"
 										title="Usar minha localização"
 									>
-										<MapPinIcon className="h-4 w-4" />
+										<MapPin className="h-4 w-4" />
 									</button>
 								</div>
 
@@ -200,7 +199,7 @@ export function HeroSection() {
 							onClick={() => router.push("/search")}
 							className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-4 text-lg shadow-lg transition-all hover:scale-105 hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl"
 						>
-							<MagnifyingGlassIcon className="mr-2 h-5 w-5" />
+							<Search className="mr-2 h-5 w-5" />
 							Encontrar Serviços
 						</Button>
 						<Button
@@ -209,7 +208,7 @@ export function HeroSection() {
 							onClick={() => router.push("/become-professional")}
 							className="rounded-xl border-2 border-indigo-600 px-8 py-4 text-indigo-600 text-lg shadow-lg transition-all hover:scale-105 hover:bg-indigo-600 hover:text-white hover:shadow-xl"
 						>
-							<CalendarIcon className="mr-2 h-5 w-5" />
+							<Calendar className="mr-2 h-5 w-5" />
 							Oferecer Serviços
 						</Button>
 					</div>

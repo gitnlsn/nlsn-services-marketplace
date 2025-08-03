@@ -1,7 +1,7 @@
 {
-	"name": "Services Marketplace",
-	"short_name": "ServicesMP",
-	"description": "Marketplace para conectar profissionais e clientes em serviços diversos",
+	"name": "Savoir Link",
+	"short_name": "SavoirLink",
+	"description": "Plataforma Savoir Link para conectar profissionais e clientes em serviços diversos",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",

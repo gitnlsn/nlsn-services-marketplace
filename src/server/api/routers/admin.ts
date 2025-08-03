@@ -1,90 +1,157 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
 	createAdminService,
-	getAnalyticsSchema,
-	getBookingsSchema,
-	getDashboardSchema,
-	getServicesSchema,
-	getUsersSchema,
-	moderateServiceSchema,
-	suspendUserSchema,
+	getBookingManagementSchema,
+	getPaymentManagementSchema,
+	getPlatformStatsSchema,
+	getServiceManagementSchema,
+	getUserManagementSchema,
+	resolveDisputeSchema,
+	updateServiceStatusSchema,
+	updateUserStatusSchema,
 } from "~/server/services/admin-service";
 
+/**
+ * Admin Router
+ *
+ * Comprehensive admin panel endpoints for platform management.
+ * All endpoints require admin permissions (isProfessional: true).
+ */
+
 export const adminRouter = createTRPCRouter({
-	// Get dashboard overview (admin only)
-	getDashboard: protectedProcedure
-		.input(getDashboardSchema)
+	/**
+	 * Get comprehensive platform statistics
+	 */
+	getPlatformStats: protectedProcedure
+		.input(getPlatformStatsSchema)
 		.query(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.getDashboard(input);
+			return await adminService.getPlatformStats(input);
 		}),
 
-	// Get users list (admin only)
-	getUsers: protectedProcedure
-		.input(getUsersSchema)
+	/**
+	 * Get user management data with filtering and pagination
+	 */
+	getUserManagement: protectedProcedure
+		.input(getUserManagementSchema)
 		.query(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.getUsers(input);
+			return await adminService.getUserManagement(input);
 		}),
 
-	// Get services list (admin only)
-	getServices: protectedProcedure
-		.input(getServicesSchema)
+	/**
+	 * Get service management data with filtering and pagination
+	 */
+	getServiceManagement: protectedProcedure
+		.input(getServiceManagementSchema)
 		.query(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.getServices(input);
+			return await adminService.getServiceManagement(input);
 		}),
 
-	// Get bookings list (admin only)
-	getBookings: protectedProcedure
-		.input(getBookingsSchema)
+	/**
+	 * Get booking management data with filtering and pagination
+	 */
+	getBookingManagement: protectedProcedure
+		.input(getBookingManagementSchema)
 		.query(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.getBookings(input);
+			return await adminService.getBookingManagement(input);
 		}),
 
-	// Get platform analytics (admin only)
-	getAnalytics: protectedProcedure
-		.input(getAnalyticsSchema)
+	/**
+	 * Get payment management data with filtering and pagination
+	 */
+	getPaymentManagement: protectedProcedure
+		.input(getPaymentManagementSchema)
 		.query(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.getAnalytics(input);
+			return await adminService.getPaymentManagement(input);
 		}),
 
-	// Moderate content (admin only)
-	moderateService: protectedProcedure
-		.input(moderateServiceSchema)
+	/**
+	 * Update user status (activate, suspend, delete)
+	 */
+	updateUserStatus: protectedProcedure
+		.input(updateUserStatusSchema)
 		.mutation(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.moderateService(input);
+			return await adminService.updateUserStatus(input);
 		}),
 
-	// Suspend user (admin only)
-	suspendUser: protectedProcedure
-		.input(suspendUserSchema)
+	/**
+	 * Update service status (approve, reject, suspend)
+	 */
+	updateServiceStatus: protectedProcedure
+		.input(updateServiceStatusSchema)
 		.mutation(async ({ ctx, input }) => {
 			const adminService = createAdminService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
 			});
-			return await adminService.suspendUser(input);
+			return await adminService.updateServiceStatus(input);
+		}),
+
+	/**
+	 * Resolve booking disputes
+	 */
+	resolveDispute: protectedProcedure
+		.input(resolveDisputeSchema)
+		.mutation(async ({ ctx, input }) => {
+			const adminService = createAdminService({
+				db: ctx.db,
+				currentUser: {
+					id: ctx.session.user.id,
+					isProfessional: ctx.session.user.isProfessional,
+					email: ctx.session.user.email ?? undefined,
+				},
+			});
+			return await adminService.resolveDispute(input);
 		}),
 });

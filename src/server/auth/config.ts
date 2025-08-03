@@ -48,6 +48,9 @@ export const authConfig = {
 					prompt: "consent",
 					access_type: "offline",
 					response_type: "code",
+					// Add Google Calendar and Drive scopes
+					scope:
+						"openid profile email https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file",
 				},
 			},
 		}),
@@ -79,14 +82,27 @@ export const authConfig = {
 		error: "/auth/error",
 	},
 	callbacks: {
-		async session({ session, user }) {
+		async jwt({ token, account, profile }) {
+			// Store the access token and refresh token in the JWT on sign in
+			if (account) {
+				token.accessToken = account.access_token;
+				token.refreshToken = account.refresh_token;
+				token.expiresAt = account.expires_at;
+			}
+			return token;
+		},
+		async session({ session, user, token }) {
+			// Include access token in session for API calls
+			if (token) {
+				session.accessToken = token.accessToken as string;
+			}
 			return {
 				...session,
 				user: {
 					...session.user,
-					id: user.id,
-					isProfessional: user.isProfessional,
-					phone: user.phone,
+					id: user?.id || (token?.sub as string),
+					isProfessional: user?.isProfessional || false,
+					phone: user?.phone || null,
 				},
 			};
 		},

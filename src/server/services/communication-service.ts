@@ -1,3 +1,4 @@
+import type { Twilio } from "twilio";
 import { env } from "~/env";
 
 // Types for different communication channels
@@ -44,7 +45,7 @@ export interface NotificationTemplate {
 
 // Communication service class
 export class CommunicationService {
-	private twilioClient: unknown;
+	private twilioClient: Twilio | null = null;
 	private emailProvider: "nodemailer" | "sendgrid" | "resend";
 
 	constructor() {
@@ -147,7 +148,13 @@ export class CommunicationService {
 		}
 
 		try {
-			const messageOptions: Record<string, unknown> = {
+			const messageOptions: {
+				body?: string;
+				from: string;
+				to: string;
+				contentSid?: string;
+				contentVariables?: string;
+			} = {
 				body: options.body,
 				from: `whatsapp:${env.TWILIO_WHATSAPP_NUMBER || env.TWILIO_PHONE_NUMBER}`,
 				to: `whatsapp:${options.to}`,
@@ -284,75 +291,121 @@ export class CommunicationService {
 	 */
 	private async sendEmailWithNodemailer(options: EmailOptions) {
 		// Implementation with nodemailer
-		const nodemailer = await import("nodemailer");
+		try {
+			const nodemailer = await import("nodemailer");
 
-		const transporter = nodemailer.createTransporter({
-			host: env.SMTP_HOST,
-			port: Number(env.SMTP_PORT || 587),
-			secure: env.SMTP_SECURE === "true",
-			auth: {
-				user: env.SMTP_USER,
-				pass: env.SMTP_PASSWORD,
-			},
-		});
+			const transporter = nodemailer.createTransport({
+				host: env.SMTP_HOST,
+				port: Number(env.SMTP_PORT || 587),
+				secure: env.SMTP_SECURE === "true",
+				auth: {
+					user: env.SMTP_USER,
+					pass: env.SMTP_PASSWORD,
+				},
+			});
 
-		const result = await transporter.sendMail({
-			from: options.from || env.SMTP_FROM,
-			to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
-			subject: options.subject,
-			text: options.text,
-			html: options.html,
-		});
+			const result = await transporter.sendMail({
+				from: options.from || env.SMTP_FROM,
+				to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+				subject: options.subject,
+				text: options.text,
+				html: options.html,
+			});
 
-		return {
-			success: true,
-			messageId: result.messageId,
-		};
+			return {
+				success: true,
+				messageId: result.messageId,
+			};
+		} catch (error) {
+			console.error("Nodemailer not installed or configured:", error);
+			throw new Error(
+				"Nodemailer is not available. Please install 'nodemailer' package.",
+			);
+		}
 	}
 
 	private async sendEmailWithSendGrid(options: EmailOptions) {
 		// Implementation with SendGrid
-		const sgMail = await import("@sendgrid/mail");
-		if (!env.SENDGRID_API_KEY)
-			throw new Error("SENDGRID_API_KEY not configured");
-		sgMail.setApiKey(env.SENDGRID_API_KEY);
+		try {
+			const sgMail = await import("@sendgrid/mail");
+			if (!env.SENDGRID_API_KEY)
+				throw new Error("SENDGRID_API_KEY not configured");
+			sgMail.default.setApiKey(env.SENDGRID_API_KEY);
 
-		const msg = {
-			to: options.to,
-			from: options.from || env.SENDGRID_FROM || "noreply@example.com",
-			subject: options.subject,
-			text: options.text,
-			html: options.html,
-		};
+			// Build content array with proper typing for SendGrid
+			const content: Array<{ type: string; value: string }> = [];
+			if (options.text) {
+				content.push({ type: "text/plain", value: options.text });
+			}
+			if (options.html) {
+				content.push({ type: "text/html", value: options.html });
+			}
 
-		const result = await sgMail.send(msg);
-		return {
-			success: true,
-			messageId: result[0].headers["x-message-id"] as string,
-		};
+			// Ensure content has at least one element
+			if (content.length === 0) {
+				content.push({ type: "text/plain", value: options.subject });
+			}
+
+			// Cast to proper SendGrid type (non-empty array)
+			const msg = {
+				to: options.to,
+				from: options.from || env.SENDGRID_FROM || "noreply@example.com",
+				subject: options.subject,
+				content: content as [
+					{ type: string; value: string },
+					...Array<{ type: string; value: string }>,
+				],
+			};
+
+			const result = await sgMail.default.send(msg);
+			return {
+				success: true,
+				messageId:
+					Array.isArray(result) && result[0] && result[0].headers
+						? (result[0].headers["x-message-id"] as string)
+						: undefined,
+			};
+		} catch (error) {
+			console.error("SendGrid not installed or configured:", error);
+			throw new Error(
+				"SendGrid is not available. Please install '@sendgrid/mail' package.",
+			);
+		}
 	}
 
 	private async sendEmailWithResend(options: EmailOptions) {
 		// Implementation with Resend
-		const { Resend } = await import("resend");
-		const resend = new Resend(env.RESEND_API_KEY);
+		try {
+			const { Resend } = await import("resend");
+			const resend = new Resend(env.RESEND_API_KEY);
 
-		const result = await resend.emails.send({
-			from: options.from || env.RESEND_FROM || "noreply@example.com",
-			to: Array.isArray(options.to) ? options.to : [options.to],
-			subject: options.subject,
-			text: options.text,
-			html: options.html,
-		});
+			const emailData = {
+				from: options.from || env.RESEND_FROM || "noreply@example.com",
+				to: Array.isArray(options.to) ? options.to : [options.to],
+				subject: options.subject,
+				...(options.html
+					? { html: options.html }
+					: options.text
+						? { text: options.text }
+						: { text: options.subject }),
+			};
 
-		if (result.error) {
-			throw new Error(result.error.message);
+			const result = await resend.emails.send(emailData);
+
+			if (result.error) {
+				throw new Error(result.error.message);
+			}
+
+			return {
+				success: true,
+				messageId: result.data?.id,
+			};
+		} catch (error) {
+			console.error("Resend not installed or configured:", error);
+			throw new Error(
+				"Resend is not available. Please install 'resend' package.",
+			);
 		}
-
-		return {
-			success: true,
-			messageId: result.data?.id,
-		};
 	}
 }
 
@@ -467,3 +520,8 @@ export const notificationTemplates: Record<string, NotificationTemplate> = {
 
 // Export singleton instance
 export const communicationService = new CommunicationService();
+
+// Export factory function for dependency injection
+export function createCommunicationService() {
+	return communicationService;
+}

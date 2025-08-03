@@ -7,6 +7,8 @@ import { MessageButton } from "~/components/messaging/message-button";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { DateDisplay } from "~/components/ui/date-display";
+import { PriceDisplay } from "~/components/ui/price-display";
 import { api } from "~/trpc/react";
 
 interface PublicProfileProps {
@@ -53,14 +55,6 @@ export function PublicProfile({ userId }: PublicProfileProps) {
 		);
 	}
 
-	const formatDate = (date: Date | null) => {
-		if (!date) return "N/A";
-		return new Intl.DateTimeFormat("pt-BR", {
-			year: "numeric",
-			month: "long",
-		}).format(new Date(date));
-	};
-
 	return (
 		<div className="container mx-auto px-4 py-8">
 			{/* Profile Header */}
@@ -106,7 +100,12 @@ export function PublicProfile({ userId }: PublicProfileProps) {
 									<div className="flex items-center gap-1">
 										<Calendar className="h-4 w-4" />
 										<span>
-											Profissional desde {formatDate(profile.professionalSince)}
+											Profissional desde{" "}
+											<DateDisplay
+												date={profile.professionalSince}
+												format="monthYear"
+												fallback="N/A"
+											/>
 										</span>
 									</div>
 									{services && (
@@ -164,8 +163,10 @@ export function PublicProfile({ userId }: PublicProfileProps) {
 												</div>
 											)}
 											<div className="absolute top-2 right-2 rounded-full bg-white px-2 py-1 font-medium text-gray-900 text-sm shadow-sm">
-												R$ {service.price.toFixed(2)}
-												{service.priceType === "hourly" && "/h"}
+												<PriceDisplay
+													amount={service.price}
+													type={service.priceType as "fixed" | "hourly"}
+												/>
 											</div>
 										</div>
 										<CardContent className="p-4">

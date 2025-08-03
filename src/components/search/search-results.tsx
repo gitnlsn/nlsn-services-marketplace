@@ -306,7 +306,7 @@ export function SearchResults({
 							</SheetContent>
 						</Sheet>
 					</div>
-					{isLoading && (
+					{isLoading ? (
 						<div className="grid gap-6 md:grid-cols-2">
 							{[0, 1, 2, 3, 4, 5].map((num) => (
 								<Card key={`loading-card-${num}`} className="animate-pulse">
@@ -319,12 +319,12 @@ export function SearchResults({
 								</Card>
 							))}
 						</div>
-					)}
+					) : null}
 					{!isLoading &&
-						searchResults?.services &&
-						Array.isArray(searchResults.services) &&
-						searchResults.services.length > 0 &&
-						(viewMode === "map" ? (
+					searchResults?.services &&
+					Array.isArray(searchResults.services) &&
+					searchResults.services.length > 0 ? (
+						viewMode === "map" ? (
 							<MapView
 								services={searchResults.services}
 								center={{ lat: -23.5505, lng: -46.6333 }}
@@ -412,21 +412,22 @@ export function SearchResults({
 									</Link>
 								))}
 							</div>
-						))}
+						)
+					) : null}
 					{/* No Results */}
 					{!isLoading &&
-						searchResults?.services &&
-						Array.isArray(searchResults.services) &&
-						searchResults.services.length === 0 && (
-							<div className="py-12 text-center">
-								<h3 className="mb-2 font-semibold text-gray-900 text-lg">
-									Nenhum serviço encontrado
-								</h3>
-								<p className="text-gray-600">
-									Tente ajustar seus filtros ou usar palavras-chave diferentes.
-								</p>
-							</div>
-						)}
+					searchResults?.services &&
+					Array.isArray(searchResults.services) &&
+					searchResults.services.length === 0 ? (
+						<div className="py-12 text-center">
+							<h3 className="mb-2 font-semibold text-gray-900 text-lg">
+								Nenhum serviço encontrado
+							</h3>
+							<p className="text-gray-600">
+								Tente ajustar seus filtros ou usar palavras-chave diferentes.
+							</p>
+						</div>
+					) : null}
 				</div>
 			</div>
 		</div>

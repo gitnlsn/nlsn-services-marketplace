@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { BookingModal } from "~/components/booking/booking-modal";
 import { MessageButton } from "~/components/messaging/message-button";
+import { PriceDisplay } from "~/components/ui/price-display";
 import { api } from "~/trpc/react";
 import { BookingWidget } from "./booking-widget";
 import { ServiceGallery } from "./service-gallery";
@@ -58,11 +59,6 @@ export function ServiceDetail({ serviceId }: ServiceDetailProps) {
 	}
 
 	const rating = service.avgRating || 0;
-	const formatPrice = (price: number, type: "fixed" | "hourly") => {
-		return type === "hourly"
-			? `R$ ${price.toFixed(2)}/hora`
-			: `R$ ${price.toFixed(2)}`;
-	};
 
 	return (
 		<div className="min-h-screen bg-gray-50 py-8">

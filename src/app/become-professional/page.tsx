@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -49,7 +50,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function BecomeProfessionalPage() {
+function BecomeProfessionalContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const returnUrl = searchParams.get("returnUrl") ?? "/dashboard";
@@ -90,7 +91,7 @@ export default function BecomeProfessionalPage() {
 		<div className="container mx-auto max-w-2xl px-4 py-8">
 			<h1 className="font-bold text-3xl">Become a Professional</h1>
 			<p className="mt-4 text-muted-foreground">
-				Upgrade your account to start offering services on our marketplace.
+				Upgrade your account to start offering services on Savoir Link.
 			</p>
 
 			<Form {...form}>
@@ -281,5 +282,19 @@ export default function BecomeProfessionalPage() {
 				</form>
 			</Form>
 		</div>
+	);
+}
+
+export default function BecomeProfessionalPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="container mx-auto max-w-2xl px-4 py-8">
+					<h1 className="font-bold text-3xl">Loading...</h1>
+				</div>
+			}
+		>
+			<BecomeProfessionalContent />
+		</Suspense>
 	);
 }

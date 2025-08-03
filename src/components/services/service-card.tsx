@@ -1,9 +1,10 @@
 "use client";
 
-import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
-import { ClockIcon, MapPinIcon, StarIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "~/components/ui/button";
+import { Clock, MapPin, Star } from "~/components/ui/icon";
+import { PriceDisplay } from "~/components/ui/price-display";
 
 interface ServiceCardProps {
 	service: {
@@ -38,12 +39,6 @@ export function ServiceCard({ service }: ServiceCardProps) {
 	const reviewCount = service._count.reviews;
 	const imageUrl = service.images[0]?.url || "/placeholder-service.jpg";
 
-	const formatPrice = (price: number, type: "fixed" | "hourly") => {
-		return type === "hourly"
-			? `R$ ${price.toFixed(2)}/hora`
-			: `R$ ${price.toFixed(2)}`;
-	};
-
 	return (
 		<div className="overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
 			{/* Image */}
@@ -55,9 +50,11 @@ export function ServiceCard({ service }: ServiceCardProps) {
 					className="object-cover"
 				/>
 				<div className="absolute top-3 right-3 rounded-full bg-white/90 px-2 py-1 backdrop-blur-sm">
-					<span className="font-semibold text-gray-800 text-sm">
-						{formatPrice(service.price, service.priceType)}
-					</span>
+					<PriceDisplay
+						amount={service.price}
+						type={service.priceType}
+						className="font-semibold text-gray-800 text-sm"
+					/>
 				</div>
 			</div>
 
@@ -83,7 +80,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
 				{/* Location */}
 				{service.location && (
 					<div className="mb-3 flex items-center text-gray-500 text-sm">
-						<MapPinIcon className="mr-1 h-4 w-4" />
+						<MapPin className="mr-1 h-4 w-4" />
 						<span className="truncate">{service.location}</span>
 					</div>
 				)}
@@ -110,9 +107,9 @@ export function ServiceCard({ service }: ServiceCardProps) {
 							{[1, 2, 3, 4, 5].map((star) => (
 								<div key={star}>
 									{star <= Math.floor(rating) ? (
-										<StarIcon className="h-4 w-4 text-yellow-400" />
+										<Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
 									) : (
-										<StarOutlineIcon className="h-4 w-4 text-gray-300" />
+										<Star className="h-4 w-4 text-gray-300" />
 									)}
 								</div>
 							))}
@@ -124,12 +121,9 @@ export function ServiceCard({ service }: ServiceCardProps) {
 				</div>
 
 				{/* Action Button */}
-				<Link
-					href={`/services/${service.id}`}
-					className="block w-full rounded-lg bg-indigo-600 py-2 text-center font-medium text-white transition-colors duration-200 hover:bg-indigo-700"
-				>
-					Ver Detalhes
-				</Link>
+				<Button asChild variant="brand" className="w-full">
+					<Link href={`/services/${service.id}`}>Ver Detalhes</Link>
+				</Button>
 			</div>
 		</div>
 	);

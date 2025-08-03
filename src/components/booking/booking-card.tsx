@@ -13,6 +13,9 @@ import { useRouter } from "next/navigation";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
+import { DateDisplay } from "~/components/ui/date-display";
+import { PriceDisplay } from "~/components/ui/price-display";
+import { StatusBadge } from "~/components/ui/status-badge";
 import { api } from "~/trpc/react";
 
 interface BookingCardProps {
@@ -118,32 +121,6 @@ export function BookingCard({ booking, role: providedRole }: BookingCardProps) {
 		router.push(`/bookings/${booking.id}/payment`);
 	};
 
-	const getStatusBadge = (status: string) => {
-		const statusConfig = {
-			pending: { label: "Pendente", variant: "secondary" as const },
-			accepted: { label: "Aceito", variant: "default" as const },
-			declined: { label: "Recusado", variant: "destructive" as const },
-			completed: { label: "Concluído", variant: "default" as const },
-			cancelled: { label: "Cancelado", variant: "secondary" as const },
-		};
-
-		const config = statusConfig[status as keyof typeof statusConfig] || {
-			label: status,
-			variant: "secondary" as const,
-		};
-
-		return <Badge variant={config.variant}>{config.label}</Badge>;
-	};
-
-	const formatDate = (date: string) => {
-		return new Date(date).toLocaleDateString("pt-BR", {
-			weekday: "long",
-			year: "numeric",
-			month: "long",
-			day: "numeric",
-		});
-	};
-
 	const formatTime = (date: string) => {
 		return new Date(date).toLocaleTimeString("pt-BR", {
 			hour: "2-digit",
@@ -160,7 +137,7 @@ export function BookingCard({ booking, role: providedRole }: BookingCardProps) {
 					<div className="flex-1">
 						<div className="flex items-center gap-3">
 							<h3 className="font-semibold text-lg">{booking.service.title}</h3>
-							{getStatusBadge(booking.status)}
+							<StatusBadge status={booking.status} type="booking" />
 						</div>
 						<p className="mt-1 text-gray-500 text-sm">
 							{booking.service.category.name}
@@ -168,7 +145,7 @@ export function BookingCard({ booking, role: providedRole }: BookingCardProps) {
 					</div>
 					<div className="text-right">
 						<p className="font-bold text-2xl text-indigo-600">
-							R$ {booking.totalPrice.toFixed(2)}
+							<PriceDisplay amount={booking.totalPrice} />
 						</p>
 					</div>
 				</div>
@@ -179,7 +156,7 @@ export function BookingCard({ booking, role: providedRole }: BookingCardProps) {
 				<div className="flex items-center gap-4 text-sm">
 					<div className="flex items-center gap-2">
 						<CalendarIcon className="h-4 w-4 text-gray-400" />
-						<span>{formatDate(booking.bookingDate)}</span>
+						<DateDisplay date={booking.bookingDate} format="full" />
 					</div>
 					<div className="flex items-center gap-2">
 						<ClockIcon className="h-4 w-4 text-gray-400" />

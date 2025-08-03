@@ -17,9 +17,11 @@ async function validateMermaid() {
 
 	for (const file of htmlFiles) {
 		const content = await readFile(file, "utf-8");
-		const mermaidBlocks = content.matchAll(
-			/<pre class="mermaid">([\s\S]*?)<\/pre>/g,
-		);
+		// Match both <pre class="mermaid"> and <div class="mermaid"> blocks
+		const mermaidBlocks = [
+			...content.matchAll(/<pre class="mermaid">([\s\S]*?)<\/pre>/g),
+			...content.matchAll(/<div class="mermaid">([\s\S]*?)<\/div>/g)
+		];
 
 		for (const match of mermaidBlocks) {
 			const mermaidCode = match[1].trim();

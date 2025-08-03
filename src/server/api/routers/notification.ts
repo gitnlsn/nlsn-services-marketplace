@@ -1,21 +1,21 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
 	bulkUpdateSchema,
+	createNotificationDbService,
 	createNotificationSchema,
-	createNotificationService,
 	deleteNotificationSchema,
 	getStatsSchema,
 	listNotificationsSchema,
 	markAsReadSchema,
 	updatePreferencesSchema,
-} from "~/server/services/notification-service";
+} from "~/server/services/notification-db-service";
 
 export const notificationRouter = createTRPCRouter({
 	// Get user's notifications
 	list: protectedProcedure
 		.input(listNotificationsSchema)
 		.query(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -24,7 +24,7 @@ export const notificationRouter = createTRPCRouter({
 
 	// Get unread count
 	getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
-		const notificationService = createNotificationService({
+		const notificationService = createNotificationDbService({
 			db: ctx.db,
 			currentUser: ctx.session.user,
 		});
@@ -35,7 +35,7 @@ export const notificationRouter = createTRPCRouter({
 	markAsRead: protectedProcedure
 		.input(markAsReadSchema)
 		.mutation(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -44,7 +44,7 @@ export const notificationRouter = createTRPCRouter({
 
 	// Mark all notifications as read
 	markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
-		const notificationService = createNotificationService({
+		const notificationService = createNotificationDbService({
 			db: ctx.db,
 			currentUser: ctx.session.user,
 		});
@@ -55,7 +55,7 @@ export const notificationRouter = createTRPCRouter({
 	delete: protectedProcedure
 		.input(deleteNotificationSchema)
 		.mutation(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -64,7 +64,7 @@ export const notificationRouter = createTRPCRouter({
 
 	// Delete all notifications
 	deleteAll: protectedProcedure.mutation(async ({ ctx }) => {
-		const notificationService = createNotificationService({
+		const notificationService = createNotificationDbService({
 			db: ctx.db,
 			currentUser: ctx.session.user,
 		});
@@ -75,7 +75,7 @@ export const notificationRouter = createTRPCRouter({
 	bulkUpdate: protectedProcedure
 		.input(bulkUpdateSchema)
 		.mutation(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -84,7 +84,7 @@ export const notificationRouter = createTRPCRouter({
 
 	// Get notification types and their counts
 	getTypeStats: protectedProcedure.query(async ({ ctx }) => {
-		const notificationService = createNotificationService({
+		const notificationService = createNotificationDbService({
 			db: ctx.db,
 			currentUser: ctx.session.user,
 		});
@@ -95,7 +95,7 @@ export const notificationRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createNotificationSchema)
 		.mutation(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -104,7 +104,7 @@ export const notificationRouter = createTRPCRouter({
 
 	// Get notification preferences
 	getPreferences: protectedProcedure.query(async ({ ctx }) => {
-		const notificationService = createNotificationService({
+		const notificationService = createNotificationDbService({
 			db: ctx.db,
 			currentUser: ctx.session.user,
 		});
@@ -115,7 +115,7 @@ export const notificationRouter = createTRPCRouter({
 	updatePreferences: protectedProcedure
 		.input(updatePreferencesSchema)
 		.mutation(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});
@@ -126,7 +126,7 @@ export const notificationRouter = createTRPCRouter({
 	getStats: protectedProcedure
 		.input(getStatsSchema)
 		.query(async ({ ctx, input }) => {
-			const notificationService = createNotificationService({
+			const notificationService = createNotificationDbService({
 				db: ctx.db,
 				currentUser: ctx.session.user,
 			});

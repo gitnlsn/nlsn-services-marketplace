@@ -262,8 +262,13 @@ export const communicationRouter = createTRPCRouter({
 				...templateData
 			} = input;
 
+			const template = notificationTemplates.bookingConfirmation;
+			if (!template) {
+				throw new Error("Booking confirmation template not found");
+			}
+
 			const result = await communicationService.sendNotification(
-				notificationTemplates.bookingConfirmation,
+				template,
 				{
 					email: customerEmail,
 					phone: customerPhone,
@@ -302,8 +307,13 @@ export const communicationRouter = createTRPCRouter({
 				...templateData
 			} = input;
 
+			const template = notificationTemplates.bookingReminder;
+			if (!template) {
+				throw new Error("Booking reminder template not found");
+			}
+
 			const result = await communicationService.sendNotification(
-				notificationTemplates.bookingReminder,
+				template,
 				{
 					email: customerEmail,
 					phone: customerPhone,
@@ -342,8 +352,13 @@ export const communicationRouter = createTRPCRouter({
 				...templateData
 			} = input;
 
+			const template = notificationTemplates.providerNewBooking;
+			if (!template) {
+				throw new Error("Provider new booking template not found");
+			}
+
 			const result = await communicationService.sendNotification(
-				notificationTemplates.providerNewBooking,
+				template,
 				{
 					email: providerEmail,
 					phone: providerPhone,

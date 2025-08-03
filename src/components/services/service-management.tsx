@@ -14,6 +14,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { PriceDisplay } from "~/components/ui/price-display";
+import { StatusBadge } from "~/components/ui/status-badge";
 import { api } from "~/trpc/react";
 
 export function ServiceManagement() {
@@ -100,17 +102,6 @@ export function ServiceManagement() {
 		void refetch();
 	};
 
-	const getStatusBadge = (status: string) => {
-		switch (status) {
-			case "active":
-				return <Badge className="bg-green-100 text-green-800">Ativo</Badge>;
-			case "inactive":
-				return <Badge variant="secondary">Inativo</Badge>;
-			default:
-				return <Badge variant="outline">{status}</Badge>;
-		}
-	};
-
 	if (isLoading) {
 		return (
 			<div className="container mx-auto px-4 py-8">
@@ -123,7 +114,7 @@ export function ServiceManagement() {
 						{Array.from({ length: 6 }).map(() => (
 							<Card key={crypto.randomUUID()}>
 								<div className="aspect-video bg-gray-200" />
-								<CardContent className="p-4">
+								<CardContent>
 									<div className="mb-2 h-4 rounded bg-gray-200" />
 									<div className="mb-2 h-3 w-3/4 rounded bg-gray-200" />
 									<div className="h-3 w-1/2 rounded bg-gray-200" />
@@ -176,11 +167,11 @@ export function ServiceManagement() {
 									</div>
 								)}
 								<div className="absolute top-2 right-2">
-									{getStatusBadge(service.status)}
+									<StatusBadge status={service.status} type="service" />
 								</div>
 							</div>
 
-							<CardContent className="p-4">
+							<CardContent>
 								<div className="mb-2 flex items-start justify-between">
 									<h3 className="line-clamp-2 font-semibold text-gray-900 text-lg">
 										{service.title}
@@ -226,10 +217,11 @@ export function ServiceManagement() {
 
 								<div className="mb-3 flex items-center justify-between">
 									<Badge variant="outline">{service.category.name}</Badge>
-									<span className="font-semibold text-indigo-600">
-										R$ {service.price.toFixed(2)}
-										{service.priceType === "hourly" && "/h"}
-									</span>
+									<PriceDisplay
+										amount={service.price}
+										type={service.priceType as "fixed" | "hourly"}
+										className="font-semibold text-indigo-600"
+									/>
 								</div>
 
 								<div className="flex items-center justify-between text-gray-500 text-sm">

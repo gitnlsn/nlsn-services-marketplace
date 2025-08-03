@@ -1,10 +1,9 @@
 "use client";
 
-import { StarIcon } from "@heroicons/react/24/outline";
-import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Star } from "~/components/ui/icon";
 import { Textarea } from "~/components/ui/textarea";
 import { api } from "~/trpc/react";
 
@@ -88,9 +87,9 @@ export function ReviewForm({
 									className="p-1 transition-transform hover:scale-110"
 								>
 									{value <= (hoveredRating || rating) ? (
-										<StarIconSolid className="h-8 w-8 text-yellow-400" />
+										<Star className="h-8 w-8 fill-yellow-400 text-yellow-400" />
 									) : (
-										<StarIcon className="h-8 w-8 text-gray-300" />
+										<Star className="h-8 w-8 text-gray-300" />
 									)}
 								</button>
 							))}

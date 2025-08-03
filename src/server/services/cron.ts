@@ -1,3 +1,4 @@
+import type { User } from "@prisma/client";
 import { db } from "~/server/db";
 import { createEscrowService } from "~/server/services/escrow-service";
 
@@ -12,7 +13,12 @@ export async function releaseEscrowFunds() {
 		const escrowService = createEscrowService({
 			db,
 			// System user context for cron jobs
-			currentUser: { id: "system", email: "system@marketplace.com" },
+			currentUser: {
+				id: "system",
+				email: "system@marketplace.com",
+				isProfessional: false,
+				phone: null,
+			} as User,
 		});
 
 		const result = await escrowService.processEscrowReleases({});

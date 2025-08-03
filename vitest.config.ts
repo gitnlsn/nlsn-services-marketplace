@@ -12,7 +12,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: "node",
-		setupFiles: ["./src/test/setup.ts"],
+		setupFiles: ["./src/test/test-setup.ts"], // Mock external dependencies
 		testTimeout: 30000,
 		hookTimeout: 30000,
 		exclude: [

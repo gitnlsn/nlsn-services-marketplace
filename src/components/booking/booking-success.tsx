@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { PriceDisplay } from "~/components/ui/price-display";
 
 interface BookingDetails {
 	id: string;
@@ -59,13 +60,6 @@ export function BookingSuccess({
 
 	// Stop animation after 3 seconds
 	setTimeout(() => setIsAnimating(false), 3000);
-
-	const formatPrice = (price: number) => {
-		return new Intl.NumberFormat("pt-BR", {
-			style: "currency",
-			currency: "BRL",
-		}).format(price);
-	};
 
 	const generateCalendarEventUrl = (type: "google" | "outlook" | "apple") => {
 		const startDate = `${booking.bookingDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
@@ -308,9 +302,10 @@ END:VCALENDAR`;
 							<div className="rounded-lg bg-gray-50 p-4">
 								<div className="flex items-center justify-between">
 									<span className="font-medium text-gray-900">Total Pago:</span>
-									<span className="font-bold text-2xl text-green-600">
-										{formatPrice(booking.totalPrice)}
-									</span>
+									<PriceDisplay
+										amount={booking.totalPrice}
+										className="font-bold text-2xl text-green-600"
+									/>
 								</div>
 								{booking.paymentMethod && (
 									<p className="mt-1 text-gray-600 text-sm">

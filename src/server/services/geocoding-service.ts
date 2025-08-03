@@ -2,9 +2,12 @@
  * Geocoding Service
  *
  * Provides geocoding functionality to convert addresses to coordinates.
- * Currently uses OpenStreetMap Nominatim API (free) but can be extended
- * to support other providers like Google Maps Geocoding API.
+ * Supports both OpenStreetMap Nominatim API (free) and Google Maps Geocoding API.
+ * Provider selection is automatic based on configuration.
  */
+
+import { env } from "~/env";
+import { googleGeocodingService } from "./google-geocoding-service";
 
 interface Coordinates {
 	lat: number;
@@ -15,7 +18,10 @@ interface GeocodeResult {
 	coordinates: Coordinates;
 	formattedAddress: string;
 	confidence: number; // 0-1 scale
+	placeId?: string;
 }
+
+export type GeocodingProvider = "openstreetmap" | "google";
 
 interface NominatimResponse {
 	lat: string;
@@ -38,9 +44,41 @@ class GeocodingService {
 	}
 
 	/**
-	 * Geocode an address string to coordinates
+	 * Get the active geocoding provider based on configuration
+	 */
+	getProvider(): GeocodingProvider {
+		// Check if Google Maps is configured and preferred
+		if (
+			env.GEOCODING_PROVIDER === "google" &&
+			googleGeocodingService.isConfigured()
+		) {
+			return "google";
+		}
+
+		// Default to OpenStreetMap (always available)
+		return "openstreetmap";
+	}
+
+	/**
+	 * Geocode an address string to coordinates using the configured provider
 	 */
 	async geocode(address: string): Promise<GeocodeResult | null> {
+		const provider = this.getProvider();
+
+		if (provider === "google") {
+			return await googleGeocodingService.geocode(address);
+		}
+
+		// Use OpenStreetMap implementation
+		return await this.geocodeWithNominatim(address);
+	}
+
+	/**
+	 * Geocode an address string using OpenStreetMap Nominatim
+	 */
+	private async geocodeWithNominatim(
+		address: string,
+	): Promise<GeocodeResult | null> {
 		if (!address || address.trim().length === 0) {
 			return null;
 		}
@@ -113,16 +151,34 @@ class GeocodingService {
 	}
 
 	/**
-	 * Batch geocode multiple addresses
+	 * Batch geocode multiple addresses using the configured provider
 	 */
 	async batchGeocode(addresses: string[]): Promise<(GeocodeResult | null)[]> {
+		const provider = this.getProvider();
+
+		if (provider === "google") {
+			return await googleGeocodingService.batchGeocode(addresses);
+		}
+
+		// Use OpenStreetMap implementation
+		return await this.batchGeocodeWithNominatim(addresses);
+	}
+
+	/**
+	 * Batch geocode multiple addresses using OpenStreetMap Nominatim
+	 */
+	private async batchGeocodeWithNominatim(
+		addresses: string[],
+	): Promise<(GeocodeResult | null)[]> {
 		const results: (GeocodeResult | null)[] = [];
 
 		// Process in batches to respect rate limits
 		const batchSize = 5;
 		for (let i = 0; i < addresses.length; i += batchSize) {
 			const batch = addresses.slice(i, i + batchSize);
-			const batchPromises = batch.map((address) => this.geocode(address));
+			const batchPromises = batch.map((address) =>
+				this.geocodeWithNominatim(address),
+			);
 			const batchResults = await Promise.all(batchPromises);
 			results.push(...batchResults);
 
@@ -179,17 +235,61 @@ class GeocodingService {
 	}
 
 	/**
+	 * Reverse geocode coordinates to address
+	 */
+	async reverseGeocode(
+		lat: number,
+		lng: number,
+	): Promise<GeocodeResult | null> {
+		const provider = this.getProvider();
+
+		if (provider === "google") {
+			return await googleGeocodingService.reverseGeocode(lat, lng);
+		}
+
+		// OpenStreetMap reverse geocoding is not implemented yet
+		return null;
+	}
+
+	/**
 	 * Clear the geocoding cache
 	 */
 	clearCache(): void {
 		this.cache.clear();
+		if (this.getProvider() === "google") {
+			googleGeocodingService.clearCache();
+		}
 	}
 
 	/**
 	 * Get cache size for monitoring
 	 */
 	getCacheSize(): number {
-		return this.cache.size;
+		const localCache = this.cache.size;
+		const googleCache =
+			this.getProvider() === "google"
+				? googleGeocodingService.getCacheSize()
+				: 0;
+		return localCache + googleCache;
+	}
+
+	/**
+	 * Get geocoding provider status
+	 */
+	getProviderStatus(): {
+		provider: GeocodingProvider;
+		providers: {
+			openstreetmap: boolean;
+			google: boolean;
+		};
+	} {
+		return {
+			provider: this.getProvider(),
+			providers: {
+				openstreetmap: true, // Always available
+				google: googleGeocodingService.isConfigured(),
+			},
+		};
 	}
 }
 

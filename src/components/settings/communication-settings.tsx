@@ -69,11 +69,7 @@ export function CommunicationSettings() {
 
 	const getStatusBadge = (configured: boolean, provider: string) => {
 		if (configured && provider !== "None") {
-			return (
-				<Badge variant="success" className="bg-green-100 text-green-800">
-					{provider}
-				</Badge>
-			);
+			return <Badge className="bg-green-100 text-green-800">{provider}</Badge>;
 		}
 		return (
 			<Badge variant="destructive" className="bg-red-100 text-red-800">

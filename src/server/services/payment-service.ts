@@ -3,6 +3,8 @@ import { TRPCError } from "@trpc/server";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { pagarmeService } from "~/server/services/pagarme";
+import { wsServer } from "../websocket/websocket-server";
+import { NotificationTypes, notificationService } from "./notification-service";
 
 // Payment method types
 interface CreditCardData {
@@ -332,6 +334,53 @@ export function createPaymentServiceRouter({
 							message: `Payment received for booking of ${booking.service.title}`,
 						},
 					});
+
+					// Send SMS/Email notification to provider
+					try {
+						const provider = await db.user.findUnique({
+							where: { id: booking.providerId },
+						});
+
+						if (provider) {
+							await notificationService.sendNotification(
+								NotificationTypes.PAYMENT_RECEIVED,
+								{
+									email: provider.email || undefined,
+									phone: provider.phone || undefined,
+									name: provider.name || "Profissional",
+								},
+								{
+									amount: booking.payment.amount / 100,
+									serviceName: booking.service.title,
+									customerName: currentUser?.name || "Cliente",
+								},
+								["sms", "email"],
+							);
+						}
+					} catch (error) {
+						console.error("Failed to send payment notification:", error);
+					}
+
+					// Send real-time WebSocket notifications
+					try {
+						// Notify provider
+						wsServer.sendPaymentUpdate(booking.service.providerId, {
+							paymentId: updatedPayment.id,
+							status: "received",
+							amount: booking.payment.amount / 100,
+							message: `Pagamento de R$ ${(booking.payment.amount / 100).toFixed(2)} recebido para ${booking.service.title}`,
+						});
+
+						// Notify client
+						wsServer.sendPaymentUpdate(booking.clientId, {
+							paymentId: updatedPayment.id,
+							status: "confirmed",
+							amount: booking.payment.amount / 100,
+							message: `Pagamento confirmado para ${booking.service.title}`,
+						});
+					} catch (error) {
+						console.error("Failed to send WebSocket notifications:", error);
+					}
 				}
 
 				return {

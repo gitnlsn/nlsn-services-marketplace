@@ -1,7 +1,8 @@
 "use client";
 
-import { FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Filter, Search } from "~/components/ui/icon";
 import { api } from "~/trpc/react";
 import { ServiceCard } from "./service-card";
 
@@ -96,12 +97,14 @@ export function ServicesGrid({
 								placeholder="Buscar serviços..."
 								className="w-full rounded-lg border border-gray-300 py-3 pr-12 pl-4 focus:border-indigo-500 focus:ring-indigo-500"
 							/>
-							<button
+							<Button
 								type="submit"
-								className="absolute top-2 right-2 rounded-lg bg-indigo-600 p-2 text-white hover:bg-indigo-700"
+								variant="brand"
+								size="icon"
+								className="absolute top-2 right-2"
 							>
-								<MagnifyingGlassIcon className="h-5 w-5" />
-							</button>
+								<Search className="h-5 w-5" />
+							</Button>
 						</div>
 					</form>
 
@@ -109,7 +112,7 @@ export function ServicesGrid({
 					<div className="flex flex-wrap items-center gap-4">
 						{/* Category Filter */}
 						<div className="flex items-center gap-2">
-							<FunnelIcon className="h-5 w-5 text-gray-400" />
+							<Filter className="h-5 w-5 text-gray-400" />
 							<select
 								value={selectedCategory}
 								onChange={(e) => setSelectedCategory(e.target.value)}
@@ -202,7 +205,7 @@ export function ServicesGrid({
 				) : (
 					<div className="py-12 text-center">
 						<div className="mb-4 text-gray-400">
-							<MagnifyingGlassIcon className="mx-auto h-16 w-16" />
+							<Search className="mx-auto h-16 w-16" />
 						</div>
 						<h3 className="mb-2 font-semibold text-gray-900 text-xl">
 							Nenhum serviço encontrado
@@ -210,17 +213,17 @@ export function ServicesGrid({
 						<p className="mb-4 text-gray-600">
 							Tente ajustar seus filtros ou buscar por outros termos.
 						</p>
-						<button
+						<Button
 							type="button"
 							onClick={() => {
 								setSearchQuery("");
 								setSelectedCategory("");
 								setPriceRange({});
 							}}
-							className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+							variant="brand"
 						>
 							Limpar filtros
-						</button>
+						</Button>
 					</div>
 				)}
 			</div>

@@ -14,6 +14,7 @@ import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { DatePicker } from "~/components/ui/date-picker";
+import { PriceDisplay } from "~/components/ui/price-display";
 import {
 	Select,
 	SelectContent,
@@ -102,13 +103,6 @@ export function BookingWidget({
 		);
 	};
 
-	const formatPrice = (price: number) => {
-		return new Intl.NumberFormat("pt-BR", {
-			style: "currency",
-			currency: "BRL",
-		}).format(price);
-	};
-
 	return (
 		<div className={`space-y-6 ${className}`}>
 			{/* Price Card */}
@@ -117,12 +111,11 @@ export function BookingWidget({
 					<div className="flex items-center justify-between">
 						<div>
 							<CardTitle className="font-bold text-2xl text-gray-900">
-								{formatPrice(service.price)}
-								{service.priceType === "hourly" && (
-									<span className="font-normal text-gray-600 text-lg">
-										/hora
-									</span>
-								)}
+								<PriceDisplay
+									amount={service.price}
+									type={service.priceType}
+									className="font-bold text-2xl text-gray-900"
+								/>
 							</CardTitle>
 							<p className="text-gray-600 text-sm">
 								{service.priceType === "hourly" ? "Por hora" : "Preço fixo"}
@@ -229,9 +222,10 @@ export function BookingWidget({
 											</p>
 										</div>
 									</div>
-									<span className="font-medium text-gray-900 text-sm">
-										{formatPrice(addOn.price)}
-									</span>
+									<PriceDisplay
+										amount={addOn.price}
+										className="font-medium text-gray-900 text-sm"
+									/>
 								</label>
 							))}
 						</div>
@@ -257,27 +251,30 @@ export function BookingWidget({
 					<div className="space-y-2 border-t pt-4">
 						<div className="flex justify-between text-sm">
 							<span>Serviço base</span>
-							<span>
-								{formatPrice(
+							<PriceDisplay
+								amount={
 									service.priceType === "hourly"
 										? service.price * (selectedDuration / 60)
-										: service.price,
-								)}
-							</span>
+										: service.price
+								}
+							/>
 						</div>
 						{selectedAddOns.map((addOnId) => {
 							const addOn = addOns.find((ao) => ao.id === addOnId);
 							return addOn ? (
 								<div key={addOnId} className="flex justify-between text-sm">
 									<span>{addOn.name}</span>
-									<span>{formatPrice(addOn.price)}</span>
+									<PriceDisplay amount={addOn.price} />
 								</div>
 							) : null;
 						})}
 						<div className="border-t pt-2">
 							<div className="flex justify-between font-semibold">
 								<span>Total</span>
-								<span>{formatPrice(calculateTotal())}</span>
+								<PriceDisplay
+									amount={calculateTotal()}
+									className="font-semibold"
+								/>
 							</div>
 						</div>
 					</div>
@@ -285,8 +282,9 @@ export function BookingWidget({
 					{/* Booking Button */}
 					<Button
 						onClick={onBookingClick}
-						className="w-full bg-indigo-600 py-3 hover:bg-indigo-700"
-						size="lg"
+						variant="brand"
+						size="xl"
+						className="w-full"
 						disabled={!selectedDate || !selectedTime}
 					>
 						<Calendar className="mr-2 h-4 w-4" />

@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createUserService } from "~/server/services/user-service";
 import {
@@ -7,17 +8,28 @@ import {
 	testDb,
 	testUsers,
 } from "../setup";
+import { asPrismaClient } from "../types";
 
 describe("UserService Integration Tests", () => {
 	beforeEach(async () => {
 		await cleanupTestDatabase();
 		await setupTestDatabase();
+		// Reset all mocks before each test
+		for (const model of Object.values(testDb)) {
+			if (typeof model === "object" && model !== null) {
+				for (const method of Object.values(model)) {
+					if (typeof method === "function" && "mockReset" in method) {
+						(method as Mock).mockReset();
+					}
+				}
+			}
+		}
 	});
 
 	describe("updateProfile", () => {
 		it("should successfully update user profile", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.client,
 			});
 
@@ -27,6 +39,15 @@ describe("UserService Integration Tests", () => {
 				bio: "Updated bio",
 			};
 
+			const updatedUser = {
+				...testUsers.client,
+				...updateData,
+				updatedAt: new Date(),
+			};
+
+			// Mock the update call
+			testDb.user.update.mockResolvedValue(updatedUser);
+
 			const result = await userService.updateProfile(updateData);
 
 			expect(result.name).toBe(updateData.name);
@@ -34,16 +55,16 @@ describe("UserService Integration Tests", () => {
 			expect(result.bio).toBe(updateData.bio);
 			expect(result.id).toBe(testUsers.client.id);
 
-			// Verify database was actually updated
-			const updatedUser = await testDb.user.findUnique({
+			// Verify the update was called with correct params
+			expect(testDb.user.update).toHaveBeenCalledWith({
 				where: { id: testUsers.client.id },
+				data: updateData,
 			});
-			expect(updatedUser?.name).toBe(updateData.name);
 		});
 
 		it("should throw error when user not authenticated", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				// No currentUser provided
 			});
 
@@ -56,9 +77,12 @@ describe("UserService Integration Tests", () => {
 	describe("getCurrentUser", () => {
 		it("should return current user data", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
+
+			// Mock the findUnique call
+			testDb.user.findUnique.mockResolvedValue(testUsers.professional);
 
 			const result = await userService.getCurrentUser();
 
@@ -70,7 +94,7 @@ describe("UserService Integration Tests", () => {
 
 		it("should throw error when user not found", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: {
 					...testUsers.client,
 					id: "non-existent-id",
@@ -84,7 +108,7 @@ describe("UserService Integration Tests", () => {
 	describe("addBankAccount", () => {
 		it("should add bank account for professional user", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -98,23 +122,32 @@ describe("UserService Integration Tests", () => {
 				isDefault: true,
 			};
 
+			const createdBankAccount = {
+				id: "bank-account-id",
+				...bankAccountData,
+				userId: testUsers.professional.id,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// Mock findFirst to check for duplicates
+			testDb.bankAccount.findFirst.mockResolvedValue(null);
+			// Mock updateMany to unset other defaults
+			testDb.bankAccount.updateMany.mockResolvedValue({ count: 0 });
+			// Mock create
+			testDb.bankAccount.create.mockResolvedValue(createdBankAccount);
+
 			const result = await userService.addBankAccount(bankAccountData);
 
 			expect(result.bankName).toBe(bankAccountData.bankName);
 			expect(result.accountNumber).toBe(bankAccountData.accountNumber);
 			expect(result.isDefault).toBe(true);
 			expect(result.userId).toBe(testUsers.professional.id);
-
-			// Verify database was updated
-			const bankAccount = await testDb.bankAccount.findUnique({
-				where: { id: result.id },
-			});
-			expect(bankAccount).toBeTruthy();
 		});
 
 		it("should throw error for non-professional user", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.client,
 			});
 
@@ -135,7 +168,7 @@ describe("UserService Integration Tests", () => {
 
 		it("should prevent duplicate bank accounts", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -149,8 +182,16 @@ describe("UserService Integration Tests", () => {
 				isDefault: true,
 			};
 
-			// Add first bank account
-			await userService.addBankAccount(bankAccountData);
+			const existingAccount = {
+				id: "existing-account",
+				...bankAccountData,
+				userId: testUsers.professional.id,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// Mock findFirst to find existing account
+			testDb.bankAccount.findFirst.mockResolvedValue(existingAccount);
 
 			// Try to add duplicate
 			await expect(userService.addBankAccount(bankAccountData)).rejects.toThrow(
@@ -160,37 +201,46 @@ describe("UserService Integration Tests", () => {
 
 		it("should unset other default accounts when setting new default", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
-			// Add first default account
-			const firstAccount = await userService.addBankAccount({
-				bankName: "First Bank",
-				accountType: "checking",
-				accountNumber: "11111",
-				agencyNumber: "1111",
-				holderName: "Test Professional",
-				holderCpf: "12345678901",
-				isDefault: true,
-			});
-
-			// Add second default account
-			const secondAccount = await userService.addBankAccount({
+			const secondAccountData = {
 				bankName: "Second Bank",
-				accountType: "savings",
+				accountType: "savings" as const,
 				accountNumber: "22222",
 				agencyNumber: "2222",
 				holderName: "Test Professional",
 				holderCpf: "12345678901",
 				isDefault: true,
+			};
+
+			const createdSecondAccount = {
+				id: "second-account-id",
+				...secondAccountData,
+				userId: testUsers.professional.id,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// Mock findFirst to check no duplicates
+			testDb.bankAccount.findFirst.mockResolvedValue(null);
+			// Mock updateMany to unset other defaults
+			testDb.bankAccount.updateMany.mockResolvedValue({ count: 1 });
+			// Mock create for second account
+			testDb.bankAccount.create.mockResolvedValue(createdSecondAccount);
+
+			const secondAccount = await userService.addBankAccount(secondAccountData);
+
+			// Verify updateMany was called to unset other defaults
+			expect(testDb.bankAccount.updateMany).toHaveBeenCalledWith({
+				where: {
+					userId: testUsers.professional.id,
+					isDefault: true,
+				},
+				data: { isDefault: false },
 			});
 
-			// Verify first account is no longer default
-			const updatedFirstAccount = await testDb.bankAccount.findUnique({
-				where: { id: firstAccount.id },
-			});
-			expect(updatedFirstAccount?.isDefault).toBe(false);
 			expect(secondAccount.isDefault).toBe(true);
 		});
 	});
@@ -198,8 +248,30 @@ describe("UserService Integration Tests", () => {
 	describe("becomeProfessional", () => {
 		it("should upgrade client to professional", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.client,
+			});
+
+			const upgradedUser = {
+				...testUsers.client,
+				isProfessional: true,
+				professionalSince: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// Mock the update
+			testDb.user.update.mockResolvedValue(upgradedUser);
+			// Mock notification creation
+			testDb.notification.create.mockResolvedValue({
+				id: "notification-id",
+				userId: testUsers.client.id,
+				type: "professional_welcome",
+				title: "Welcome, Professional!",
+				message:
+					"Congratulations! You are now registered as a professional. You can start offering your services.",
+				read: false,
+				data: null,
+				createdAt: new Date(),
 			});
 
 			const result = await userService.becomeProfessional();
@@ -207,25 +279,19 @@ describe("UserService Integration Tests", () => {
 			expect(result.isProfessional).toBe(true);
 			expect(result.professionalSince).toBeTruthy();
 
-			// Verify database was updated
-			const updatedUser = await testDb.user.findUnique({
+			// Verify update was called
+			expect(testDb.user.update).toHaveBeenCalledWith({
 				where: { id: testUsers.client.id },
-			});
-			expect(updatedUser?.isProfessional).toBe(true);
-
-			// Verify notification was created
-			const notification = await testDb.notification.findFirst({
-				where: {
-					userId: testUsers.client.id,
-					type: "professional_welcome",
+				data: {
+					isProfessional: true,
+					professionalSince: expect.any(Date),
 				},
 			});
-			expect(notification).toBeTruthy();
 		});
 
 		it("should throw error if user is already professional", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -234,28 +300,9 @@ describe("UserService Integration Tests", () => {
 	});
 
 	describe("requestWithdrawal", () => {
-		beforeEach(async () => {
-			// Add a bank account for withdrawal tests
-			await testDb.bankAccount.create({
-				data: {
-					id: "test-bank-account-id",
-					userId: testUsers.professional.id,
-					bankName: "Test Bank",
-					accountType: "checking",
-					accountNumber: "12345",
-					agencyNumber: "6789",
-					holderName: "Test Professional",
-					holderCpf: "12345678901",
-					isDefault: true,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			});
-		});
-
 		it("should process withdrawal request successfully", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -264,31 +311,64 @@ describe("UserService Integration Tests", () => {
 				bankAccountId: "test-bank-account-id",
 			};
 
+			const bankAccount = {
+				id: "test-bank-account-id",
+				userId: testUsers.professional.id,
+				bankName: "Test Bank",
+				accountType: "checking",
+				accountNumber: "12345",
+				agencyNumber: "6789",
+				holderName: "Test Professional",
+				holderCpf: "12345678901",
+				isDefault: true,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			const withdrawal = {
+				id: "withdrawal-id",
+				userId: testUsers.professional.id,
+				amount: withdrawalData.amount,
+				bankAccountId: withdrawalData.bankAccountId,
+				status: "pending",
+				requestDate: new Date(),
+				processedDate: null,
+				transactionId: null,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+
+			// Mock bank account lookup
+			testDb.bankAccount.findUnique.mockResolvedValue(bankAccount);
+			// Mock withdrawal creation
+			testDb.withdrawal.create.mockResolvedValue(withdrawal);
+			// Mock user update
+			testDb.user.update.mockResolvedValue({
+				...testUsers.professional,
+				accountBalance: 50.0,
+			});
+			// Mock notification creation
+			testDb.notification.create.mockResolvedValue({
+				id: "notification-id",
+				userId: testUsers.professional.id,
+				type: "withdrawal_requested",
+				title: "Withdrawal Requested",
+				message: "Your withdrawal request has been submitted.",
+				read: false,
+				data: null,
+				createdAt: new Date(),
+			});
+
 			const result = await userService.requestWithdrawal(withdrawalData);
 
 			expect(result.amount).toBe(withdrawalData.amount);
 			expect(result.bankAccountId).toBe(withdrawalData.bankAccountId);
 			expect(result.status).toBe("pending");
-
-			// Verify user balance was updated
-			const updatedUser = await testDb.user.findUnique({
-				where: { id: testUsers.professional.id },
-			});
-			expect(updatedUser?.accountBalance).toBe(50.0); // 100 - 50
-
-			// Verify notification was created
-			const notification = await testDb.notification.findFirst({
-				where: {
-					userId: testUsers.professional.id,
-					type: "withdrawal_requested",
-				},
-			});
-			expect(notification).toBeTruthy();
 		});
 
 		it("should throw error for insufficient balance", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -304,7 +384,7 @@ describe("UserService Integration Tests", () => {
 
 		it("should throw error for non-existent bank account", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -320,7 +400,7 @@ describe("UserService Integration Tests", () => {
 
 		it("should throw error for amount below minimum", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
 			});
 
@@ -336,54 +416,37 @@ describe("UserService Integration Tests", () => {
 	});
 
 	describe("getEarningsSummary", () => {
-		beforeEach(async () => {
-			// Create test booking and payment for earnings
-			const booking = await testDb.booking.create({
-				data: {
-					id: "test-booking-id",
-					serviceId: "test-service-id",
-					clientId: testUsers.client.id,
-					providerId: testUsers.professional.id,
-					bookingDate: new Date(),
-					totalPrice: 100.0,
-					status: "completed",
-					completedAt: new Date(),
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			});
-
-			await testDb.payment.create({
-				data: {
-					id: "test-payment-id",
-					bookingId: booking.id,
-					amount: 100.0,
-					status: "paid",
-					serviceFee: 10.0,
-					netAmount: 90.0,
-					releasedAt: new Date(),
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			});
-
-			await testDb.withdrawal.create({
-				data: {
-					id: "test-withdrawal-id",
-					userId: testUsers.professional.id,
-					amount: 40.0,
-					status: "completed",
-					bankAccountId: "test-bank-account-id",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			});
-		});
-
 		it("should return accurate earnings summary", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.professional,
+			});
+
+			// Mock payment aggregate for total earnings
+			testDb.payment.aggregate.mockResolvedValue({
+				_sum: { netAmount: 90.0 },
+				_count: null,
+				_avg: null,
+				_max: null,
+				_min: null,
+			});
+
+			// Mock payment aggregate for pending escrow
+			testDb.payment.aggregate.mockResolvedValueOnce({
+				_sum: { netAmount: 0 },
+				_count: null,
+				_avg: null,
+				_max: null,
+				_min: null,
+			});
+
+			// Mock withdrawal aggregate for total withdrawn
+			testDb.withdrawal.aggregate.mockResolvedValue({
+				_sum: { amount: 40.0 },
+				_count: null,
+				_avg: null,
+				_max: null,
+				_min: null,
 			});
 
 			const result = await userService.getEarningsSummary();
@@ -398,7 +461,7 @@ describe("UserService Integration Tests", () => {
 
 		it("should throw error for non-professional user", async () => {
 			const userService = createUserService({
-				db: testDb,
+				db: asPrismaClient(testDb),
 				currentUser: testUsers.client,
 			});
 

@@ -11,6 +11,7 @@ import {
 	teardownTestDatabase,
 	testDb,
 } from "../helpers/database";
+import { asPrismaClient } from "../types";
 
 describe("BookingService Integration Tests", () => {
 	setupTestDatabase();
@@ -28,8 +29,9 @@ describe("BookingService Integration Tests", () => {
 		testService = await createTestService(testProfessional.id, testCategory.id);
 
 		bookingService = createBookingService({
-			db: testDb,
-			currentUser: { id: testUser.id, email: testUser.email },
+			db: asPrismaClient(testDb),
+			currentUser: testUser,
+			currentUserId: testUser.id,
 		});
 	});
 
@@ -46,10 +48,7 @@ describe("BookingService Integration Tests", () => {
 				address: "Test Address, 123",
 			};
 
-			const result = await bookingService.createBooking(
-				testUser.id,
-				bookingData,
-			);
+			const result = await bookingService.createBooking(bookingData);
 
 			expect(result.booking.serviceId).toBe(testService.id);
 			expect(result.booking.clientId).toBe(testUser.id);
@@ -65,9 +64,9 @@ describe("BookingService Integration Tests", () => {
 				bookingDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
 			};
 
-			await expect(
-				bookingService.createBooking(testProfessional.id, bookingData),
-			).rejects.toThrow("Cannot book your own service");
+			await expect(bookingService.createBooking(bookingData)).rejects.toThrow(
+				"Cannot book your own service",
+			);
 		});
 
 		it("should prevent booking inactive service", async () => {
@@ -82,9 +81,9 @@ describe("BookingService Integration Tests", () => {
 				bookingDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
 			};
 
-			await expect(
-				bookingService.createBooking(testUser.id, bookingData),
-			).rejects.toThrow("Service is not available for booking");
+			await expect(bookingService.createBooking(bookingData)).rejects.toThrow(
+				"Service is not available for booking",
+			);
 		});
 
 		it("should calculate hourly pricing correctly", async () => {
@@ -106,10 +105,7 @@ describe("BookingService Integration Tests", () => {
 				endDate,
 			};
 
-			const result = await bookingService.createBooking(
-				testUser.id,
-				bookingData,
-			);
+			const result = await bookingService.createBooking(bookingData);
 
 			expect(result.booking.totalPrice).toBe(15000); // 3 hours * R$ 50 = R$ 150
 		});
@@ -124,14 +120,14 @@ describe("BookingService Integration Tests", () => {
 			const bookingDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 			// Create first booking
-			await bookingService.createBooking(testUser.id, {
+			await bookingService.createBooking({
 				serviceId: limitedService.id,
 				bookingDate,
 			});
 
 			// Try to create second booking for same date
 			await expect(
-				bookingService.createBooking(testUser.id, {
+				bookingService.createBooking({
 					serviceId: limitedService.id,
 					bookingDate,
 				}),
@@ -144,7 +140,7 @@ describe("BookingService Integration Tests", () => {
 				bookingDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
 			};
 
-			await bookingService.createBooking(testUser.id, bookingData);
+			await bookingService.createBooking(bookingData);
 
 			const notification = await testDb.notification.findFirst({
 				where: {
@@ -166,10 +162,9 @@ describe("BookingService Integration Tests", () => {
 				testProfessional.id,
 			);
 
-			const result = await bookingService.acceptBooking(
-				testProfessional.id,
-				booking.id,
-			);
+			const result = await bookingService.acceptBooking({
+				bookingId: booking.id,
+			});
 
 			expect(result.status).toBe("accepted");
 
@@ -191,7 +186,7 @@ describe("BookingService Integration Tests", () => {
 			);
 
 			await expect(
-				bookingService.acceptBooking(testUser.id, booking.id),
+				bookingService.acceptBooking({ bookingId: booking.id }),
 			).rejects.toThrow("Only the service provider can accept this booking");
 		});
 
@@ -204,7 +199,7 @@ describe("BookingService Integration Tests", () => {
 			);
 
 			await expect(
-				bookingService.acceptBooking(testProfessional.id, booking.id),
+				bookingService.acceptBooking({ bookingId: booking.id }),
 			).rejects.toThrow("Booking is not in pending status");
 		});
 	});
@@ -218,11 +213,10 @@ describe("BookingService Integration Tests", () => {
 			);
 
 			const reason = "Schedule conflict";
-			const result = await bookingService.declineBooking(
-				testProfessional.id,
-				booking.id,
+			const result = await bookingService.declineBooking({
+				bookingId: booking.id,
 				reason,
-			);
+			});
 
 			expect(result.status).toBe("declined");
 			expect(result.cancellationReason).toBe(reason);
@@ -261,7 +255,7 @@ describe("BookingService Integration Tests", () => {
 				},
 			});
 
-			await bookingService.declineBooking(testProfessional.id, booking.id);
+			await bookingService.declineBooking({ bookingId: booking.id });
 
 			const updatedPayment = await testDb.payment.findUnique({
 				where: { id: payment.id },
@@ -278,10 +272,7 @@ describe("BookingService Integration Tests", () => {
 				testProfessional.id,
 			);
 
-			const result = await bookingService.getBookingById(
-				testUser.id,
-				booking.id,
-			);
+			const result = await bookingService.getBooking({ bookingId: booking.id });
 
 			expect(result.id).toBe(booking.id);
 			expect(result.service).toBeDefined();
@@ -296,10 +287,7 @@ describe("BookingService Integration Tests", () => {
 				testProfessional.id,
 			);
 
-			const result = await bookingService.getBookingById(
-				testProfessional.id,
-				booking.id,
-			);
+			const result = await bookingService.getBooking({ bookingId: booking.id });
 
 			expect(result.id).toBe(booking.id);
 		});
@@ -313,7 +301,7 @@ describe("BookingService Integration Tests", () => {
 			const otherUser = await createTestUser({ email: "other@example.com" });
 
 			await expect(
-				bookingService.getBookingById(otherUser.id, booking.id),
+				bookingService.getBooking({ bookingId: booking.id }),
 			).rejects.toThrow("You don't have permission to view this booking");
 		});
 	});
@@ -338,13 +326,10 @@ describe("BookingService Integration Tests", () => {
 				},
 			});
 
-			const result = await bookingService.updateBookingStatus(
-				testProfessional.id,
-				{
-					bookingId: booking.id,
-					status: "completed",
-				},
-			);
+			const result = await bookingService.updateBookingStatus({
+				bookingId: booking.id,
+				status: "completed",
+			});
 
 			expect(result.status).toBe("completed");
 			expect(result.completedAt).toBeInstanceOf(Date);
@@ -375,7 +360,7 @@ describe("BookingService Integration Tests", () => {
 			);
 
 			await expect(
-				bookingService.updateBookingStatus(testUser.id, {
+				bookingService.updateBookingStatus({
 					bookingId: booking.id,
 					status: "completed",
 				}),
@@ -402,7 +387,7 @@ describe("BookingService Integration Tests", () => {
 				},
 			});
 
-			const result = await bookingService.updateBookingStatus(testUser.id, {
+			const result = await bookingService.updateBookingStatus({
 				bookingId: booking.id,
 				status: "cancelled",
 				reason: "Change of plans",
@@ -429,7 +414,7 @@ describe("BookingService Integration Tests", () => {
 				createTestBooking(testService.id, testUser.id, testProfessional.id),
 			]);
 
-			const result = await bookingService.listBookings(testUser.id, {
+			const result = await bookingService.listBookings({
 				role: "client",
 				limit: 2,
 			});
@@ -441,8 +426,9 @@ describe("BookingService Integration Tests", () => {
 		it("should list provider bookings", async () => {
 			await createTestBooking(testService.id, testUser.id, testProfessional.id);
 
-			const result = await bookingService.listBookings(testProfessional.id, {
+			const result = await bookingService.listBookings({
 				role: "provider",
+				limit: 20,
 			});
 
 			expect(result.bookings).toHaveLength(1);
@@ -467,14 +453,16 @@ describe("BookingService Integration Tests", () => {
 				},
 			);
 
-			const pendingResult = await bookingService.listBookings(testUser.id, {
+			const pendingResult = await bookingService.listBookings({
 				role: "client",
 				status: "pending",
+				limit: 20,
 			});
 
-			const acceptedResult = await bookingService.listBookings(testUser.id, {
+			const acceptedResult = await bookingService.listBookings({
 				role: "client",
 				status: "accepted",
+				limit: 20,
 			});
 
 			expect(pendingResult.bookings).toHaveLength(1);

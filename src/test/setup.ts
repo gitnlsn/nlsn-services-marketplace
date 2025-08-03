@@ -1,14 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-import { afterAll, beforeAll, beforeEach } from "vitest";
+import { vi } from "vitest";
+import type { MockPrismaClient } from "./types";
 
-// Test database client
-export const testDb = new PrismaClient({
-	datasources: {
-		db: {
-			url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
-		},
-	},
-});
+export type { MockPrismaClient } from "./types";
 
 // Test user data
 export const testUsers = {
@@ -70,93 +63,337 @@ export const testService = {
 	title: "Test Service",
 	description: "This is a test service for testing purposes",
 	price: 50.0,
-	priceType: "fixed",
+	priceType: "fixed" as const,
 	categoryId: testCategory.id,
 	providerId: testUsers.professional.id,
 	duration: 60,
 	location: "Test Location",
 	maxBookings: 5,
-	status: "active",
+	status: "active" as const,
 	viewCount: 0,
 	bookingCount: 0,
 	embedding: [],
+	allowRecurring: true,
+	bufferTime: 15,
+	createdAt: new Date(),
+	updatedAt: new Date(),
 };
 
-// Setup and teardown functions
+// Helper function to create a mock Prisma client
+export function createMockPrismaClient(): MockPrismaClient {
+	const mockDb = {
+		user: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		service: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		booking: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+			groupBy: vi.fn(),
+		},
+		payment: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+			aggregate: vi.fn(),
+			groupBy: vi.fn(),
+		},
+		notification: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		category: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		review: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+			aggregate: vi.fn(),
+			groupBy: vi.fn(),
+		},
+		withdrawal: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+			aggregate: vi.fn(),
+		},
+		bankAccount: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		image: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		waitlist: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+			groupBy: vi.fn(),
+		},
+		recurringBooking: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		groupBooking: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		serviceAddOn: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		serviceBundle: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		bookingAddOn: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		bookingReminder: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		groupBookingSettings: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		bookingPolicy: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		timeSlot: {
+			create: vi.fn(),
+			createMany: vi.fn(),
+			findUnique: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+			findFirst: vi.fn(),
+			findMany: vi.fn(),
+			update: vi.fn(),
+			updateMany: vi.fn(),
+			delete: vi.fn(),
+			deleteMany: vi.fn(),
+			upsert: vi.fn(),
+			count: vi.fn(),
+		},
+		$connect: vi.fn().mockResolvedValue(undefined),
+		$disconnect: vi.fn().mockResolvedValue(undefined),
+		$transaction: vi.fn().mockImplementation((fn) => {
+			if (typeof fn === "function") {
+				return fn(mockDb);
+			}
+			return Promise.all(fn);
+		}),
+		$queryRaw: vi.fn(),
+		$executeRaw: vi.fn(),
+		$executeRawUnsafe: vi.fn(),
+		$queryRawUnsafe: vi.fn(),
+	} as MockPrismaClient;
+
+	return mockDb;
+}
+
+// Export a default mock database instance for tests to use
+export const testDb = createMockPrismaClient();
+
+// No database setup or cleanup needed anymore
 export async function setupTestDatabase() {
-	// Create test users
-	await testDb.user.createMany({
-		data: [testUsers.client, testUsers.professional],
-		skipDuplicates: true,
-	});
-
-	// Create test category
-	await testDb.category.create({
-		data: testCategory,
-	});
-
-	// Create test service
-	await testDb.service.create({
-		data: testService,
-	});
+	// No-op: Tests will configure mocks as needed
 }
 
 export async function cleanupTestDatabase() {
-	// Clean up in reverse order of dependencies
-	await testDb.review.deleteMany();
-	await testDb.notification.deleteMany();
-	await testDb.payment.deleteMany();
-	await testDb.booking.deleteMany();
-	await testDb.withdrawal.deleteMany();
-	await testDb.bankAccount.deleteMany();
-	await testDb.image.deleteMany();
-	await testDb.service.deleteMany();
-	await testDb.category.deleteMany();
-	await testDb.user.deleteMany();
+	// No-op: No actual database to clean up
 }
-
-// Vitest global setup
-beforeAll(async () => {
-	console.log("🔧 Setting up test database...");
-	await setupTestDatabase();
-});
-
-afterAll(async () => {
-	console.log("🧹 Cleaning up test database...");
-	await cleanupTestDatabase();
-	await testDb.$disconnect();
-});
-
-beforeEach(async () => {
-	// Clean up any data created during tests (except seed data)
-	await testDb.review.deleteMany({
-		where: {
-			NOT: { id: "seed-data" }, // Keep any seed data if exists
-		},
-	});
-	await testDb.notification.deleteMany({
-		where: {
-			NOT: { id: "seed-data" },
-		},
-	});
-	await testDb.payment.deleteMany({
-		where: {
-			NOT: { id: "seed-data" },
-		},
-	});
-	await testDb.booking.deleteMany({
-		where: {
-			NOT: { id: "seed-data" },
-		},
-	});
-	await testDb.withdrawal.deleteMany({
-		where: {
-			NOT: { id: "seed-data" },
-		},
-	});
-	await testDb.bankAccount.deleteMany({
-		where: {
-			NOT: { id: "seed-data" },
-		},
-	});
-});

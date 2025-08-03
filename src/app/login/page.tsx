@@ -2,10 +2,11 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { Button } from "~/components/ui/button";
 import { useAuth } from "~/contexts/auth-context";
 
-export default function LoginPage() {
+function LoginContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const returnUrl = searchParams.get("returnUrl") ?? "/";
@@ -33,17 +34,17 @@ export default function LoginPage() {
 			<div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
 				<div className="text-center">
 					<h2 className="font-bold text-3xl">Sign in to your account</h2>
-					<p className="mt-2 text-gray-600">
-						Access the NLSN Services Marketplace
-					</p>
+					<p className="mt-2 text-gray-600">Access Savoir Link</p>
 				</div>
 
 				<div className="mt-8">
-					<button
+					<Button
 						type="button"
 						onClick={handleGoogleSignIn}
 						disabled={isLoading}
-						className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+						variant="google"
+						size="lg"
+						className="w-full"
 					>
 						<svg
 							className="h-5 w-5"
@@ -69,7 +70,7 @@ export default function LoginPage() {
 							/>
 						</svg>
 						{isLoading ? "Signing in..." : "Continue with Google"}
-					</button>
+					</Button>
 				</div>
 
 				<div className="text-center text-gray-600 text-sm">
@@ -84,5 +85,23 @@ export default function LoginPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function LoginPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center bg-gray-50">
+					<div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
+						<div className="text-center">
+							<h2 className="font-bold text-3xl">Loading...</h2>
+						</div>
+					</div>
+				</div>
+			}
+		>
+			<LoginContent />
+		</Suspense>
 	);
 }

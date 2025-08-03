@@ -39,4 +39,29 @@ export const geocodingRouter = createTRPCRouter({
 			cacheSize: geocodingService.getCacheSize(),
 		};
 	}),
+
+	/**
+	 * Reverse geocode coordinates to address
+	 */
+	reverseGeocode: publicProcedure
+		.input(
+			z.object({
+				lat: z.number().min(-90).max(90),
+				lng: z.number().min(-180).max(180),
+			}),
+		)
+		.query(async ({ input }) => {
+			const result = await geocodingService.reverseGeocode(
+				input.lat,
+				input.lng,
+			);
+			return result;
+		}),
+
+	/**
+	 * Get geocoding provider status
+	 */
+	getProviderStatus: publicProcedure.query(() => {
+		return geocodingService.getProviderStatus();
+	}),
 });

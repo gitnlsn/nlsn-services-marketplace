@@ -125,6 +125,96 @@
 	}
 }
 
+/* Consistent spacing utilities */
+@layer utilities {
+	/* Card spacing - unified padding for cards */
+	.card-padding {
+		@apply p-6;
+	}
+
+	.card-padding-sm {
+		@apply p-4;
+	}
+
+	.card-padding-lg {
+		@apply p-8;
+	}
+
+	/* Section spacing - unified spacing for page sections */
+	.section-spacing {
+		@apply py-8;
+	}
+
+	.section-spacing-sm {
+		@apply py-4;
+	}
+
+	.section-spacing-lg {
+		@apply py-12;
+	}
+
+	/* Grid spacing - unified gaps for grids */
+	.grid-gap {
+		@apply gap-6;
+	}
+
+	.grid-gap-sm {
+		@apply gap-4;
+	}
+
+	.grid-gap-lg {
+		@apply gap-8;
+	}
+
+	/* Stack spacing - unified spacing for vertical stacks */
+	.stack-spacing {
+		@apply space-y-4;
+	}
+
+	.stack-spacing-sm {
+		@apply space-y-2;
+	}
+
+	.stack-spacing-lg {
+		@apply space-y-6;
+	}
+
+	/* Container widths - unified max-widths */
+	.container-sm {
+		@apply mx-auto max-w-2xl px-4;
+	}
+
+	.container-md {
+		@apply mx-auto max-w-4xl px-4;
+	}
+
+	.container-lg {
+		@apply mx-auto max-w-6xl px-4;
+	}
+
+	/* Form spacing */
+	.form-spacing {
+		@apply space-y-4;
+	}
+
+	.form-group {
+		@apply space-y-2;
+	}
+
+	/* Button spacing */
+	.button-group {
+		@apply flex space-x-3;
+	}
+
+	.button-group-sm {
+		@apply flex space-x-2;
+	}
+
+	.button-group-lg {
+		@apply flex space-x-4;
+	}
+}
+
 /* Custom Leaflet Styles */
 .custom-marker-icon {
 	border: none !important;

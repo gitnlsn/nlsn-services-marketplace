@@ -1,7 +1,7 @@
-// Service Worker for Services Marketplace
-const CACHE_NAME = "services-marketplace-v1";
-const STATIC_CACHE_NAME = "services-marketplace-static-v1";
-const DYNAMIC_CACHE_NAME = "services-marketplace-dynamic-v1";
+// Service Worker for Savoir Link
+const CACHE_NAME = "savoir-link-v1";
+const STATIC_CACHE_NAME = "savoir-link-static-v1";
+const DYNAMIC_CACHE_NAME = "savoir-link-dynamic-v1";
 
 // Files to cache on install
 const STATIC_FILES = [

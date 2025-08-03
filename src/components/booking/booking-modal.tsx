@@ -1,12 +1,10 @@
 "use client";
 
 import { Dialog, Transition } from "@headlessui/react";
-import {
-	CalendarIcon,
-	ClockIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/outline";
 import { Fragment, useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Calendar, Clock, X } from "~/components/ui/icon";
+import { PriceDisplay } from "~/components/ui/price-display";
 import { api } from "~/trpc/react";
 
 interface BookingModalProps {
@@ -87,8 +85,6 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 		return service.price;
 	};
 
-	const formatPrice = (price: number) => `R$ ${price.toFixed(2)}`;
-
 	// Get minimum date (today)
 	const today = new Date().toISOString().split("T")[0];
 
@@ -132,7 +128,7 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 										onClick={onClose}
 										className="rounded-full p-1 text-gray-400 hover:text-gray-600"
 									>
-										<XMarkIcon className="h-6 w-6" />
+										<X className="h-6 w-6" />
 									</button>
 								</div>
 
@@ -150,10 +146,11 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 												? "Por hora"
 												: "Preço fixo"}
 										</span>
-										<span className="font-semibold text-indigo-600">
-											{formatPrice(service.price)}
-											{service.priceType === "hourly" && "/hora"}
-										</span>
+										<PriceDisplay
+											amount={service.price}
+											type={service.priceType}
+											className="font-semibold text-indigo-600"
+										/>
 									</div>
 								</div>
 
@@ -176,7 +173,7 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 												className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
 												required
 											/>
-											<CalendarIcon className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
+											<Calendar className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
 										</div>
 									</div>
 
@@ -198,7 +195,7 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 													className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
 													required
 												/>
-												<ClockIcon className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
+												<Clock className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
 											</div>
 										</div>
 
@@ -218,7 +215,7 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 														onChange={(e) => setEndTime(e.target.value)}
 														className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500"
 													/>
-													<ClockIcon className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
+													<Clock className="absolute top-2.5 right-3 h-5 w-5 text-gray-400" />
 												</div>
 											</div>
 										)}
@@ -266,9 +263,10 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 											<span className="font-medium text-gray-900">
 												Total estimado:
 											</span>
-											<span className="font-bold text-indigo-600 text-lg">
-												{formatPrice(calculatePrice())}
-											</span>
+											<PriceDisplay
+												amount={calculatePrice()}
+												className="font-bold text-indigo-600 text-lg"
+											/>
 										</div>
 										{service.priceType === "hourly" && (
 											<p className="mt-1 text-gray-600 text-xs">
@@ -279,20 +277,22 @@ export function BookingModal({ isOpen, onClose, service }: BookingModalProps) {
 
 									{/* Actions */}
 									<div className="flex space-x-3 pt-4">
-										<button
+										<Button
 											type="button"
 											onClick={onClose}
-											className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+											variant="outline"
+											className="flex-1"
 										>
 											Cancelar
-										</button>
-										<button
+										</Button>
+										<Button
 											type="submit"
 											disabled={createBooking.isPending}
-											className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+											variant="brand"
+											className="flex-1"
 										>
 											{createBooking.isPending ? "Agendando..." : "Agendar"}
-										</button>
+										</Button>
 									</div>
 								</form>
 							</Dialog.Panel>

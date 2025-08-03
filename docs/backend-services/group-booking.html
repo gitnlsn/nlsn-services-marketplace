@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Booking - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Group Booking Service</h1>
+        
+        <p>The Group Booking service enables multiple users to participate in shared service bookings, allowing for cost-effective group sessions and collaborative experiences.</p>
+
+        <h2>Service Overview</h2>
+        <ul>
+            <li><strong>Organizer Model:</strong> One user creates and manages the group booking</li>
+            <li><strong>Participant Management:</strong> Multiple users can join and leave group bookings</li>
+            <li><strong>Capacity Control:</strong> Configurable minimum and maximum participants</li>
+            <li><strong>Automatic Processing:</strong> Group bookings are processed when minimum requirements are met</li>
+        </ul>
+
+        <h2>Group Booking Flow</h2>
+        <div class="mermaid">
+        graph TD
+            A[Organizer Creates Group Booking] --> B[Set Service, Date, Capacity]
+            B --> C[Group Booking Available for Joining]
+            C --> D{Participants Join}
+            D --> E[Check Min/Max Capacity]
+            E --> F{Min Reached?}
+            F -->|Yes| G[Group Booking Confirmed]
+            F -->|No| H[Wait for More Participants]
+            H --> D
+            G --> I[Individual Bookings Created]
+            I --> J[Payment Processing Begins]
+            
+            style A fill:#ADD8E6
+            style G fill:#C8E6C9
+            style I fill:#DDA0DD
+            style J fill:#87CEEB
+        </div>
+
+        <h2>API Endpoints</h2>
+
+        <h3>Create Group Booking</h3>
+        <pre><code>POST /api/trpc/groupBooking.create
+{
+  "serviceId": "service_id",
+  "name": "Group Yoga Session",
+  "description": "Morning yoga for beginners",
+  "maxParticipants": 10,
+  "minParticipants": 3,
+  "bookingDate": "2024-03-15T09:00:00Z",
+  "endDate": "2024-03-15T10:00:00Z"
+}</code></pre>
+
+        <h3>Join Group Booking</h3>
+        <pre><code>POST /api/trpc/groupBooking.join
+{
+  "groupBookingId": "group_booking_id",
+  "notes": "Looking forward to the session"
+}</code></pre>
+
+        <h3>List Available Group Bookings</h3>
+        <pre><code>GET /api/trpc/groupBooking.listAvailable
+Query Parameters:
+- categoryId (optional)
+- city (optional)
+- startDate (optional)
+- endDate (optional)</code></pre>
+
+        <h2>Group Booking States</h2>
+        <div class="mermaid">
+        stateDiagram-v2
+            [*] --> Open: Group Created
+            Open --> InProgress: Min Participants Reached
+            Open --> Cancelled: Organizer Cancels
+            InProgress --> Confirmed: Booking Date Approaches
+            Confirmed --> Completed: Service Delivered
+            Cancelled --> [*]
+            Completed --> [*]
+            
+            note right of Open : Accepting participants
+            note right of InProgress : Preparing for service
+            note right of Confirmed : Ready to proceed
+        </div>
+
+        <h2>Business Rules</h2>
+        <ul>
+            <li><strong>Minimum Participants:</strong> Group booking must reach minimum before confirmation</li>
+            <li><strong>Maximum Capacity:</strong> No more participants can join once maximum is reached</li>
+            <li><strong>Organizer Privileges:</strong> Only organizer can cancel the entire group booking</li>
+            <li><strong>Individual Exit:</strong> Participants can leave before confirmation without penalty</li>
+            <li><strong>Payment Splitting:</strong> Service cost is divided equally among confirmed participants</li>
+        </ul>
+
+        <h2>Notification Integration</h2>
+        <p>Group bookings trigger notifications for:</p>
+        <ul>
+            <li>New participant joins</li>
+            <li>Participant leaves group</li>
+            <li>Minimum capacity reached</li>
+            <li>Group booking confirmed</li>
+            <li>Group booking cancelled</li>
+        </ul>
+
+        <h2>Error Handling</h2>
+        <ul>
+            <li><strong>Capacity Exceeded:</strong> Prevent joining when maximum reached</li>
+            <li><strong>Duplicate Participation:</strong> Users cannot join the same group twice</li>
+            <li><strong>Invalid Organizer Actions:</strong> Only organizer can perform management actions</li>
+            <li><strong>Past Date Bookings:</strong> Prevent creation of group bookings for past dates</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Backend Services</a>
+        </nav>
+    </div>
+</body>
+</html>

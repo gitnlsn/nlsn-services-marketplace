@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
-	deleteImage,
+	deleteFile,
 	generateSignedUploadUrl,
 	getOptimizedImageUrl,
-	uploadImage,
-} from "~/server/services/storage-service";
+	getStorageStatus,
+	uploadFile,
+} from "~/server/services/unified-storage-service";
 
 export const uploadRouter = createTRPCRouter({
 	/**
@@ -18,7 +19,7 @@ export const uploadRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			return generateSignedUploadUrl(input.folder);
+			return await generateSignedUploadUrl({ folder: input.folder });
 		}),
 
 	/**
@@ -37,12 +38,19 @@ export const uploadRouter = createTRPCRouter({
 			const base64Data = input.base64.replace(/^data:image\/\w+;base64,/, "");
 			const buffer = Buffer.from(base64Data, "base64");
 
-			const result = await uploadImage(buffer, {
+			const result = await uploadFile(buffer, {
 				folder: input.folder,
 				filename: input.filename,
 			});
 
-			return result;
+			return {
+				url: result.url,
+				publicId: result.id,
+				width: result.metadata?.width,
+				height: result.metadata?.height,
+				format: result.metadata?.format,
+				bytes: result.metadata?.size,
+			};
 		}),
 
 	/**
@@ -55,7 +63,7 @@ export const uploadRouter = createTRPCRouter({
 			}),
 		)
 		.mutation(async ({ input }) => {
-			await deleteImage(input.publicId);
+			await deleteFile(input.publicId);
 			return { success: true };
 		}),
 
@@ -79,4 +87,11 @@ export const uploadRouter = createTRPCRouter({
 				url: getOptimizedImageUrl(publicId, options),
 			};
 		}),
+
+	/**
+	 * Get storage provider status
+	 */
+	getStorageStatus: protectedProcedure.query(async () => {
+		return getStorageStatus();
+	}),
 });

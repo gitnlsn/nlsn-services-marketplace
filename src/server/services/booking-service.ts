@@ -1,6 +1,8 @@
 import type { PrismaClient, User } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { wsServer } from "../websocket/websocket-server";
+import { NotificationTypes, notificationService } from "./notification-service";
 
 // Input schemas
 export const createBookingSchema = z.object({
@@ -9,6 +11,12 @@ export const createBookingSchema = z.object({
 	endDate: z.date().optional(),
 	notes: z.string().optional(),
 	address: z.string().optional(),
+	// Advanced booking features
+	isRecurring: z.boolean().optional(),
+	recurringBookingId: z.string().cuid().optional(),
+	groupBookingId: z.string().cuid().optional(),
+	addOnIds: z.array(z.string().cuid()).optional(),
+	bundleId: z.string().cuid().optional(),
 });
 
 export const acceptBookingSchema = z.object({
@@ -51,7 +59,8 @@ export type ListBookingsInput = z.infer<typeof listBookingsSchema>;
 // Dependencies interface
 interface BookingServiceDependencies {
 	db: PrismaClient;
-	currentUser: User;
+	currentUser?: User;
+	currentUserId: string;
 }
 
 export class BookingService {
@@ -79,7 +88,7 @@ export class BookingService {
 		}
 
 		// Prevent booking own service
-		if (service.providerId === this.deps.currentUser.id) {
+		if (service.providerId === this.deps.currentUserId) {
 			throw new TRPCError({
 				code: "BAD_REQUEST",
 				message: "Cannot book your own service",
@@ -94,6 +103,38 @@ export class BookingService {
 					(1000 * 60 * 60),
 			);
 			totalPrice = service.price * hours;
+		}
+
+		// Apply bundle discount if applicable
+		if (input.bundleId) {
+			const bundle = await this.deps.db.serviceBundle.findUnique({
+				where: { id: input.bundleId },
+				include: { services: true },
+			});
+
+			if (bundle?.services.some((s) => s.id === service.id)) {
+				totalPrice = totalPrice * (1 - bundle.discount / 100);
+			}
+		}
+
+		// Add add-on prices
+		let addOns: Array<{
+			id: string;
+			price: number;
+			name: string;
+			serviceId: string;
+		}> = [];
+		if (input.addOnIds && input.addOnIds.length > 0) {
+			addOns = await this.deps.db.serviceAddOn.findMany({
+				where: {
+					id: { in: input.addOnIds },
+					serviceId: service.id,
+					isActive: true,
+				},
+			});
+
+			const addOnTotal = addOns.reduce((sum, addon) => sum + addon.price, 0);
+			totalPrice += addOnTotal;
 		}
 
 		// Check for booking conflicts if service has max bookings
@@ -127,7 +168,7 @@ export class BookingService {
 		const booking = await this.deps.db.booking.create({
 			data: {
 				serviceId: service.id,
-				clientId: this.deps.currentUser.id,
+				clientId: this.deps.currentUserId,
 				providerId: service.providerId,
 				bookingDate: input.bookingDate,
 				endDate: input.endDate,
@@ -135,8 +176,22 @@ export class BookingService {
 				notes: input.notes,
 				address: input.address ?? service.location,
 				status: "pending",
+				isRecurring: input.isRecurring || false,
+				recurringBookingId: input.recurringBookingId,
+				groupBookingId: input.groupBookingId,
 			},
 		});
+
+		// Create booking add-ons
+		if (addOns.length > 0) {
+			await this.deps.db.bookingAddOn.createMany({
+				data: addOns.map((addon) => ({
+					bookingId: booking.id,
+					addOnId: addon.id,
+					price: addon.price,
+				})),
+			});
+		}
 
 		// Create payment record
 		const payment = await this.deps.db.payment.create({
@@ -165,6 +220,67 @@ export class BookingService {
 			data: { bookingCount: { increment: 1 } },
 		});
 
+		// Get current user details for notifications
+		const currentUser = await this.deps.db.user.findUnique({
+			where: { id: this.deps.currentUserId },
+		});
+
+		// Send notification to provider
+		try {
+			await notificationService.sendNotification(
+				NotificationTypes.BOOKING_CREATED,
+				{
+					email: service.provider.email || undefined,
+					phone: service.provider.phone || undefined,
+					name: service.provider.name || "Profissional",
+				},
+				{
+					serviceName: service.title,
+					customerName: currentUser?.name || "Cliente",
+					date: input.bookingDate.toLocaleDateString("pt-BR"),
+					address: input.address || service.location || "",
+				},
+				["sms", "email"],
+			);
+		} catch (error) {
+			console.error("Failed to send booking notification:", error);
+			// Don't fail the booking if notification fails
+		}
+
+		// Send real-time WebSocket notification to provider
+		try {
+			wsServer.sendBookingUpdate(service.providerId, {
+				type: "new_booking",
+				bookingId: booking.id,
+				serviceName: service.title,
+				customerName: currentUser?.name || "Cliente",
+				date: input.bookingDate.toISOString(),
+				message: `Nova reserva para ${service.title}`,
+			});
+		} catch (error) {
+			console.error("Failed to send WebSocket notification:", error);
+		}
+
+		// Schedule booking reminders
+		try {
+			const { BookingReminderService } = await import(
+				"./booking-reminder-service"
+			);
+			const reminderService = new BookingReminderService({ db: this.deps.db });
+			await reminderService.scheduleBookingReminders(booking.id);
+		} catch (error) {
+			console.error("Failed to schedule booking reminders:", error);
+		}
+
+		// Apply buffer time to prevent back-to-back bookings
+		if (service.bufferTime && service.bufferTime > 0) {
+			try {
+				await this.applyBufferTime(booking, service.bufferTime);
+			} catch (error) {
+				console.error("Failed to apply buffer time:", error);
+			}
+		}
+
 		return { booking, payment };
 	}
 
@@ -182,7 +298,7 @@ export class BookingService {
 		}
 
 		// Verify user is the provider
-		if (booking.providerId !== this.deps.currentUser.id) {
+		if (booking.providerId !== this.deps.currentUserId) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
 				message: "Only the service provider can accept this booking",
@@ -212,6 +328,41 @@ export class BookingService {
 			},
 		});
 
+		// Send SMS/Email notification to client
+		try {
+			await notificationService.sendNotification(
+				NotificationTypes.BOOKING_ACCEPTED,
+				{
+					email: booking.client.email || undefined,
+					phone: booking.client.phone || undefined,
+					name: booking.client.name || "Cliente",
+				},
+				{
+					serviceName: booking.service.title,
+					providerName: this.deps.currentUser?.name || "Profissional",
+					date: booking.bookingDate.toLocaleDateString("pt-BR"),
+					address: booking.address || "",
+				},
+				["sms", "email"],
+			);
+		} catch (error) {
+			console.error("Failed to send acceptance notification:", error);
+		}
+
+		// Send real-time WebSocket notification to client
+		try {
+			wsServer.sendBookingUpdate(booking.clientId, {
+				type: "booking_accepted",
+				bookingId: booking.id,
+				serviceName: booking.service.title,
+				providerName: this.deps.currentUser?.name || "Profissional",
+				date: booking.bookingDate.toISOString(),
+				message: `Sua reserva para ${booking.service.title} foi aceita!`,
+			});
+		} catch (error) {
+			console.error("Failed to send WebSocket notification:", error);
+		}
+
 		return updatedBooking;
 	}
 
@@ -229,7 +380,7 @@ export class BookingService {
 		}
 
 		// Verify user is the provider
-		if (booking.providerId !== this.deps.currentUser.id) {
+		if (booking.providerId !== this.deps.currentUserId) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
 				message: "Only the service provider can decline this booking",
@@ -249,7 +400,7 @@ export class BookingService {
 			data: {
 				status: "declined",
 				cancellationReason: input.reason,
-				cancelledBy: this.deps.currentUser.id,
+				cancelledBy: this.deps.currentUserId,
 			},
 		});
 
@@ -278,6 +429,45 @@ export class BookingService {
 			where: { id: booking.serviceId },
 			data: { bookingCount: { decrement: 1 } },
 		});
+
+		// Send SMS/Email notification to client
+		try {
+			const client = await this.deps.db.user.findUnique({
+				where: { id: booking.clientId },
+			});
+
+			if (client) {
+				await notificationService.sendNotification(
+					NotificationTypes.BOOKING_DECLINED,
+					{
+						email: client.email || undefined,
+						phone: client.phone || undefined,
+						name: client.name || "Cliente",
+					},
+					{
+						serviceName: booking.service.title,
+						reason: input.reason || "",
+					},
+					["sms", "email"],
+				);
+			}
+		} catch (error) {
+			console.error("Failed to send decline notification:", error);
+		}
+
+		// Send real-time WebSocket notification to client
+		try {
+			wsServer.sendBookingUpdate(booking.clientId, {
+				type: "booking_declined",
+				bookingId: booking.id,
+				serviceName: booking.service.title,
+				reason: input.reason || "",
+				date: booking.bookingDate.toISOString(),
+				message: `Sua reserva para ${booking.service.title} foi recusada`,
+			});
+		} catch (error) {
+			console.error("Failed to send WebSocket notification:", error);
+		}
 
 		return updatedBooking;
 	}
@@ -323,8 +513,8 @@ export class BookingService {
 
 		// Verify user is either client or provider
 		if (
-			booking.clientId !== this.deps.currentUser.id &&
-			booking.providerId !== this.deps.currentUser.id
+			booking.clientId !== this.deps.currentUserId &&
+			booking.providerId !== this.deps.currentUserId
 		) {
 			throw new TRPCError({
 				code: "FORBIDDEN",
@@ -349,8 +539,8 @@ export class BookingService {
 		}
 
 		// Determine who can update status
-		const isClient = booking.clientId === this.deps.currentUser.id;
-		const isProvider = booking.providerId === this.deps.currentUser.id;
+		const isClient = booking.clientId === this.deps.currentUserId;
+		const isProvider = booking.providerId === this.deps.currentUserId;
 
 		if (!isClient && !isProvider) {
 			throw new TRPCError({
@@ -393,7 +583,7 @@ export class BookingService {
 				cancellationReason:
 					input.status === "cancelled" ? input.reason : undefined,
 				cancelledBy:
-					input.status === "cancelled" ? this.deps.currentUser.id : undefined,
+					input.status === "cancelled" ? this.deps.currentUserId : undefined,
 			},
 		});
 
@@ -451,14 +641,23 @@ export class BookingService {
 			},
 		});
 
+		// Check waitlist opportunities for cancelled bookings
+		if (input.status === "cancelled") {
+			await this.handleCancellationWaitlist({
+				id: booking.id,
+				serviceId: booking.serviceId,
+				bookingDate: booking.bookingDate,
+			});
+		}
+
 		return updatedBooking;
 	}
 
 	async listBookings(input: ListBookingsInput) {
 		const where: { clientId?: string; providerId?: string; status?: string } =
 			input.role === "client"
-				? { clientId: this.deps.currentUser.id }
-				: { providerId: this.deps.currentUser.id };
+				? { clientId: this.deps.currentUserId }
+				: { providerId: this.deps.currentUserId };
 
 		if (input.status) {
 			where.status = input.status;
@@ -503,6 +702,86 @@ export class BookingService {
 			bookings,
 			nextCursor,
 		};
+	}
+
+	/**
+	 * Apply buffer time around a booking to prevent conflicts
+	 */
+	private async applyBufferTime(
+		booking: {
+			id: string;
+			bookingDate: Date;
+			endDate?: Date | null;
+			serviceId: string;
+		},
+		bufferMinutes: number,
+	) {
+		const startTime = new Date(
+			booking.bookingDate.getTime() - bufferMinutes * 60000,
+		);
+		const endTime = new Date(
+			(booking.endDate || booking.bookingDate).getTime() +
+				bufferMinutes * 60000,
+		);
+
+		// Get provider ID first
+		const service = await this.deps.db.service.findUnique({
+			where: { id: booking.serviceId },
+			select: { providerId: true },
+		});
+
+		if (!service?.providerId) {
+			throw new Error("Service provider not found");
+		}
+
+		// Mark buffer time slots as unavailable
+		await this.deps.db.timeSlot.createMany({
+			data: [
+				{
+					providerId: service.providerId,
+					serviceId: booking.serviceId,
+					date: new Date(booking.bookingDate.toDateString()),
+					startTime,
+					endTime: booking.bookingDate,
+					isBooked: true,
+				},
+				{
+					providerId: service.providerId,
+					serviceId: booking.serviceId,
+					date: new Date(
+						(booking.endDate || booking.bookingDate).toDateString(),
+					),
+					startTime: booking.endDate || booking.bookingDate,
+					endTime,
+					isBooked: true,
+				},
+			],
+			skipDuplicates: true,
+		});
+	}
+
+	/**
+	 * Handle booking cancellation and check waitlist
+	 */
+	private async handleCancellationWaitlist(booking: {
+		id: string;
+		serviceId: string;
+		bookingDate: Date;
+	}) {
+		try {
+			const { WaitlistService } = await import("./waitlist-service");
+			const waitlistService = new WaitlistService({
+				db: this.deps.db,
+				currentUserId: this.deps.currentUserId,
+			});
+
+			await waitlistService.checkWaitlistOpportunities(
+				booking.serviceId,
+				booking.bookingDate,
+			);
+		} catch (error) {
+			console.error("Failed to check waitlist opportunities:", error);
+		}
 	}
 }
 

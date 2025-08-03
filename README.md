@@ -1,4 +1,4 @@
-# NLSN Services Marketplace
+# Savoir Link
 
 A modern peer-to-peer services marketplace built with the T3 Stack where professionals can showcase their skills and connect with clients who need their services.
 
@@ -37,8 +37,8 @@ This platform creates a dynamic ecosystem for service providers and consumers wi
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nlsn-services-marketplace.git
-cd nlsn-services-marketplace
+git clone https://github.com/yourusername/savoir-link.git
+cd savoir-link
 ```
 
 2. Install dependencies:
@@ -85,7 +85,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-nlsn-services-marketplace/
+savoir-link/
 ├── src/
 │   ├── app/           # Next.js App Router pages
 │   ├── components/    # React components

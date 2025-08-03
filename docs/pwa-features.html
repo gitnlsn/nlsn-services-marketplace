@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progressive Web App Features - Savoir Link</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Progressive Web App (PWA) Features</h1>
+        
+        <p>Savoir Link is built as a Progressive Web App, providing native app-like experiences on web browsers with offline capabilities, push notifications, and installable features.</p>
+
+        <h2>PWA Architecture</h2>
+        <div class="mermaid">
+        graph TD
+            A[Web Application] --> B[Service Worker]
+            B --> C[Cache Management]
+            B --> D[Background Sync]
+            B --> E[Push Notifications]
+            
+            F[App Manifest] --> G[Install Prompts]
+            F --> H[App Icons & Splash]
+            F --> I[Display Modes]
+            
+            C --> J[Offline Content]
+            D --> K[Queue Operations]
+            E --> L[Native Notifications]
+            
+            style A fill:#ADD8E6
+            style B fill:#90EE90
+            style F fill:#FFD700
+            style L fill:#87CEEB
+        </div>
+
+        <h2>Core PWA Features</h2>
+
+        <h3>1. App Installation</h3>
+        <ul>
+            <li><strong>Install Prompts:</strong> Smart prompts for users to install the app</li>
+            <li><strong>Custom Install UI:</strong> Branded installation experience</li>
+            <li><strong>Multiple Platforms:</strong> Works on desktop, mobile, and tablet devices</li>
+            <li><strong>Home Screen Icons:</strong> Custom app icons and splash screens</li>
+        </ul>
+
+        <h3>2. Offline Capabilities</h3>
+        <div class="mermaid">
+        graph LR
+            A[User Action] --> B{Online?}
+            B -->|Yes| C[Process Immediately]
+            B -->|No| D[Cache Action]
+            D --> E[Show Offline UI]
+            E --> F[Background Sync Queue]
+            F --> G[Sync When Online]
+            G --> C
+            
+            style B fill:#FFD700
+            style D fill:#87CEEB
+            style E fill:#FFCDD2
+            style G fill:#C8E6C9
+        </div>
+
+        <h3>3. Push Notifications</h3>
+        <ul>
+            <li><strong>Booking Alerts:</strong> New booking requests and confirmations</li>
+            <li><strong>Payment Updates:</strong> Payment processing and completion notifications</li>
+            <li><strong>Message Notifications:</strong> New messages from clients or providers</li>
+            <li><strong>System Updates:</strong> Platform updates and maintenance notifications</li>
+        </ul>
+
+        <h2>Installation Experience</h2>
+
+        <h3>Install Component</h3>
+        <pre><code>// PWA Install Component
+const PWAInstaller = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        trackEvent('pwa_installed');
+      }
+      
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    }
+  };
+
+  return isInstallable ? (
+    &lt;InstallBanner onInstall={handleInstall} /&gt;
+  ) : null;
+};</code></pre>
+
+        <h3>App Manifest Configuration</h3>
+        <pre><code>{
+  "name": "Savoir Link - Professional Services Marketplace",
+  "short_name": "Savoir Link",
+  "description": "Connect with professionals and discover services",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "social"],
+  "shortcuts": [
+    {
+      "name": "Find Services",
+      "url": "/search",
+      "icons": [{"src": "/icons/search-96x96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "My Bookings",
+      "url": "/bookings",
+      "icons": [{"src": "/icons/bookings-96x96.png", "sizes": "96x96"}]
+    }
+  ]
+}</code></pre>
+
+        <h2>Offline Strategy</h2>
+
+        <h3>Cache-First Strategy</h3>
+        <div class="mermaid">
+        flowchart TD
+            A[Request] --> B{In Cache?}
+            B -->|Yes| C[Return Cached]
+            B -->|No| D{Online?}
+            D -->|Yes| E[Fetch from Network]
+            D -->|No| F[Show Offline Page]
+            E --> G[Update Cache]
+            G --> H[Return Response]
+            
+            style C fill:#C8E6C9
+            style F fill:#FFCDD2
+            style G fill:#DDA0DD
+        </div>
+
+        <h3>Cached Resources</h3>
+        <ul>
+            <li><strong>Static Assets:</strong> CSS, JavaScript, images, and fonts</li>
+            <li><strong>Core Pages:</strong> Home, dashboard, profile, and search pages</li>
+            <li><strong>API Responses:</strong> User data, services, and booking information</li>
+            <li><strong>Offline Fallbacks:</strong> Custom offline pages and error states</li>
+        </ul>
+
+        <h3>Background Sync</h3>
+        <pre><code>// Background Sync for Offline Actions
+const queueOfflineAction = (action) => {
+  if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+    // Store action in IndexedDB
+    storeOfflineAction(action);
+    
+    // Register background sync
+    navigator.serviceWorker.ready.then(registration => {
+      return registration.sync.register('background-sync');
+    });
+  }
+};
+
+// Service Worker Background Sync Handler
+self.addEventListener('sync', event => {
+  if (event.tag === 'background-sync') {
+    event.waitUntil(processOfflineActions());
+  }
+});
+
+const processOfflineActions = async () => {
+  const actions = await getOfflineActions();
+  
+  for (const action of actions) {
+    try {
+      await processAction(action);
+      await removeOfflineAction(action.id);
+    } catch (error) {
+      console.error('Failed to sync action:', error);
+    }
+  }
+};</code></pre>
+
+        <h2>Push Notifications</h2>
+
+        <h3>Notification Permission Flow</h3>
+        <div class="mermaid">
+        sequenceDiagram
+            participant U as User
+            participant A as App
+            participant SW as Service Worker
+            participant S as Server
+            
+            U->>A: Enable Notifications
+            A->>A: Request Permission
+            A->>SW: Subscribe to Push
+            SW->>S: Send Subscription
+            S->>S: Store Subscription
+            S->>SW: Send Notification
+            SW->>U: Display Notification
+        </div>
+
+        <h3>Push Notification Setup</h3>
+        <pre><code>// Push Notification Subscription
+const subscribeToPush = async () => {
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    const registration = await navigator.serviceWorker.ready;
+    
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+    });
+    
+    // Send subscription to server
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subscription)
+    });
+  }
+};
+
+// Service Worker Push Event Handler
+self.addEventListener('push', event => {
+  const data = event.data ? event.data.json() : {};
+  
+  const options = {
+    body: data.body,
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    data: data.data,
+    actions: [
+      {
+        action: 'view',
+        title: 'View Details',
+        icon: '/icons/view-action.png'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss',
+        icon: '/icons/dismiss-action.png'
+      }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});</code></pre>
+
+        <h2>Performance Optimizations</h2>
+
+        <h3>Code Splitting & Lazy Loading</h3>
+        <pre><code>// Dynamic imports for code splitting
+const DashboardPage = lazy(() => import('../pages/dashboard'));
+const BookingsPage = lazy(() => import('../pages/bookings'));
+const ServicesPage = lazy(() => import('../pages/services'));
+
+// Route-based code splitting
+const AppRouter = () => (
+  &lt;Suspense fallback={&lt;PageSkeleton /&gt;}&gt;
+    &lt;Routes&gt;
+      &lt;Route path="/dashboard" element={&lt;DashboardPage /&gt;} /&gt;
+      &lt;Route path="/bookings" element={&lt;BookingsPage /&gt;} /&gt;
+      &lt;Route path="/services" element={&lt;ServicesPage /&gt;} /&gt;
+    &lt;/Routes&gt;
+  &lt;/Suspense&gt;
+);</code></pre>
+
+        <h3>Resource Hints & Preloading</h3>
+        <ul>
+            <li><strong>Critical Resources:</strong> Preload essential fonts and CSS</li>
+            <li><strong>Route Prefetching:</strong> Prefetch likely next pages</li>
+            <li><strong>Image Optimization:</strong> WebP formats with fallbacks</li>
+            <li><strong>Bundle Optimization:</strong> Tree shaking and minification</li>
+        </ul>
+
+        <h2>Mobile-First Design</h2>
+
+        <h3>Responsive Components</h3>
+        <div class="mermaid">
+        graph TD
+            A[Responsive Container] --> B[Mobile Layout]
+            A --> C[Tablet Layout]
+            A --> D[Desktop Layout]
+            
+            B --> E[Bottom Navigation]
+            B --> F[Swipe Gestures]
+            B --> G[Touch Targets]
+            
+            C --> H[Side Navigation]
+            C --> I[Grid Layouts]
+            
+            D --> J[Multi-column]
+            D --> K[Hover States]
+            
+            style A fill:#ADD8E6
+            style E fill:#90EE90
+            style F fill:#87CEEB
+        </div>
+
+        <h3>Touch-Friendly Interfaces</h3>
+        <pre><code>// Touch-optimized components
+&lt;TouchTarget size="large"&gt;
+  &lt;Button 
+    variant="primary"
+    size="lg"
+    className="min-h-[44px] min-w-[44px]" // 44px minimum touch target
+  &gt;
+    Book Service
+  &lt;/Button&gt;
+&lt;/TouchTarget&gt;
+
+// Swipe gesture support
+&lt;SwipeGesture
+  onSwipeLeft={handleNextPage}
+  onSwipeRight={handlePreviousPage}
+&gt;
+  &lt;ServiceCard service={service} /&gt;
+&lt;/SwipeGesture&gt;</code></pre>
+
+        <h2>PWA Analytics</h2>
+
+        <h3>Installation Tracking</h3>
+        <pre><code>// Track PWA installations
+window.addEventListener('appinstalled', (evt) => {
+  analytics.track('pwa_installed', {
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    platform: navigator.platform
+  });
+});
+
+// Track PWA usage
+const trackPWAUsage = () => {
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true;
+  
+  if (isPWA) {
+    analytics.track('pwa_session_start', {
+      sessionId: generateSessionId(),
+      timestamp: new Date().toISOString()
+    });
+  }
+};</code></pre>
+
+        <h3>Performance Metrics</h3>
+        <ul>
+            <li><strong>Installation Rate:</strong> Percentage of users who install the app</li>
+            <li><strong>Offline Usage:</strong> Time spent using the app offline</li>
+            <li><strong>Push Engagement:</strong> Click-through rates on push notifications</li>
+            <li><strong>Load Performance:</strong> First paint and interactive timing metrics</li>
+        </ul>
+
+        <h2>Browser Support</h2>
+        <div class="mermaid">
+        graph TD
+            A[Modern Browsers] --> B[Chrome/Edge 80+]
+            A --> C[Firefox 75+]
+            A --> D[Safari 14+]
+            A --> E[Samsung Internet 12+]
+            
+            F[Progressive Enhancement] --> G[Service Worker Support]
+            F --> H[Push Notification Support]
+            F --> I[App Manifest Support]
+            F --> J[Background Sync Support]
+            
+            style A fill:#C8E6C9
+            style F fill:#87CEEB
+        </div>
+
+        <h2>Development Tools</h2>
+
+        <h3>PWA Testing</h3>
+        <pre><code>// PWA Lighthouse audits
+npm run lighthouse -- --preset=desktop --output=html
+npm run lighthouse -- --preset=mobile --output=json
+
+// Service Worker testing
+npm run test:sw
+
+// PWA manifest validation
+npm run validate:manifest</code></pre>
+
+        <h3>Debug Tools</h3>
+        <ul>
+            <li><strong>Chrome DevTools:</strong> Application tab for PWA debugging</li>
+            <li><strong>Lighthouse:</strong> PWA audits and performance scoring</li>
+            <li><strong>Workbox DevTools:</strong> Cache inspection and management</li>
+            <li><strong>Push Testing:</strong> Manual push notification testing</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Documentation Home</a>
+        </nav>
+    </div>
+</body>
+</html>
