@@ -26,6 +26,13 @@ declare module "next-auth" {
 	}
 }
 
+declare module "@auth/core/adapters" {
+	interface AdapterUser {
+		isProfessional: boolean;
+		phone?: string | null;
+	}
+}
+
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *

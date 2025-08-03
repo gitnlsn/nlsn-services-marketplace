@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ServiceService } from "~/server/services/service.service";
+import { createServiceService } from "~/server/services/service-service";
 import {
 	createTestCategory,
 	createTestProfessional,
@@ -14,14 +14,20 @@ import {
 describe("ServiceService Integration Tests", () => {
 	setupTestDatabase();
 
-	let serviceService: ServiceService;
+	let serviceService: ReturnType<typeof createServiceService>;
 	let testProfessional: Awaited<ReturnType<typeof createTestProfessional>>;
 	let testUser: Awaited<ReturnType<typeof createTestUser>>;
 	let testCategory: Awaited<ReturnType<typeof createTestCategory>>;
 
 	beforeAll(async () => {
-		serviceService = new ServiceService(testDb);
 		testProfessional = await createTestProfessional();
+		testUser = await createTestUser();
+		testCategory = await createTestCategory();
+
+		serviceService = createServiceService({
+			db: testDb,
+			currentUser: { id: testProfessional.id, email: testProfessional.email },
+		});
 		testUser = await createTestUser();
 		testCategory = await createTestCategory();
 	});

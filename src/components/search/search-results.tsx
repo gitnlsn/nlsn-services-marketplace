@@ -1,10 +1,12 @@
 "use client";
 
-import { Filter, MapPin, Star } from "lucide-react";
+import { Filter, Grid, Map as MapIcon, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type React from "react";
 import { useState } from "react";
+import { MapView } from "~/components/map/map-view";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -26,7 +28,7 @@ interface SearchResultsProps {
 export function SearchResults({
 	initialQuery,
 	initialCategory,
-}: SearchResultsProps) {
+}: SearchResultsProps): React.ReactElement {
 	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState(initialQuery);
 	const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -34,6 +36,11 @@ export function SearchResults({
 	const [minPrice, setMinPrice] = useState<string>("");
 	const [maxPrice, setMaxPrice] = useState<string>("");
 	const [location, setLocation] = useState<string>("");
+	const [minRating, setMinRating] = useState<number>(0);
+	const [sortBy, setSortBy] = useState<
+		"relevance" | "price_asc" | "price_desc" | "rating" | "newest"
+	>("relevance");
+	const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
 
 	// Get categories for filter
 	const { data: categories } = api.search.getCategories.useQuery();
@@ -50,6 +57,8 @@ export function SearchResults({
 		minPrice: minPrice ? Number(minPrice) : undefined,
 		maxPrice: maxPrice ? Number(maxPrice) : undefined,
 		location: location || undefined,
+		minRating: minRating > 0 ? minRating : undefined,
+		sortBy,
 		limit: 20,
 	});
 
@@ -68,6 +77,8 @@ export function SearchResults({
 		setMinPrice("");
 		setMaxPrice("");
 		setLocation("");
+		setMinRating(0);
+		setSortBy("relevance");
 		void refetch();
 	};
 
@@ -157,6 +168,34 @@ export function SearchResults({
 				/>
 			</div>
 
+			{/* Rating Filter */}
+			<div>
+				<p className="mb-2 block font-medium text-sm">Avaliação Mínima</p>
+				<div className="flex items-center gap-1">
+					{[1, 2, 3, 4, 5].map((rating) => (
+						<button
+							key={rating}
+							type="button"
+							onClick={() => setMinRating(rating === minRating ? 0 : rating)}
+							className="transition-colors hover:scale-110"
+						>
+							<Star
+								className={`h-6 w-6 ${
+									rating <= minRating
+										? "fill-yellow-400 text-yellow-400"
+										: "text-gray-300 hover:text-yellow-400"
+								}`}
+							/>
+						</button>
+					))}
+					{minRating > 0 && (
+						<span className="ml-2 text-gray-600 text-sm">
+							{minRating}+ estrelas
+						</span>
+					)}
+				</div>
+			</div>
+
 			<div className="space-y-2">
 				<Button onClick={() => refetch()} className="w-full">
 					Aplicar Filtros
@@ -190,9 +229,47 @@ export function SearchResults({
 						<h1 className="font-bold text-2xl text-gray-900">
 							Resultados para "{searchQuery}"
 						</h1>
-						<p className="text-gray-600">
-							{searchResults?.totalCount || 0} serviços encontrados
-						</p>
+						<div className="flex items-center gap-4">
+							<p className="text-gray-600">
+								{searchResults?.totalCount || 0} serviços encontrados
+							</p>
+							{/* Sort Dropdown */}
+							<Select
+								value={sortBy}
+								onValueChange={(value: typeof sortBy) => setSortBy(value)}
+							>
+								<SelectTrigger className="w-48">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="relevance">Mais Relevantes</SelectItem>
+									<SelectItem value="rating">Melhor Avaliação</SelectItem>
+									<SelectItem value="price_asc">Menor Preço</SelectItem>
+									<SelectItem value="price_desc">Maior Preço</SelectItem>
+									<SelectItem value="newest">Mais Recentes</SelectItem>
+								</SelectContent>
+							</Select>
+							<div className="flex rounded-lg border bg-white p-1">
+								<Button
+									variant={viewMode === "grid" ? "default" : "ghost"}
+									size="sm"
+									onClick={() => setViewMode("grid")}
+									className="flex items-center gap-2"
+								>
+									<Grid className="h-4 w-4" />
+									Grade
+								</Button>
+								<Button
+									variant={viewMode === "map" ? "default" : "ghost"}
+									size="sm"
+									onClick={() => setViewMode("map")}
+									className="flex items-center gap-2"
+								>
+									<MapIcon className="h-4 w-4" />
+									Mapa
+								</Button>
+							</div>
+						</div>
 					</div>
 				)}
 			</div>
@@ -229,12 +306,10 @@ export function SearchResults({
 							</SheetContent>
 						</Sheet>
 					</div>
-
-					{/* Loading State */}
 					{isLoading && (
 						<div className="grid gap-6 md:grid-cols-2">
-							{Array.from({ length: 6 }).map(() => (
-								<Card key={crypto.randomUUID()} className="animate-pulse">
+							{[0, 1, 2, 3, 4, 5].map((num) => (
+								<Card key={`loading-card-${num}`} className="animate-pulse">
 									<div className="aspect-video bg-gray-200" />
 									<CardContent className="p-4">
 										<div className="mb-2 h-4 rounded bg-gray-200" />
@@ -245,11 +320,16 @@ export function SearchResults({
 							))}
 						</div>
 					)}
-
-					{/* Results Grid */}
 					{!isLoading &&
 						searchResults?.services &&
-						Array.isArray(searchResults.services) && (
+						Array.isArray(searchResults.services) &&
+						searchResults.services.length > 0 &&
+						(viewMode === "map" ? (
+							<MapView
+								services={searchResults.services}
+								center={{ lat: -23.5505, lng: -46.6333 }}
+							/>
+						) : (
 							<div className="grid gap-6 md:grid-cols-2">
 								{searchResults.services.map((service) => (
 									<Link key={service.id} href={`/services/${service.id}`}>
@@ -332,8 +412,7 @@ export function SearchResults({
 									</Link>
 								))}
 							</div>
-						)}
-
+						))}
 					{/* No Results */}
 					{!isLoading &&
 						searchResults?.services &&

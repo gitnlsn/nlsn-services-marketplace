@@ -18,9 +18,19 @@ import { api } from "~/trpc/react";
 
 export function ServiceManagement() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
-	const [editingService, setEditingService] = useState<
-		NonNullable<typeof services>["services"][0] | null
-	>(null);
+	const [editingService, setEditingService] = useState<{
+		id: string;
+		title: string;
+		description: string;
+		price: number;
+		priceType: string;
+		categoryId: string;
+		duration?: number;
+		location?: string;
+		maxBookings?: number;
+		images?: Array<{ url: string; [key: string]: unknown }>;
+		[key: string]: unknown;
+	} | null>(null);
 
 	const {
 		data: services,
@@ -69,7 +79,18 @@ export function ServiceManagement() {
 	};
 
 	const handleEdit = (service: NonNullable<typeof services>["services"][0]) => {
-		setEditingService(service);
+		setEditingService({
+			id: service.id,
+			title: service.title,
+			description: service.description,
+			price: service.price,
+			priceType: service.priceType,
+			categoryId: service.categoryId,
+			duration: service.duration ?? undefined,
+			location: service.location ?? undefined,
+			maxBookings: service.maxBookings ?? undefined,
+			images: service.images,
+		});
 		setIsFormOpen(true);
 	};
 

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -122,4 +123,23 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+}
+
+/* Custom Leaflet Styles */
+.custom-marker-icon {
+	border: none !important;
+	background: transparent !important;
+}
+
+.leaflet-popup-content-wrapper {
+	border-radius: 8px !important;
+	padding: 0 !important;
+}
+
+.leaflet-popup-content {
+	margin: 0 !important;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
 }

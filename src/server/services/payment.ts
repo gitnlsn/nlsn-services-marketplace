@@ -1,105 +1,6 @@
-// Mock types for Pagarme SDK (package not installed)
-class ApiError extends Error {}
+import { pagarmeService } from "./pagarme";
 
-type ApiResponse<T> = {
-	data: T;
-	result?: {
-		id?: string;
-		status?: string;
-		charges?: Array<{
-			id?: string;
-			status?: string;
-			qrCode?: string;
-			boletoDetails?: {
-				url?: string;
-			};
-		}>;
-	};
-};
-
-type Customer = {
-	id?: string;
-	name: string;
-	email: string;
-	document?: string;
-	phones?: {
-		homePhone?: { areaCode: string; number: string };
-		mobilePhone?: { areaCode: string; number: string };
-	};
-};
-
-type CustomerPhones = {
-	homePhone?: { areaCode: string; number: string };
-	mobilePhone?: { areaCode: string; number: string };
-};
-
-type CreateOrderRequest = {
-	customer: Customer;
-	code: string;
-	closed: boolean;
-	customerId?: string;
-	items: Array<{
-		code: string;
-		amount: number;
-		description: string;
-		quantity: number;
-	}>;
-	payments: Array<{
-		paymentMethod: string;
-		creditCard?: {
-			installments: number;
-			card: {
-				number: string;
-				holderName: string;
-				expMonth: number;
-				expYear: number;
-				cvv: string;
-				billingAddress: unknown;
-			};
-		};
-		pix?: {
-			expiresIn: number;
-		};
-		boleto?: {
-			bank: string;
-			instructions: string;
-			dueAt: string;
-			documentNumber: string;
-		};
-	}>;
-};
-
-type GetTransactionResponse = {
-	id?: string;
-	status?: string;
-	qrCode?: string;
-	boletoDetails?: {
-		url?: string;
-	};
-};
-
-// Mock Pagarme SDK classes
-class OrdersController {
-	constructor(private config: unknown) {}
-	createOrder(_data: CreateOrderRequest): Promise<ApiResponse<unknown>> {
-		throw new Error("Pagarme SDK not installed");
-	}
-	getOrder(_id: string): Promise<ApiResponse<GetTransactionResponse>> {
-		throw new Error("Pagarme SDK not installed");
-	}
-}
-
-class PagarmeApiSDK {
-	ordersController = new OrdersController(null);
-}
-import { env } from "~/env";
-
-interface PaymentServiceConfig {
-	apiKey: string;
-	isProduction?: boolean;
-}
-
-interface BasePaymentData {
+interface PaymentData {
 	amount: number; // in cents
 	description: string;
 	orderId: string;
@@ -120,7 +21,7 @@ interface BasePaymentData {
 	};
 }
 
-interface CreditCardPaymentData extends BasePaymentData {
+interface CreditCardData extends PaymentData {
 	card: {
 		number: string;
 		holderName: string;
@@ -128,12 +29,13 @@ interface CreditCardPaymentData extends BasePaymentData {
 		expiryYear: string;
 		cvv: string;
 	};
-	installments?: number;
+	installments: number;
 }
 
 interface PaymentResult {
 	transactionId: string;
-	status: "pending" | "paid" | "failed";
+	status: string;
+	checkoutUrl?: string;
 	pixCode?: string;
 	pixQrCode?: string;
 	pixExpiresAt?: Date;
@@ -142,292 +44,147 @@ interface PaymentResult {
 	boletoDueDate?: Date;
 }
 
-export class PaymentService {
-	private client: PagarmeApiSDK;
-	private ordersController: OrdersController;
+interface RefundData {
+	transactionId: string;
+	amount: number; // in cents
+	reason: string;
+}
 
-	constructor(config: PaymentServiceConfig) {
-		this.client = new PagarmeApiSDK();
-		this.ordersController = new OrdersController(this.client);
+export interface PaymentService {
+	processCreditCard(data: CreditCardData): Promise<PaymentResult>;
+	generatePix(data: PaymentData): Promise<PaymentResult>;
+	generateBoleto(data: PaymentData): Promise<PaymentResult>;
+	checkPaymentStatus(transactionId: string): Promise<{ status: string }>;
+	processRefund(
+		data: RefundData,
+	): Promise<{ refundId: string; status: string }>;
+}
+
+class PagarmePaymentService implements PaymentService {
+	async processCreditCard(data: CreditCardData): Promise<PaymentResult> {
+		// For now, create a checkout link since direct credit card processing
+		// requires more complex integration with Pagarme
+		const result = await pagarmeService.createCheckoutLink({
+			amount: data.amount,
+			description: data.description,
+			customerName: data.customer.name,
+			customerEmail: data.customer.email,
+			customerPhone: data.customer.phone,
+			customerDocument: data.customer.cpf,
+			expiresInSeconds: 24 * 60 * 60, // 24 hours
+			successUrl: `${process.env.NEXTAUTH_URL}/bookings/${data.orderId}/payment/success`,
+			metadata: {
+				orderId: data.orderId,
+				paymentMethod: "credit_card",
+				installments: data.installments,
+			},
+		});
+
+		return {
+			transactionId: result.orderId,
+			status: "pending",
+			checkoutUrl: result.checkoutUrl,
+		};
 	}
 
-	async processCreditCard(data: CreditCardPaymentData): Promise<PaymentResult> {
-		try {
-			const customer = this.createCustomer(data.customer);
+	async generatePix(data: PaymentData): Promise<PaymentResult> {
+		const result = await pagarmeService.createCheckoutLink({
+			amount: data.amount,
+			description: data.description,
+			customerName: data.customer.name,
+			customerEmail: data.customer.email,
+			customerPhone: data.customer.phone,
+			customerDocument: data.customer.cpf,
+			expiresInSeconds: 24 * 60 * 60, // 24 hours
+			successUrl: `${process.env.NEXTAUTH_URL}/bookings/${data.orderId}/payment/success`,
+			metadata: {
+				orderId: data.orderId,
+				paymentMethod: "pix",
+			},
+		});
 
-			const request: CreateOrderRequest = {
-				customer: customer,
-				code: data.orderId,
-				closed: false,
-				customerId: customer.id,
-				items: [
-					{
-						code: data.orderId,
-						amount: data.amount,
-						description: data.description,
-						quantity: 1,
-					},
-				],
-				payments: [
-					{
-						paymentMethod: "credit_card",
-						creditCard: {
-							installments: data.installments || 1,
-							card: {
-								number: data.card.number.replace(/\s/g, ""),
-								holderName: data.card.holderName,
-								expMonth: Number.parseInt(data.card.expiryMonth),
-								expYear: Number.parseInt(`20${data.card.expiryYear}`),
-								cvv: data.card.cvv,
-								billingAddress: this.formatAddress(data.customer.address),
-							},
-						},
-					},
-				],
-			};
-
-			const response = await this.ordersController.createOrder(request);
-
-			if (!response.result) {
-				throw new Error("No response from payment gateway");
-			}
-
-			const charge = response.result.charges?.[0];
-			if (!charge) {
-				throw new Error("No charge created");
-			}
-
-			return {
-				transactionId: charge.id || "unknown",
-				status: this.mapStatus(charge.status || "pending"),
-			};
-		} catch (error) {
-			console.error("Credit card payment error:", error);
-			if (error instanceof ApiError) {
-				throw new Error(`Payment failed: ${error.message}`);
-			}
-			throw new Error(
-				`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
-		}
+		return {
+			transactionId: result.orderId,
+			status: "pending",
+			checkoutUrl: result.checkoutUrl,
+			pixExpiresAt: result.expiresAt,
+		};
 	}
 
-	async generatePix(data: BasePaymentData): Promise<PaymentResult> {
-		try {
-			const customer = this.createCustomer(data.customer);
+	async generateBoleto(data: PaymentData): Promise<PaymentResult> {
+		const result = await pagarmeService.createCheckoutLink({
+			amount: data.amount,
+			description: data.description,
+			customerName: data.customer.name,
+			customerEmail: data.customer.email,
+			customerPhone: data.customer.phone,
+			customerDocument: data.customer.cpf,
+			expiresInSeconds: 24 * 60 * 60, // 24 hours
+			successUrl: `${process.env.NEXTAUTH_URL}/bookings/${data.orderId}/payment/success`,
+			metadata: {
+				orderId: data.orderId,
+				paymentMethod: "boleto",
+			},
+		});
 
-			const request: CreateOrderRequest = {
-				customer: customer,
-				code: data.orderId,
-				closed: false,
-				customerId: customer.id,
-				items: [
-					{
-						code: data.orderId,
-						amount: data.amount,
-						description: data.description,
-						quantity: 1,
-					},
-				],
-				payments: [
-					{
-						paymentMethod: "pix",
-						pix: {
-							expiresIn: 3600, // 1 hour
-						},
-					},
-				],
-			};
+		// Calculate due date (typically 3 days from creation)
+		const boletoDueDate = new Date();
+		boletoDueDate.setDate(boletoDueDate.getDate() + 3);
 
-			const response = await this.ordersController.createOrder(request);
-
-			if (!response.result) {
-				throw new Error("No response from payment gateway");
-			}
-
-			const charge = response.result.charges?.[0];
-			if (!charge) {
-				throw new Error("No charge created");
-			}
-
-			const pixData = charge?.qrCode;
-			const pixExpiresAt = new Date();
-			pixExpiresAt.setHours(pixExpiresAt.getHours() + 1);
-
-			return {
-				transactionId: charge.id || "unknown",
-				status: "pending",
-				pixCode: pixData,
-				pixQrCode: pixData,
-				pixExpiresAt,
-			};
-		} catch (error) {
-			console.error("PIX payment error:", error);
-			if (error instanceof ApiError) {
-				throw new Error(`Payment failed: ${error.message}`);
-			}
-			throw new Error(
-				`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
-		}
-	}
-
-	async generateBoleto(data: BasePaymentData): Promise<PaymentResult> {
-		try {
-			const customer = this.createCustomer(data.customer);
-
-			// Due date is 3 days from now
-			const dueDate = new Date();
-			dueDate.setDate(dueDate.getDate() + 3);
-
-			const request: CreateOrderRequest = {
-				customer: customer,
-				code: data.orderId,
-				closed: false,
-				customerId: customer.id,
-				items: [
-					{
-						code: data.orderId,
-						amount: data.amount,
-						description: data.description,
-						quantity: 1,
-					},
-				],
-				payments: [
-					{
-						paymentMethod: "boleto",
-						boleto: {
-							bank: "237", // Bradesco
-							instructions: "Pagamento referente a serviço contratado",
-							dueAt: dueDate.toISOString(),
-							documentNumber: data.orderId.substring(0, 11),
-						},
-					},
-				],
-			};
-
-			const response = await this.ordersController.createOrder(request);
-
-			if (!response.result) {
-				throw new Error("No response from payment gateway");
-			}
-
-			const charge = response.result.charges?.[0];
-			if (!charge) {
-				throw new Error("No charge created");
-			}
-
-			const boletoData = charge?.boletoDetails;
-
-			return {
-				transactionId: charge.id || "unknown",
-				status: "pending",
-				boletoUrl: boletoData?.url,
-				boletoBarcode: boletoData?.url, // Using URL as placeholder
-				boletoDueDate: dueDate,
-			};
-		} catch (error) {
-			console.error("Boleto payment error:", error);
-			if (error instanceof ApiError) {
-				throw new Error(`Payment failed: ${error.message}`);
-			}
-			throw new Error(
-				`Payment failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
-		}
+		return {
+			transactionId: result.orderId,
+			status: "pending",
+			checkoutUrl: result.checkoutUrl,
+			boletoUrl: result.checkoutUrl, // Use checkout URL for now
+			boletoDueDate,
+		};
 	}
 
 	async checkPaymentStatus(transactionId: string): Promise<{ status: string }> {
 		try {
-			const response = await this.ordersController.getOrder(transactionId);
+			const paymentLink = await pagarmeService.getPaymentLink(transactionId);
 
-			if (!response.result) {
-				throw new Error("Transaction not found");
+			// Map Pagarme status to our internal status
+			let status = "pending";
+			if (paymentLink.status === "paid") {
+				status = "paid";
+			} else if (
+				paymentLink.status === "failed" ||
+				paymentLink.status === "canceled"
+			) {
+				status = "failed";
 			}
 
-			const charge = response.result.charges?.[0];
-			if (!charge) {
-				throw new Error("No charge found");
-			}
-
-			return {
-				status: this.mapStatus(charge.status || "pending"),
-			};
+			return { status };
 		} catch (error) {
-			console.error("Status check error:", error);
-			throw error;
+			console.error("Error checking payment status:", error);
+			// Return current status if we can't check
+			return { status: "pending" };
 		}
 	}
 
-	async processRefund(data: {
-		transactionId: string;
-		amount: number;
-		reason: string;
-	}): Promise<{ refundId: string }> {
-		try {
-			// In real implementation, this would call Pagarme's refund endpoint
-			// For now, we'll simulate it
-			console.log("Processing refund:", data);
+	async processRefund(
+		data: RefundData,
+	): Promise<{ refundId: string; status: string }> {
+		// Note: This is a simplified implementation
+		// In a real implementation, you'd call Pagarme's refund API
+		console.log(
+			"Processing refund for transaction:",
+			data.transactionId,
+			"Amount:",
+			data.amount,
+			"Reason:",
+			data.reason,
+		);
 
-			// Simulated refund ID
-			const refundId = `refund_${Date.now()}`;
-
-			return { refundId };
-		} catch (error) {
-			console.error("Refund error:", error);
-			throw error;
-		}
-	}
-
-	private createCustomer(customerData: BasePaymentData["customer"]): Customer {
-		const phones: CustomerPhones = {};
-		if (customerData.phone) {
-			phones.mobilePhone = {
-				areaCode: customerData.phone.substring(0, 2),
-				number: customerData.phone.substring(2),
-			};
-		}
-
+		// For now, return a mock successful refund
 		return {
-			id: `customer_${Date.now()}`,
-			name: customerData.name,
-			email: customerData.email,
-			document: customerData.cpf,
-			phones,
+			refundId: `refund_${Date.now()}`,
+			status: "refunded",
 		};
-	}
-
-	private formatAddress(address: BasePaymentData["customer"]["address"]) {
-		return {
-			street: address.street,
-			number: address.number,
-			complement: address.complement,
-			neighborhood: address.neighborhood,
-			city: address.city,
-			state: address.state,
-			zipCode: address.zipCode.replace(/\D/g, ""),
-			country: "BR",
-		};
-	}
-
-	private mapStatus(pagarmeStatus: string): "pending" | "paid" | "failed" {
-		switch (pagarmeStatus) {
-			case "paid":
-			case "captured":
-				return "paid";
-			case "pending":
-			case "processing":
-			case "waiting_payment":
-				return "pending";
-			default:
-				return "failed";
-		}
 	}
 }
 
 export function createPaymentService(): PaymentService {
-	return new PaymentService({
-		apiKey: env.PAGARME_SECRET_KEY,
-		isProduction: env.NODE_ENV === "production",
-	});
+	return new PagarmePaymentService();
 }

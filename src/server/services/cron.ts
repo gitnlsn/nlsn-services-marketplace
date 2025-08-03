@@ -1,5 +1,5 @@
 import { db } from "~/server/db";
-import { escrowService } from "./escrow";
+import { createEscrowService } from "~/server/services/escrow-service";
 
 // Automated task service for handling scheduled operations
 
@@ -8,8 +8,14 @@ export async function releaseEscrowFunds() {
 	console.log("Starting escrow funds release task...");
 
 	try {
-		// Use the enhanced escrow service for bulk processing
-		const result = await escrowService.processBulkRelease();
+		// Create escrow service for system user (cron job)
+		const escrowService = createEscrowService({
+			db,
+			// System user context for cron jobs
+			currentUser: { id: "system", email: "system@marketplace.com" },
+		});
+
+		const result = await escrowService.processEscrowReleases({});
 		console.log(
 			`Escrow release completed: ${result.released} successful, ${result.errors} errors`,
 		);

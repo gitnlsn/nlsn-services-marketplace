@@ -1,11 +1,11 @@
 "use client";
 
-import { Trash2, Upload, X } from "lucide-react";
-import Image from "next/image";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { ImageUpload } from "~/components/ui/image-upload";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -62,7 +62,7 @@ export function ServiceForm({ service, onClose }: ServiceFormProps) {
 				title: service.title || "",
 				description: service.description || "",
 				price: service.price?.toString() || "",
-				priceType: service.priceType || "fixed",
+				priceType: (service.priceType as "fixed" | "hourly") || "fixed",
 				categoryId: service.categoryId || "",
 				duration: service.duration?.toString() || "",
 				location: service.location || "",
@@ -140,23 +140,6 @@ export function ServiceForm({ service, onClose }: ServiceFormProps) {
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
-
-	const handleImageAdd = () => {
-		const url = prompt("Digite a URL da imagem:");
-		if (url?.trim()) {
-			setFormData((prev) => ({
-				...prev,
-				images: [...prev.images, url.trim()],
-			}));
-		}
-	};
-
-	const handleImageRemove = (imageUrl: string) => {
-		setFormData((prev) => ({
-			...prev,
-			images: prev.images.filter((url) => url !== imageUrl),
-		}));
 	};
 
 	return (
@@ -351,53 +334,18 @@ export function ServiceForm({ service, onClose }: ServiceFormProps) {
 
 						{/* Images */}
 						<div className="space-y-4">
-							<div className="flex items-center justify-between">
-								<h3 className="font-semibold text-lg">Imagens</h3>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={handleImageAdd}
-									className="flex items-center space-x-2"
-								>
-									<Upload className="h-4 w-4" />
-									<span>Adicionar URL</span>
-								</Button>
-							</div>
-
-							{formData.images.length > 0 ? (
-								<div className="grid grid-cols-2 gap-4">
-									{formData.images.map((imageUrl) => (
-										<div key={imageUrl} className="group relative">
-											<div className="relative aspect-video overflow-hidden rounded-lg">
-												<Image
-													src={imageUrl}
-													alt="Imagem do serviço"
-													fill
-													className="object-cover"
-												/>
-											</div>
-											<Button
-												type="button"
-												variant="destructive"
-												size="sm"
-												className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-												onClick={() => handleImageRemove(imageUrl)}
-											>
-												<Trash2 className="h-4 w-4" />
-											</Button>
-										</div>
-									))}
-								</div>
-							) : (
-								<div className="rounded-lg border-2 border-gray-300 border-dashed py-8 text-center text-gray-500">
-									<Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-									<p>Nenhuma imagem adicionada</p>
-									<p className="text-sm">
-										Clique em "Adicionar URL" para começar
-									</p>
-								</div>
-							)}
+							<h3 className="font-semibold text-lg">Imagens</h3>
+							<ImageUpload
+								value={formData.images}
+								onChange={(images) =>
+									setFormData((prev) => ({
+										...prev,
+										images: Array.isArray(images) ? images : [images],
+									}))
+								}
+								multiple
+								maxFiles={10}
+							/>
 						</div>
 
 						{/* Form Actions */}

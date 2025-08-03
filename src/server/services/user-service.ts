@@ -10,6 +10,7 @@ export const updateProfileSchema = z.object({
 		.regex(/^\d{10,11}$/)
 		.optional(),
 	bio: z.string().max(500).optional(),
+	image: z.string().url().optional(),
 	address: z.string().max(200).optional(),
 	city: z.string().max(100).optional(),
 	state: z.string().length(2).optional(),
@@ -68,6 +69,7 @@ export class UserService {
 				email: true,
 				phone: true,
 				bio: true,
+				image: true,
 				address: true,
 				city: true,
 				state: true,

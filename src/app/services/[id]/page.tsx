@@ -1,13 +1,14 @@
 import { ServiceDetail } from "~/components/services/service-detail";
 
 interface ServicePageProps {
-	params: { id: string };
+	params: Promise<{ id: string }>;
 }
 
-export default function ServicePage({ params }: ServicePageProps) {
+export default async function ServicePage({ params }: ServicePageProps) {
+	const { id } = await params;
 	return (
 		<main className="min-h-screen bg-gray-50">
-			<ServiceDetail serviceId={params.id} />
+			<ServiceDetail serviceId={id} />
 		</main>
 	);
 }

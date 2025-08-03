@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { BookingService } from "~/server/services/booking.service";
+import { createBookingService } from "~/server/services/booking-service";
 import {
 	createTestBooking,
 	createTestCategory,
@@ -15,18 +15,22 @@ import {
 describe("BookingService Integration Tests", () => {
 	setupTestDatabase();
 
-	let bookingService: BookingService;
+	let bookingService: ReturnType<typeof createBookingService>;
 	let testProfessional: Awaited<ReturnType<typeof createTestProfessional>>;
 	let testUser: Awaited<ReturnType<typeof createTestUser>>;
 	let testCategory: Awaited<ReturnType<typeof createTestCategory>>;
 	let testService: Awaited<ReturnType<typeof createTestService>>;
 
 	beforeAll(async () => {
-		bookingService = new BookingService(testDb);
 		testProfessional = await createTestProfessional();
 		testUser = await createTestUser();
 		testCategory = await createTestCategory();
 		testService = await createTestService(testProfessional.id, testCategory.id);
+
+		bookingService = createBookingService({
+			db: testDb,
+			currentUser: { id: testUser.id, email: testUser.email },
+		});
 	});
 
 	afterAll(async () => {
@@ -282,7 +286,7 @@ describe("BookingService Integration Tests", () => {
 			expect(result.id).toBe(booking.id);
 			expect(result.service).toBeDefined();
 			expect(result.client).toBeDefined();
-			expect(result.provider).toBeDefined();
+			expect(result.service.provider).toBeDefined();
 		});
 
 		it("should return booking details for provider", async () => {

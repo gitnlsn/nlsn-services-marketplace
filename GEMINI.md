@@ -51,7 +51,49 @@ This project is a Next.js web application that provides a marketplace for servic
 *   Return structured data that can be easily tested
 
 #### Service Layer Structure
-**❌ Bad: Business logic in tRPC procedure**
+
+**CRITICAL**: All service functions must accept router inputs as direct parameters to enable independent testing without tRPC context dependencies.
+
+**Service Function Design Pattern**
+Service functions should be designed to accept all necessary data as parameters, making them independently testable:
+
+**❌ Bad: Service tightly coupled to tRPC context**
+```typescript
+export function createUserService({ ctx }: { ctx: TRPCContext }) {
+  return {
+    async updateProfile(input: UpdateProfileInput) {
+      // Cannot test this without full tRPC context
+      const user = await ctx.db.user.findUnique({ where: { id: ctx.session.user.id } });
+      // Business logic...
+    }
+  };
+}
+```
+
+**✅ Good: Service accepts all required data as parameters**
+```typescript
+export function createUserService({
+  db,
+  currentUser,
+}: {
+  db: PrismaClient;
+  currentUser?: Session["user"];
+}) {
+  return {
+    async updateProfile(input: UpdateProfileInput) {
+      if (!currentUser) throw new TRPCError({ code: "UNAUTHORIZED" });
+      // Easily testable - can inject mock db and user
+      const user = await db.user.findUnique({ where: { id: currentUser.id } });
+      // Business logic...
+    }
+  };
+}
+```
+
+**Router Implementation Pattern**
+tRPC routers should be thin wrappers that inject router context into service functions:
+
+**❌ Bad: Business logic embedded in router**
 ```typescript
 export const userRouter = createTRPCRouter({
   updateProfile: protectedProcedure
@@ -65,16 +107,27 @@ export const userRouter = createTRPCRouter({
 });
 ```
 
-**✅ Good: Business logic extracted to service**
+**✅ Good: Router delegates to service with injected dependencies**
 ```typescript
 export const userRouter = createTRPCRouter({
   updateProfile: protectedProcedure
     .input(updateProfileSchema)
     .mutation(async ({ ctx, input }) => {
-      return await userService.updateProfile(ctx.db, ctx.session.user.id, input);
+      const userService = createUserService({
+        db: ctx.db,
+        currentUser: ctx.session.user,
+      });
+      return await userService.updateProfile(input);
     })
 });
 ```
+
+**Testing Benefits**
+This pattern enables:
+- **Unit Testing**: Test service functions with mock dependencies
+- **Integration Testing**: Test complete workflows with test database
+- **Isolation**: Services can be tested without tRPC infrastructure
+- **Reusability**: Services can be used outside of tRPC context
 
 #### Testing Patterns
 *   Integration tests should test complete workflows end-to-end

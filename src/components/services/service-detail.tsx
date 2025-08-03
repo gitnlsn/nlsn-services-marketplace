@@ -13,6 +13,8 @@ import { useState } from "react";
 import { BookingModal } from "~/components/booking/booking-modal";
 import { MessageButton } from "~/components/messaging/message-button";
 import { api } from "~/trpc/react";
+import { BookingWidget } from "./booking-widget";
+import { ServiceGallery } from "./service-gallery";
 
 interface ServiceDetailProps {
 	serviceId: string;
@@ -68,25 +70,11 @@ export function ServiceDetail({ serviceId }: ServiceDetailProps) {
 				<div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 					{/* Main Content */}
 					<div className="lg:col-span-2">
-						{/* Image Gallery */}
-						<div className="mb-8">
-							{service.images.length > 0 ? (
-								<div className="relative h-96 overflow-hidden rounded-lg">
-									<Image
-										src={service.images[0]?.url || "/placeholder.jpg"}
-										alt={service.title}
-										fill
-										className="object-cover"
-									/>
-								</div>
-							) : (
-								<div className="flex h-96 items-center justify-center rounded-lg bg-gray-200">
-									<span className="text-gray-500">
-										Nenhuma imagem disponível
-									</span>
-								</div>
-							)}
-						</div>
+						{/* Enhanced Image Gallery */}
+						<ServiceGallery
+							images={service.images}
+							serviceName={service.title}
+						/>
 
 						{/* Service Info */}
 						<div className="mb-8 rounded-lg bg-white p-6 shadow-md">
@@ -201,90 +189,25 @@ export function ServiceDetail({ serviceId }: ServiceDetailProps) {
 
 					{/* Sidebar */}
 					<div className="lg:col-span-1">
-						{/* Pricing & Booking */}
-						<div className="sticky top-8 mb-6 rounded-lg bg-white p-6 shadow-md">
-							<div className="mb-6 text-center">
-								<div className="mb-2 font-bold text-3xl text-indigo-600">
-									{formatPrice(
-										service.price,
-										service.priceType as "fixed" | "hourly",
-									)}
-								</div>
-								<p className="text-gray-600">
-									{service.priceType === "hourly" ? "Por hora" : "Preço fixo"}
-								</p>
-							</div>
-
-							<button
-								type="button"
-								onClick={() => setIsBookingModalOpen(true)}
-								className="mb-3 w-full rounded-lg bg-indigo-600 py-3 font-semibold text-white transition-colors duration-200 hover:bg-indigo-700"
-							>
-								Agendar Serviço
-							</button>
-
-							<MessageButton
-								participantId={service.provider.id}
-								participantName={service.provider.name || undefined}
-								className="mb-4 w-full"
-								variant="secondary"
-							/>
-
-							<p className="text-center text-gray-500 text-sm">
-								Você será direcionado para o processo de agendamento
-							</p>
-						</div>
-
-						{/* Provider Info */}
-						<div className="rounded-lg bg-white p-6 shadow-md">
-							<h3 className="mb-4 font-semibold text-gray-900 text-lg">
-								Sobre o Profissional
-							</h3>
-
-							<div className="mb-4 flex items-center">
-								<div className="relative mr-4 h-16 w-16 overflow-hidden rounded-full">
-									<Image
-										src={service.provider.image || "/placeholder-avatar.jpg"}
-										alt={service.provider.name || "Profissional"}
-										fill
-										className="object-cover"
-									/>
-								</div>
-								<div>
-									<h4 className="font-semibold text-gray-900">
-										{service.provider.name || "Profissional"}
-									</h4>
-									<p className="text-gray-600">
-										{service.provider.isProfessional
-											? "Profissional Verificado"
-											: "Usuário"}
-									</p>
-								</div>
-							</div>
-
-							{service.provider.bio && (
-								<div className="mb-4">
-									<p className="text-gray-600 text-sm">
-										{service.provider.bio}
-									</p>
-								</div>
-							)}
-
-							<div className="text-gray-600 text-sm">
-								<p className="mb-1">
-									Profissional desde{" "}
-									{service.provider.professionalSince
-										? new Date(service.provider.professionalSince).getFullYear()
-										: "2024"}
-								</p>
-								<p>
-									Membro desde{" "}
-									{service.provider.professionalSince
-										? new Date(service.provider.professionalSince).getFullYear()
-										: "2024"}
-								</p>
-							</div>
-						</div>
+						{/* Enhanced Booking Widget */}
+						<BookingWidget
+							service={{
+								id: service.id,
+								title: service.title,
+								price: service.price,
+								priceType: service.priceType as "fixed" | "hourly",
+								duration: service.duration || undefined,
+								location: service.location || undefined,
+								provider: {
+									id: service.provider.id,
+									name: service.provider.name || undefined,
+									image: service.provider.image || undefined,
+								},
+							}}
+							rating={rating}
+							reviewCount={service._count.reviews}
+							onBookingClick={() => setIsBookingModalOpen(true)}
+						/>
 					</div>
 				</div>
 			</div>

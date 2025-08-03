@@ -20,9 +20,15 @@ export const serviceRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createServiceSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.createService(input);
 		}),
@@ -31,9 +37,15 @@ export const serviceRouter = createTRPCRouter({
 	update: protectedProcedure
 		.input(updateServiceSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.updateService(input);
 		}),
@@ -42,9 +54,15 @@ export const serviceRouter = createTRPCRouter({
 	updateStatus: protectedProcedure
 		.input(updateServiceStatusSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.updateServiceStatus(input);
 		}),
@@ -73,9 +91,15 @@ export const serviceRouter = createTRPCRouter({
 	listMyServices: protectedProcedure
 		.input(listMyServicesSchema)
 		.query(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.listMyServices(input);
 		}),
@@ -84,9 +108,15 @@ export const serviceRouter = createTRPCRouter({
 	delete: protectedProcedure
 		.input(deleteServiceSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.deleteService(input);
 		}),
@@ -95,9 +125,15 @@ export const serviceRouter = createTRPCRouter({
 	getStats: protectedProcedure
 		.input(getServiceStatsSchema)
 		.query(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const serviceService = createServiceService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await serviceService.getServiceStats(input);
 		}),

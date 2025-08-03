@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { BookingService } from "~/server/services/booking.service";
-import { ServiceService } from "~/server/services/service.service";
-import { UserService } from "~/server/services/user.service";
+import { createBookingService } from "~/server/services/booking-service";
+import { createServiceService } from "~/server/services/service-service";
+import { createUserService } from "~/server/services/user-service";
 import {
 	createTestCategory,
 	createTestProfessional,
@@ -14,19 +14,27 @@ import {
 describe("Complete Booking Workflow Integration Tests", () => {
 	setupTestDatabase();
 
-	let userService: UserService;
-	let serviceService: ServiceService;
-	let bookingService: BookingService;
+	let userService: ReturnType<typeof createUserService>;
+	let serviceService: ReturnType<typeof createServiceService>;
+	let bookingService: ReturnType<typeof createBookingService>;
 	let testProfessional: Awaited<ReturnType<typeof createTestProfessional>>;
 	let testUser: Awaited<ReturnType<typeof createTestUser>>;
 	let testCategory: Awaited<ReturnType<typeof createTestCategory>>;
 
 	beforeAll(async () => {
-		userService = new UserService(testDb);
-		serviceService = new ServiceService(testDb);
-		bookingService = new BookingService(testDb);
 		testProfessional = await createTestProfessional();
 		testUser = await createTestUser();
+		testCategory = await createTestCategory();
+
+		userService = createUserService({ db: testDb });
+		serviceService = createServiceService({
+			db: testDb,
+			currentUser: { id: testProfessional.id, email: testProfessional.email },
+		});
+		bookingService = createBookingService({
+			db: testDb,
+			currentUser: { id: testUser.id, email: testUser.email },
+		});
 		testCategory = await createTestCategory();
 	});
 

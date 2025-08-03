@@ -15,20 +15,34 @@ import {
 export const userRouter = createTRPCRouter({
 	// Get current authenticated user
 	getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
-		const userService = createUserService({
-			db: ctx.db,
-			currentUser: ctx.session.user,
+		const currentUser = await ctx.db.user.findUnique({
+			where: { id: ctx.session.user.id },
 		});
-		return await userService.getCurrentUser();
+		if (!currentUser) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "User not found",
+			});
+		}
+		return currentUser;
 	}),
 
 	// Update user profile
 	updateProfile: protectedProcedure
 		.input(updateProfileSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "User not found",
+				});
+			}
 			const userService = createUserService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser: currentUser,
 			});
 			return await userService.updateProfile(input);
 		}),
@@ -50,9 +64,18 @@ export const userRouter = createTRPCRouter({
 
 	// Switch to professional role
 	becomeProfessional: protectedProcedure.mutation(async ({ ctx }) => {
+		const currentUser = await ctx.db.user.findUnique({
+			where: { id: ctx.session.user.id },
+		});
+		if (!currentUser) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "User not found",
+			});
+		}
 		const userService = createUserService({
 			db: ctx.db,
-			currentUser: ctx.session.user,
+			currentUser: currentUser,
 		});
 		return await userService.becomeProfessional();
 	}),
@@ -81,18 +104,30 @@ export const userRouter = createTRPCRouter({
 	addBankAccount: protectedProcedure
 		.input(addBankAccountSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const userService = createUserService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await userService.addBankAccount(input);
 		}),
 
 	// Get user's bank accounts
 	getBankAccounts: protectedProcedure.query(async ({ ctx }) => {
+		const currentUser = await ctx.db.user.findUnique({
+			where: { id: ctx.session.user.id },
+		});
+		if (!currentUser) {
+			throw new Error("User not found");
+		}
 		const userService = createUserService({
 			db: ctx.db,
-			currentUser: ctx.session.user,
+			currentUser,
 		});
 		return await userService.getBankAccounts();
 	}),
@@ -101,18 +136,30 @@ export const userRouter = createTRPCRouter({
 	requestWithdrawal: protectedProcedure
 		.input(requestWithdrawalSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const userService = createUserService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await userService.requestWithdrawal(input);
 		}),
 
 	// Get user earnings summary
 	getEarningsSummary: protectedProcedure.query(async ({ ctx }) => {
+		const currentUser = await ctx.db.user.findUnique({
+			where: { id: ctx.session.user.id },
+		});
+		if (!currentUser) {
+			throw new Error("User not found");
+		}
 		const userService = createUserService({
 			db: ctx.db,
-			currentUser: ctx.session.user,
+			currentUser,
 		});
 		return await userService.getEarningsSummary();
 	}),

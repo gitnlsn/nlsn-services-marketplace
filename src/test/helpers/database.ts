@@ -73,8 +73,6 @@ export async function createTestCategory(overrides = {}) {
 	return testDb.category.create({
 		data: {
 			name: "Test Category",
-			description: "A test category for services",
-			slug: "test-category",
 			...overrides,
 		},
 	});

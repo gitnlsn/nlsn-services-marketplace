@@ -1,11 +1,14 @@
 "use client";
 
 import {
+	ArrowDownIcon,
+	ArrowUpIcon,
 	BanknotesIcon,
 	CalendarIcon,
 	ChartBarIcon,
 	ClockIcon,
 	CurrencyDollarIcon,
+	EyeIcon,
 	StarIcon,
 	UserGroupIcon,
 } from "@heroicons/react/24/outline";
@@ -206,6 +209,19 @@ export function ProfessionalDashboard() {
 		);
 	}
 
+	// Calculate additional metrics
+	const acceptanceRate =
+		overview.bookings.total > 0
+			? ((overview.bookings.total - overview.bookings.pending) /
+					overview.bookings.total) *
+				100
+			: 0;
+
+	const avgBookingValue =
+		overview.bookings.total > 0
+			? overview.earnings.total / overview.bookings.total
+			: 0;
+
 	const stats = [
 		{
 			name: "Total de Agendamentos",
@@ -213,6 +229,8 @@ export function ProfessionalDashboard() {
 			icon: CalendarIcon,
 			change: `${overview.bookings.growth.toFixed(1)}%`,
 			changeType: overview.bookings.growth >= 0 ? "increase" : "decrease",
+			color: "blue",
+			subtitle: `${overview.bookings.pending} pendentes`,
 		},
 		{
 			name: "Ganhos Totais",
@@ -220,20 +238,43 @@ export function ProfessionalDashboard() {
 			icon: CurrencyDollarIcon,
 			change: `${overview.earnings.growth.toFixed(1)}%`,
 			changeType: overview.earnings.growth >= 0 ? "increase" : "decrease",
+			color: "green",
+			subtitle: `Média: R$ ${avgBookingValue.toFixed(2)}/serviço`,
 		},
 		{
 			name: "Saldo Disponível",
 			stat: `R$ ${overview.earnings.available.toFixed(2)}`,
 			icon: BanknotesIcon,
-			change: "",
+			change:
+				overview.earnings.total > 0
+					? `${((overview.earnings.available / overview.earnings.total) * 100).toFixed(1)}%`
+					: "",
 			changeType: "neutral",
+			color: "purple",
+			subtitle: "do total ganho",
+		},
+		{
+			name: "Taxa de Aceitação",
+			stat: `${acceptanceRate.toFixed(1)}%`,
+			icon: ChartBarIcon,
+			change: `${overview.services.active}/${overview.services.total}`,
+			changeType:
+				acceptanceRate >= 80
+					? "increase"
+					: acceptanceRate >= 60
+						? "neutral"
+						: "decrease",
+			color: "indigo",
+			subtitle: "serviços ativos",
 		},
 		{
 			name: "Serviços Ativos",
 			stat: overview.services.active,
-			icon: StarIcon,
+			icon: UserGroupIcon,
 			change: `${overview.services.total} total`,
 			changeType: "neutral",
+			color: "orange",
+			subtitle: "serviços",
 		},
 	];
 
@@ -248,57 +289,90 @@ export function ProfessionalDashboard() {
 					<p className="text-gray-600">Gerencie seus serviços e agendamentos</p>
 				</div>
 
-				{/* Stats */}
-				<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-					{stats.map((item) => (
-						<div
-							key={item.name}
-							className="overflow-hidden rounded-lg bg-white shadow"
-						>
-							<div className="p-5">
-								<div className="flex items-center">
-									<div className="flex-shrink-0">
-										<item.icon
-											className="h-6 w-6 text-gray-400"
-											aria-hidden="true"
-										/>
-									</div>
-									<div className="ml-5 w-0 flex-1">
-										<dl>
-											<dt className="truncate font-medium text-gray-500 text-sm">
+				{/* Enhanced Stats */}
+				<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+					{stats.map((item) => {
+						const colorClasses = {
+							blue: "from-blue-500 to-blue-600 text-blue-600 bg-blue-50",
+							green: "from-green-500 to-green-600 text-green-600 bg-green-50",
+							purple:
+								"from-purple-500 to-purple-600 text-purple-600 bg-purple-50",
+							indigo:
+								"from-indigo-500 to-indigo-600 text-indigo-600 bg-indigo-50",
+							orange:
+								"from-orange-500 to-orange-600 text-orange-600 bg-orange-50",
+							pink: "from-pink-500 to-pink-600 text-pink-600 bg-pink-50",
+						};
+
+						const colors =
+							colorClasses[item.color as keyof typeof colorClasses] ||
+							colorClasses.blue;
+						const [gradientClasses, iconTextClass, bgClass] = colors.split(" ");
+
+						return (
+							<div
+								key={item.name}
+								className="relative overflow-hidden rounded-xl bg-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+							>
+								{/* Gradient background accent */}
+								<div
+									className={`absolute top-0 right-0 h-24 w-24 bg-gradient-to-br ${gradientClasses} rounded-bl-full opacity-10`}
+								/>
+
+								<div className="p-6">
+									<div className="flex items-center justify-between">
+										<div className="flex-1">
+											<div
+												className={`inline-flex h-12 w-12 items-center justify-center rounded-lg ${bgClass} mb-4`}
+											>
+												<item.icon
+													className={`h-6 w-6 ${iconTextClass}`}
+													aria-hidden="true"
+												/>
+											</div>
+											<h3 className="mb-1 font-medium text-gray-500 text-sm">
 												{item.name}
-											</dt>
-											<dd>
-												<div className="font-medium text-gray-900 text-lg">
-													{item.stat}
-												</div>
-											</dd>
-										</dl>
+											</h3>
+											<p className="mb-1 font-bold text-2xl text-gray-900">
+												{item.stat}
+											</p>
+											{item.subtitle && (
+												<p className="text-gray-500 text-xs">{item.subtitle}</p>
+											)}
+										</div>
 									</div>
+
+									{item.change && (
+										<div className="mt-4 flex items-center">
+											{item.changeType === "increase" && (
+												<ArrowUpIcon className="mr-1 h-4 w-4 text-green-500" />
+											)}
+											{item.changeType === "decrease" && (
+												<ArrowDownIcon className="mr-1 h-4 w-4 text-red-500" />
+											)}
+											<span
+												className={`font-medium text-sm ${
+													item.changeType === "increase"
+														? "text-green-600"
+														: item.changeType === "decrease"
+															? "text-red-600"
+															: "text-gray-600"
+												}`}
+											>
+												{item.change}
+											</span>
+											{item.changeType !== "neutral" && (
+												<span className="ml-1 text-gray-500 text-xs">
+													{" "}
+													vs. mês anterior
+												</span>
+											)}
+										</div>
+									)}
 								</div>
 							</div>
-							{item.change && (
-								<div className="bg-gray-50 px-5 py-3">
-									<div className="text-sm">
-										<span
-											className={`font-medium ${
-												item.changeType === "increase"
-													? "text-green-600"
-													: item.changeType === "decrease"
-														? "text-red-600"
-														: "text-gray-600"
-											}`}
-										>
-											{item.change}
-										</span>
-										{item.changeType !== "neutral" && (
-											<span className="text-gray-500"> vs. mês anterior</span>
-										)}
-									</div>
-								</div>
-							)}
-						</div>
-					))}
+						);
+					})}
 				</div>
 
 				{/* Content Grid */}

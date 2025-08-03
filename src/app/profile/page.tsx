@@ -1,38 +1,55 @@
 "use client";
 
-import { withAuth } from "~/components/auth/with-auth";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { useAuth } from "~/contexts/auth-context";
+import { useSession } from "next-auth/react";
+import { ProfileEditForm } from "~/components/profile/profile-edit-form";
+import { Loading } from "~/components/ui/loading";
+import { api } from "~/trpc/react";
 
-function ProfilePage() {
-	const { user, isProfessional } = useAuth();
+export default function ProfilePage() {
+	const { data: session, status } = useSession();
+	const { data: user, isLoading } = api.user.getCurrentUser.useQuery(
+		undefined,
+		{ enabled: !!session },
+	);
+
+	if (status === "loading" || isLoading) {
+		return (
+			<Loading className="min-h-screen" size="lg" text="Carregando perfil..." />
+		);
+	}
+
+	if (!session || !user) {
+		return (
+			<div className="container mx-auto px-4 py-8 text-center">
+				<h1 className="mb-4 font-bold text-2xl text-gray-900">Acesso negado</h1>
+				<p className="text-gray-600">
+					Você precisa estar autenticado para acessar esta página.
+				</p>
+			</div>
+		);
+	}
 
 	return (
-		<div className="container mx-auto px-4 py-8">
-			<h1 className="font-bold text-3xl">My Profile</h1>
+		<div className="container mx-auto max-w-4xl px-4 py-8">
+			<h1 className="mb-8 font-bold text-3xl text-gray-900">Meu Perfil</h1>
 
-			<Card className="mt-8">
-				<CardHeader>
-					<div className="flex items-center gap-4">
-						{user?.image && (
-							<img
-								src={user.image}
-								alt={user.name ?? "Profile"}
-								className="h-20 w-20 rounded-full"
-							/>
-						)}
-						<div>
-							<h2 className="font-semibold text-xl">{user?.name}</h2>
-							<p className="text-muted-foreground">{user?.email}</p>
-							<p className="mt-1 text-muted-foreground text-sm">
-								{isProfessional ? "Professional Account" : "Client Account"}
-							</p>
-						</div>
+			<div className="space-y-6">
+				<ProfileEditForm user={user} />
+
+				{/* Additional sections can be added here */}
+				{user.isProfessional && (
+					<div className="rounded-lg border bg-blue-50 p-6">
+						<h3 className="mb-2 font-semibold text-blue-900 text-lg">
+							Dica: Complete seu perfil
+						</h3>
+						<p className="text-blue-700">
+							Um perfil completo com foto e descrição aumenta suas chances de
+							receber mais contratações. Clientes preferem profissionais com
+							perfis detalhados.
+						</p>
 					</div>
-				</CardHeader>
-			</Card>
+				)}
+			</div>
 		</div>
 	);
 }
-
-export default withAuth(ProfilePage);

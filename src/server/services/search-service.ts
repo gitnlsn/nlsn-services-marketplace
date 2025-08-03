@@ -11,6 +11,10 @@ export const searchServicesInputSchema = z.object({
 	maxPrice: z.number().positive().optional(),
 	location: z.string().optional(),
 	priceType: z.enum(["fixed", "hourly", "all"]).default("all"),
+	minRating: z.number().min(0).max(5).optional(),
+	sortBy: z
+		.enum(["relevance", "price_asc", "price_desc", "rating", "newest"])
+		.default("relevance"),
 	limit: z.number().min(1).max(50).default(20),
 	offset: z.number().min(0).default(0),
 });
@@ -83,6 +87,12 @@ export class SearchService {
 			whereConditions.price = priceFilter;
 		}
 
+		if (input.minRating !== undefined && input.minRating > 0) {
+			whereConditions.avgRating = {
+				gte: input.minRating,
+			};
+		}
+
 		let services: unknown;
 		let totalCount: number;
 
@@ -143,6 +153,11 @@ export class SearchService {
 		if (input.location) {
 			conditions.push(`location ILIKE $${params.length + 1}`);
 			params.push(`%${input.location}%`);
+		}
+
+		if (input.minRating !== undefined && input.minRating > 0) {
+			conditions.push(`"avgRating" >= $${params.length + 1}`);
+			params.push(input.minRating);
 		}
 
 		const whereClause = conditions.join(" AND ");

@@ -4,6 +4,7 @@ import { Calendar, Clock, CreditCard, MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { ReviewModal } from "~/components/review/review-modal";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -11,15 +12,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { api } from "~/trpc/react";
 
 export function CustomerDashboard() {
-	const [activeTab, setActiveTab] = useState("bookings");
+	const [activeTab, setActiveTab] = useState("upcoming");
+	const [reviewModalOpen, setReviewModalOpen] = useState(false);
+	const [selectedBooking, setSelectedBooking] = useState<{
+		id: string;
+		serviceId: string;
+		serviceName: string;
+	} | null>(null);
 
-	const { data: bookings, isLoading: bookingsLoading } =
-		api.booking.list.useQuery({
-			role: "client",
-			limit: 20,
-		});
+	const {
+		data: bookings,
+		isLoading: bookingsLoading,
+		refetch,
+	} = api.booking.list.useQuery({
+		role: "client",
+		limit: 20,
+	});
 
 	const { data: userData } = api.user.getCurrentUser.useQuery();
+
+	const cancelBooking = api.booking.updateStatus.useMutation({
+		onSuccess: () => {
+			// Refetch bookings after cancellation
+			void refetch();
+		},
+	});
+
+	const handleCancelBooking = (bookingId: string) => {
+		const reason = prompt("Motivo do cancelamento (opcional):");
+		if (confirm("Tem certeza que deseja cancelar este agendamento?")) {
+			cancelBooking.mutate({
+				bookingId,
+				status: "cancelled",
+				reason: reason || undefined,
+			});
+		}
+	};
 
 	const formatDate = (date: Date) => {
 		return new Intl.DateTimeFormat("pt-BR", {
@@ -52,6 +80,92 @@ export function CustomerDashboard() {
 		};
 
 		return <Badge className={config.className}>{config.label}</Badge>;
+	};
+
+	const filterBookingsByStatus = (
+		status: "upcoming" | "past" | "cancelled",
+	) => {
+		if (!bookings?.bookings) return [];
+
+		switch (status) {
+			case "upcoming":
+				return bookings.bookings.filter(
+					(b) => b.status === "pending" || b.status === "accepted",
+				);
+			case "past":
+				return bookings.bookings.filter((b) => b.status === "completed");
+			case "cancelled":
+				return bookings.bookings.filter(
+					(b) => b.status === "cancelled" || b.status === "declined",
+				);
+			default:
+				return [];
+		}
+	};
+
+	type BookingType = NonNullable<typeof bookings>["bookings"][0];
+
+	const canCancelBooking = (booking: BookingType) => {
+		if (booking.status !== "pending" && booking.status !== "accepted") {
+			return false;
+		}
+		// Can cancel if booking is more than 24 hours away
+		const bookingDate = new Date(booking.bookingDate);
+		const now = new Date();
+		const hoursUntilBooking =
+			(bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+		return hoursUntilBooking > 24;
+	};
+
+	const renderBookingActions = (booking: BookingType) => {
+		const actions = [];
+
+		// Always show "Ver Serviço" button
+		actions.push(
+			<Link key="view" href={`/services/${booking.service.id}`}>
+				<Button variant="outline" size="sm">
+					Ver Serviço
+				</Button>
+			</Link>,
+		);
+
+		// Cancel button for pending/accepted bookings
+		if (canCancelBooking(booking)) {
+			actions.push(
+				<Button
+					key="cancel"
+					variant="destructive"
+					size="sm"
+					onClick={() => handleCancelBooking(booking.id)}
+					disabled={cancelBooking.isPending}
+				>
+					{cancelBooking.isPending ? "Cancelando..." : "Cancelar"}
+				</Button>,
+			);
+		}
+
+		// Review button for completed bookings
+		if (booking.status === "completed") {
+			actions.push(
+				<Button
+					key="review"
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setSelectedBooking({
+							id: booking.id,
+							serviceId: booking.service.id,
+							serviceName: booking.service.title,
+						});
+						setReviewModalOpen(true);
+					}}
+				>
+					Avaliar
+				</Button>,
+			);
+		}
+
+		return <div className="flex flex-col space-y-2">{actions}</div>;
 	};
 
 	const formatPrice = (price: number) => {
@@ -161,99 +275,251 @@ export function CustomerDashboard() {
 
 			{/* Main Content */}
 			<div className="space-y-6">
-				{/* Recent Bookings */}
+				{/* Bookings with Tabs */}
 				<Card>
 					<CardHeader>
 						<CardTitle>Meus Agendamentos</CardTitle>
 					</CardHeader>
 					<CardContent>
-						{bookings?.bookings && bookings.bookings.length > 0 ? (
-							<div className="space-y-4">
-								{bookings.bookings.map((booking) => (
-									<div
-										key={booking.id}
-										className="flex items-center justify-between rounded-lg border p-4"
-									>
-										<div className="flex items-center space-x-4">
-											{booking.service.images?.[0] ? (
-												<div className="relative h-16 w-16 overflow-hidden rounded-lg">
-													<Image
-														src={booking.service.images[0].url}
-														alt={booking.service.title}
-														fill
-														className="object-cover"
-													/>
-												</div>
-											) : (
-												<div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
-													<span className="font-semibold text-indigo-600 text-xl">
-														{booking.service.category.name.charAt(0)}
-													</span>
-												</div>
-											)}
+						<Tabs
+							value={activeTab}
+							onValueChange={setActiveTab}
+							className="w-full"
+						>
+							<TabsList className="grid w-full grid-cols-3">
+								<TabsTrigger value="upcoming">
+									Próximos ({filterBookingsByStatus("upcoming").length})
+								</TabsTrigger>
+								<TabsTrigger value="past">
+									Concluídos ({filterBookingsByStatus("past").length})
+								</TabsTrigger>
+								<TabsTrigger value="cancelled">
+									Cancelados ({filterBookingsByStatus("cancelled").length})
+								</TabsTrigger>
+							</TabsList>
 
-											<div className="flex-1">
-												<h3 className="font-semibold text-gray-900">
-													{booking.service.title}
-												</h3>
-												<p className="text-gray-600 text-sm">
-													com {booking.provider.name}
-												</p>
-												<div className="mt-1 flex items-center space-x-4 text-gray-500 text-sm">
-													<div className="flex items-center space-x-1">
-														<Calendar className="h-4 w-4" />
-														<span>{formatDate(booking.bookingDate)}</span>
-													</div>
-													{booking.address && (
-														<div className="flex items-center space-x-1">
-															<MapPin className="h-4 w-4" />
-															<span>{booking.address}</span>
+							<TabsContent value="upcoming" className="mt-6">
+								{filterBookingsByStatus("upcoming").length > 0 ? (
+									<div className="space-y-4">
+										{filterBookingsByStatus("upcoming").map((booking) => (
+											<div
+												key={booking.id}
+												className="flex items-center justify-between rounded-lg border p-4"
+											>
+												<div className="flex items-center space-x-4">
+													{booking.service.images?.[0] ? (
+														<div className="relative h-16 w-16 overflow-hidden rounded-lg">
+															<Image
+																src={booking.service.images[0].url}
+																alt={booking.service.title}
+																fill
+																className="object-cover"
+															/>
+														</div>
+													) : (
+														<div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+															<span className="font-semibold text-indigo-600 text-xl">
+																{booking.service.category.name.charAt(0)}
+															</span>
 														</div>
 													)}
+
+													<div className="flex-1">
+														<h3 className="font-semibold text-gray-900">
+															{booking.service.title}
+														</h3>
+														<p className="text-gray-600 text-sm">
+															com {booking.provider.name}
+														</p>
+														<div className="mt-1 flex items-center space-x-4 text-gray-500 text-sm">
+															<div className="flex items-center space-x-1">
+																<Calendar className="h-4 w-4" />
+																<span>{formatDate(booking.bookingDate)}</span>
+															</div>
+															{booking.address && (
+																<div className="flex items-center space-x-1">
+																	<MapPin className="h-4 w-4" />
+																	<span>{booking.address}</span>
+																</div>
+															)}
+														</div>
+													</div>
+												</div>
+
+												<div className="flex items-center space-x-4">
+													<div className="text-right">
+														<p className="font-semibold text-gray-900">
+															{formatPrice(booking.totalPrice)}
+														</p>
+														{getStatusBadge(booking.status)}
+													</div>
+													{renderBookingActions(booking)}
 												</div>
 											</div>
-										</div>
-
-										<div className="flex items-center space-x-4">
-											<div className="text-right">
-												<p className="font-semibold text-gray-900">
-													{formatPrice(booking.totalPrice)}
-												</p>
-												{getStatusBadge(booking.status)}
-											</div>
-
-											<div className="flex flex-col space-y-2">
-												<Link href={`/services/${booking.service.id}`}>
-													<Button variant="outline" size="sm">
-														Ver Serviço
-													</Button>
-												</Link>
-
-												{booking.status === "completed" && (
-													<Button variant="outline" size="sm">
-														Avaliar
-													</Button>
-												)}
-											</div>
-										</div>
+										))}
 									</div>
-								))}
-							</div>
-						) : (
-							<div className="py-12 text-center">
-								<Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-								<h3 className="mb-2 font-semibold text-gray-900 text-lg">
-									Nenhum agendamento encontrado
-								</h3>
-								<p className="mb-6 text-gray-600">
-									Você ainda não fez nenhum agendamento. Explore nossos
-									serviços!
-								</p>
-								<Link href="/search">
-									<Button>Encontrar Serviços</Button>
-								</Link>
-							</div>
-						)}
+								) : (
+									<div className="py-12 text-center">
+										<Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+										<h3 className="mb-2 font-semibold text-gray-900 text-lg">
+											Nenhum agendamento próximo
+										</h3>
+										<p className="mb-6 text-gray-600">
+											Você não possui agendamentos pendentes ou confirmados.
+										</p>
+										<Link href="/search">
+											<Button>Encontrar Serviços</Button>
+										</Link>
+									</div>
+								)}
+							</TabsContent>
+
+							<TabsContent value="past" className="mt-6">
+								{filterBookingsByStatus("past").length > 0 ? (
+									<div className="space-y-4">
+										{filterBookingsByStatus("past").map((booking) => (
+											<div
+												key={booking.id}
+												className="flex items-center justify-between rounded-lg border p-4"
+											>
+												<div className="flex items-center space-x-4">
+													{booking.service.images?.[0] ? (
+														<div className="relative h-16 w-16 overflow-hidden rounded-lg">
+															<Image
+																src={booking.service.images[0].url}
+																alt={booking.service.title}
+																fill
+																className="object-cover"
+															/>
+														</div>
+													) : (
+														<div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+															<span className="font-semibold text-indigo-600 text-xl">
+																{booking.service.category.name.charAt(0)}
+															</span>
+														</div>
+													)}
+
+													<div className="flex-1">
+														<h3 className="font-semibold text-gray-900">
+															{booking.service.title}
+														</h3>
+														<p className="text-gray-600 text-sm">
+															com {booking.provider.name}
+														</p>
+														<div className="mt-1 flex items-center space-x-4 text-gray-500 text-sm">
+															<div className="flex items-center space-x-1">
+																<Calendar className="h-4 w-4" />
+																<span>{formatDate(booking.bookingDate)}</span>
+															</div>
+															{booking.address && (
+																<div className="flex items-center space-x-1">
+																	<MapPin className="h-4 w-4" />
+																	<span>{booking.address}</span>
+																</div>
+															)}
+														</div>
+													</div>
+												</div>
+
+												<div className="flex items-center space-x-4">
+													<div className="text-right">
+														<p className="font-semibold text-gray-900">
+															{formatPrice(booking.totalPrice)}
+														</p>
+														{getStatusBadge(booking.status)}
+													</div>
+													{renderBookingActions(booking)}
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="py-12 text-center">
+										<Star className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+										<h3 className="mb-2 font-semibold text-gray-900 text-lg">
+											Nenhum serviço concluído
+										</h3>
+										<p className="text-gray-600">
+											Você ainda não possui agendamentos concluídos.
+										</p>
+									</div>
+								)}
+							</TabsContent>
+
+							<TabsContent value="cancelled" className="mt-6">
+								{filterBookingsByStatus("cancelled").length > 0 ? (
+									<div className="space-y-4">
+										{filterBookingsByStatus("cancelled").map((booking) => (
+											<div
+												key={booking.id}
+												className="flex items-center justify-between rounded-lg border p-4 opacity-75"
+											>
+												<div className="flex items-center space-x-4">
+													{booking.service.images?.[0] ? (
+														<div className="relative h-16 w-16 overflow-hidden rounded-lg">
+															<Image
+																src={booking.service.images[0].url}
+																alt={booking.service.title}
+																fill
+																className="object-cover"
+															/>
+														</div>
+													) : (
+														<div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100">
+															<span className="font-semibold text-indigo-600 text-xl">
+																{booking.service.category.name.charAt(0)}
+															</span>
+														</div>
+													)}
+
+													<div className="flex-1">
+														<h3 className="font-semibold text-gray-900">
+															{booking.service.title}
+														</h3>
+														<p className="text-gray-600 text-sm">
+															com {booking.provider.name}
+														</p>
+														<div className="mt-1 flex items-center space-x-4 text-gray-500 text-sm">
+															<div className="flex items-center space-x-1">
+																<Calendar className="h-4 w-4" />
+																<span>{formatDate(booking.bookingDate)}</span>
+															</div>
+															{booking.address && (
+																<div className="flex items-center space-x-1">
+																	<MapPin className="h-4 w-4" />
+																	<span>{booking.address}</span>
+																</div>
+															)}
+														</div>
+													</div>
+												</div>
+
+												<div className="flex items-center space-x-4">
+													<div className="text-right">
+														<p className="font-semibold text-gray-900">
+															{formatPrice(booking.totalPrice)}
+														</p>
+														{getStatusBadge(booking.status)}
+													</div>
+													{renderBookingActions(booking)}
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="py-12 text-center">
+										<Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+										<h3 className="mb-2 font-semibold text-gray-900 text-lg">
+											Nenhum agendamento cancelado
+										</h3>
+										<p className="text-gray-600">
+											Todos os seus agendamentos estão ativos.
+										</p>
+									</div>
+								)}
+							</TabsContent>
+						</Tabs>
 					</CardContent>
 				</Card>
 
@@ -306,6 +572,20 @@ export function CustomerDashboard() {
 					</Card>
 				</div>
 			</div>
+
+			{/* Review Modal */}
+			{selectedBooking && (
+				<ReviewModal
+					isOpen={reviewModalOpen}
+					onClose={() => {
+						setReviewModalOpen(false);
+						setSelectedBooking(null);
+					}}
+					serviceId={selectedBooking.serviceId}
+					bookingId={selectedBooking.id}
+					serviceName={selectedBooking.serviceName}
+				/>
+			)}
 		</div>
 	);
 }

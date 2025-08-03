@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { UserService } from "~/server/services/user.service";
+import { createUserService } from "~/server/services/user-service";
 import {
 	createTestProfessional,
 	createTestUser,
@@ -12,10 +12,13 @@ import {
 describe("UserService Integration Tests", () => {
 	setupTestDatabase();
 
-	let userService: UserService;
+	let userService: ReturnType<typeof createUserService>;
 
 	beforeAll(() => {
-		userService = new UserService(testDb);
+		userService = createUserService({
+			db: testDb,
+			// currentUser will be set per test as needed
+		});
 	});
 
 	afterAll(async () => {

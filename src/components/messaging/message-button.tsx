@@ -10,7 +10,7 @@ interface MessageButtonProps {
 	participantName?: string;
 	bookingId?: string;
 	className?: string;
-	variant?: "primary" | "secondary";
+	variant?: "primary" | "secondary" | "outline";
 }
 
 export function MessageButton({
@@ -61,6 +61,8 @@ export function MessageButton({
 	const variantClasses = {
 		primary: "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50",
 		secondary:
+			"border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50",
+		outline:
 			"border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50",
 	};
 

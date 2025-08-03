@@ -15,6 +15,22 @@ interface MessageListProps {
 	};
 }
 
+interface MessageWithSender {
+	id: string;
+	conversationId: string;
+	senderId: string;
+	content: string;
+	messageType: string;
+	isRead: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+	sender: {
+		id: string;
+		name: string | null;
+		image: string | null;
+	};
+}
+
 export function MessageList({
 	conversationId,
 	otherParticipant,
@@ -33,7 +49,10 @@ export function MessageList({
 	} = api.message.getMessages.useInfiniteQuery(
 		{ conversationId, limit: 20 },
 		{
-			getNextPageParam: (lastPage) => lastPage.nextCursor,
+			getNextPageParam: (lastPage: {
+				messages: MessageWithSender[];
+				nextCursor?: string;
+			}) => lastPage.nextCursor,
 			refetchInterval: 3000, // Poll for new messages every 3 seconds
 		},
 	);
@@ -54,7 +73,11 @@ export function MessageList({
 	const markAsReadMutation = api.message.markAsRead.useMutation();
 
 	// Flatten messages from pages
-	const messages = messagesData?.pages.flatMap((page) => page.messages) || [];
+	const messages =
+		messagesData?.pages.flatMap(
+			(page: { messages: MessageWithSender[]; nextCursor?: string }) =>
+				page.messages,
+		) || [];
 
 	// Auto-scroll to bottom on new messages
 	useEffect(() => {
@@ -148,12 +171,13 @@ export function MessageList({
 				)}
 
 				<div className="space-y-4">
-					{messages.map((message, index) => {
+					{messages.map((message: MessageWithSender, index: number) => {
 						const isOwnMessage = message.senderId === currentUserId;
+						const prevMessage = messages[index - 1];
 						const showDate =
 							index === 0 ||
-							(messages[index - 1]?.createdAt &&
-								formatMessageDate(messages[index - 1]?.createdAt) !==
+							(prevMessage?.createdAt &&
+								formatMessageDate(prevMessage.createdAt) !==
 									formatMessageDate(message.createdAt));
 
 						return (

@@ -14,9 +14,15 @@ export const bookingRouter = createTRPCRouter({
 	create: protectedProcedure
 		.input(createBookingSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.createBooking(input);
 		}),
@@ -25,9 +31,15 @@ export const bookingRouter = createTRPCRouter({
 	accept: protectedProcedure
 		.input(acceptBookingSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.acceptBooking(input);
 		}),
@@ -36,9 +48,15 @@ export const bookingRouter = createTRPCRouter({
 	decline: protectedProcedure
 		.input(declineBookingSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.declineBooking(input);
 		}),
@@ -47,9 +65,15 @@ export const bookingRouter = createTRPCRouter({
 	getById: protectedProcedure
 		.input(getBookingSchema)
 		.query(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.getBooking(input);
 		}),
@@ -58,9 +82,15 @@ export const bookingRouter = createTRPCRouter({
 	updateStatus: protectedProcedure
 		.input(updateBookingStatusSchema)
 		.mutation(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.updateBookingStatus(input);
 		}),
@@ -69,9 +99,15 @@ export const bookingRouter = createTRPCRouter({
 	list: protectedProcedure
 		.input(listBookingsSchema)
 		.query(async ({ ctx, input }) => {
+			const currentUser = await ctx.db.user.findUnique({
+				where: { id: ctx.session.user.id },
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
 			const bookingService = createBookingService({
 				db: ctx.db,
-				currentUser: ctx.session.user,
+				currentUser,
 			});
 			return await bookingService.listBookings(input);
 		}),
