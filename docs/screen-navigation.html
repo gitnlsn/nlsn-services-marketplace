@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savoir Link - Screen Navigation Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        
+        h1 {
+            color: #111;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: #1f2937;
+            font-size: 1.875rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        pre.mermaid {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: inherit;
+        }
+        
+        .notes {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+        
+        .notes h3 {
+            color: #1e40af;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .notes ul {
+            margin-left: 1.5rem;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Savoir Link - Screen Navigation Flow (14 Screens Total)</h1>
+    
+    <div class="section">
+        <h2>📱 Screen Navigation Diagram</h2>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f3e8ff;"></div>
+                <span>Landing Page</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e0f2fe;"></div>
+                <span>Authentication</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fef3c7;"></div>
+                <span>Core Screens</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dcfce7;"></div>
+                <span>Customer Screens</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fce7f3;"></div>
+                <span>Professional Screens</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e0e7ff;"></div>
+                <span>Shared Screens</span>
+            </div>
+        </div>
+        
+        <pre class="mermaid">
+graph TD
+    %% Entry Point
+    Landing[Landing Page<br/>Hero & CTA] --> Auth[Auth Screen<br/>Login/Signup]
+    Landing --> |Browse| Search[Search & Results<br/>Find Services]
+    Auth --> Home[Home Dashboard<br/>Role Toggle]
+    
+    %% Main Navigation Hub
+    Home --> Search[Search & Results<br/>Find Services]
+    Home --> MyBookings[Bookings Management<br/>Active/Past]
+    Home --> Messages[Messages<br/>All Chats]
+    Home --> Services[Services Management<br/>My Offerings]
+    Home --> Settings[Settings<br/>Profile/Prefs]
+    
+    %% Customer Flow - Search to Booking
+    Search --> ServiceDetail[Service/Professional Detail<br/>Portfolio, Reviews & Booking]
+    ServiceDetail --> |Book Now| External[External Payment<br/>Stripe/PayPal]
+    External --> |Success| MyBookings
+    External --> |Cancel| ServiceDetail
+    ServiceDetail --> Messages
+    
+    %% Customer - Manage Bookings
+    MyBookings --> ServiceDetail
+    MyBookings --> Messages
+    MyBookings --> Reviews[Reviews<br/>View & Leave]
+    
+    %% Professional Flow - Service Management
+    Services --> ServiceEditor[Service Editor<br/>Create/Edit & Availability]
+    ServiceEditor --> Services
+    
+    %% Professional - Earnings
+    Services --> Earnings[Earnings<br/>Revenue & Payouts]
+    Home --> Earnings
+    
+    %% Professional - Handle Bookings
+    MyBookings --> |Accept/Decline| MyBookings
+    Earnings --> MyBookings
+    
+    %% Messaging System
+    Messages --> |Select Chat| Messages
+    ServiceDetail --> |Contact Pro| Messages
+    MyBookings --> |Message| Messages
+    
+    %% Reviews System
+    Reviews --> ServiceDetail
+    MyBookings --> |Complete Service| Reviews
+    
+    %% Settings
+    Settings --> Auth
+    Settings --> Home
+    
+    %% Back Navigation (implicit)
+    ServiceDetail -.-> Search
+    ServiceEditor -.-> Services
+    Earnings -.-> Home
+    Reviews -.-> MyBookings
+    Messages -.-> Home
+    Settings -.-> Home
+    
+    %% Style the nodes
+    style Landing fill:#f3e8ff
+    style Auth fill:#e0f2fe
+    style Home fill:#fef3c7
+    style Search fill:#dcfce7
+    style ServiceDetail fill:#dcfce7
+    style External fill:#f9fafb
+    style MyBookings fill:#e0e7ff
+    style Services fill:#fce7f3
+    style ServiceEditor fill:#fce7f3
+    style Earnings fill:#fce7f3
+    style Messages fill:#e0e7ff
+    style Reviews fill:#e0e7ff
+    style Settings fill:#e0e7ff
+        </pre>
+        
+        <div class="notes">
+            <h3>Navigation Notes:</h3>
+            <ul>
+                <li><strong>Solid arrows (→)</strong> represent forward navigation/primary user flow</li>
+                <li><strong>Dotted arrows (-.->)</strong> represent back navigation or return paths</li>
+                <li><strong>Landing Page</strong> is the public entry point with hero content and can browse services without login</li>
+                <li><strong>Home Dashboard</strong> acts as the central hub with persistent navigation</li>
+                <li><strong>Service Detail</strong> includes integrated booking calendar and redirects to external payment provider</li>
+                <li><strong>External Payment</strong> handled by Stripe/PayPal checkout, returns to app on success/cancel</li>
+                <li><strong>Messages</strong> can be accessed from multiple entry points for context-aware communication</li>
+                <li><strong>Bookings Management</strong> screen adapts based on user role (customer bookings vs professional requests)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔄 Simplified Navigation Patterns</h2>
+        
+        <h3>Primary Navigation (Always Accessible from Home)</h3>
+        <ul>
+            <li>Search & Results - Find services</li>
+            <li>Bookings Management - Track all bookings</li>
+            <li>Messages - Communication hub</li>
+            <li>Services Management - Professional tools</li>
+            <li>Settings - Account management</li>
+        </ul>
+        
+        <h3>Public Visitor Journey (3 screens before auth)</h3>
+        <ol>
+            <li>Landing Page → Browse services</li>
+            <li>Landing → Search & Results (limited view)</li>
+            <li>Search → Auth Screen (to book/contact)</li>
+        </ol>
+        
+        <h3>Customer Journey (4 screens + external)</h3>
+        <ol>
+            <li>Home Dashboard → Search & Results</li>
+            <li>Search & Results → Service/Professional Detail (with booking)</li>
+            <li>Service Detail → External Payment Provider</li>
+            <li>Success → Bookings Management</li>
+            <li>Bookings Management → Reviews</li>
+        </ol>
+        
+        <h3>Professional Journey (4 screens)</h3>
+        <ol>
+            <li>Home Dashboard → Services Management</li>
+            <li>Services Management → Service Editor (includes availability)</li>
+            <li>Home Dashboard → Earnings (revenue tracking)</li>
+            <li>Bookings Management (handle requests)</li>
+        </ol>
+        
+        <h3>Modal/Overlay Components (not shown as separate screens)</h3>
+        <ul>
+            <li>Quick Booking Modal - Accessible from Service Detail for repeat customers</li>
+            <li>Review Modal - Triggered from Bookings Management</li>
+            <li>Filter Drawer - Side panel on Search & Results</li>
+            <li>Chat Panel - Sliding panel within Messages screen</li>
+        </ul>
+    </div>
+</body>
+</html>
