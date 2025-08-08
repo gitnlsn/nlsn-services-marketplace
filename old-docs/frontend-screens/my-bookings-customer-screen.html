@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>My Bookings Screen (Customer) - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>My Bookings Screen (Customer)</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The My Bookings Screen for customers provides a comprehensive view of all their service bookings across different stages of completion. This screen serves as the central hub for customers to track their appointments, manage upcoming services, view booking history, and take actions like rescheduling or leaving reviews.</p>
+            <p><strong>Primary Purpose:</strong> Enable customers to efficiently manage their service bookings, track appointment status, and access booking-related actions all in one place.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Filter Tabs:</strong>
+                    <ul>
+                        <li>All Bookings</li>
+                        <li>Upcoming (Confirmed/Pending)</li>
+                        <li>Completed</li>
+                        <li>Cancelled</li>
+                    </ul>
+                </li>
+                <li><strong>Booking Cards:</strong>
+                    <ul>
+                        <li>Service thumbnail and title</li>
+                        <li>Professional name and photo</li>
+                        <li>Booking status badge</li>
+                        <li>Date and time</li>
+                        <li>Service location/address</li>
+                        <li>Total price paid</li>
+                        <li>Booking reference number</li>
+                    </ul>
+                </li>
+                <li><strong>Status-Specific Actions:</strong>
+                    <ul>
+                        <li>Pending: "Cancel Booking", "Edit Details"</li>
+                        <li>Confirmed: "Reschedule", "Cancel", "Contact Professional"</li>
+                        <li>Completed: "Leave Review", "Book Again", "Download Receipt"</li>
+                        <li>Cancelled: "Book Again", "View Refund Status"</li>
+                    </ul>
+                </li>
+                <li><strong>Search and Sort:</strong>
+                    <ul>
+                        <li>Search by service or professional name</li>
+                        <li>Sort by date, status, or price</li>
+                        <li>Filter by date range</li>
+                    </ul>
+                </li>
+                <li><strong>Empty States:</strong> "No bookings yet" with CTA to browse services</li>
+                <li><strong>Pagination:</strong> For customers with many bookings</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>bookings.getByCustomer(customerId, filters)</code> - Fetch customer's bookings</li>
+                <li><code>bookings.cancel(bookingId, reason)</code> - Cancel a booking</li>
+                <li><code>bookings.reschedule(bookingId, newDateTime)</code> - Request reschedule</li>
+                <li><code>reviews.create(bookingId, rating, comment)</code> - Submit service review</li>
+                <li><code>receipts.download(bookingId)</code> - Generate PDF receipt</li>
+                <li><code>refunds.getStatus(bookingId)</code> - Check refund processing status</li>
+                <li><code>chat.initiate(professionalId)</code> - Start conversation with professional</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Customer Accesses My Bookings] --> B[Load All Bookings]
+    B --> C[Display Booking List]
+    
+    C --> D{User Action}
+    
+    D -->|Filter by Status| E[Select Tab/Filter]
+    E --> F[Update Booking List]
+    
+    D -->|Search Bookings| G[Enter Search Query]
+    G --> H[Filter Results]
+    
+    D -->|View Booking Details| I[Click Booking Card]
+    I --> J[Expand Details View]
+    
+    D -->|Cancel Booking| K[Click Cancel]
+    K --> L[Show Cancellation Form]
+    L --> M[Select Reason]
+    M --> N[Confirm Cancellation]
+    N --> O[Process Refund]
+    
+    D -->|Reschedule| P[Click Reschedule]
+    P --> Q[Show Available Times]
+    Q --> R[Select New Time]
+    R --> S[Send Reschedule Request]
+    
+    D -->|Leave Review| T[Click Review Button]
+    T --> U[Open Review Form]
+    U --> V[Submit Rating & Comments]
+    V --> W[Update Professional Rating]
+    
+    D -->|Contact Professional| X[Click Contact]
+    X --> Y[Open Chat/Messaging]
+    
+    D -->|Download Receipt| Z[Click Receipt]
+    Z --> AA[Generate PDF]
+    
+    D -->|Book Again| AB[Click Book Again]
+    AB --> AC[Navigate to Service Detail]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#FFD700,stroke:#333,stroke-width:2px
+    style J fill:#87CEEB,stroke:#333,stroke-width:2px
+    style O fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style S fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style W fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style Y fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style AA fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style AC fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style F fill:#90EE90,stroke:#333,stroke-width:2px
+    style H fill:#90EE90,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Booking Status Management</h2>
+        <ul>
+            <li><strong>Pending:</strong> Awaiting professional confirmation</li>
+            <li><strong>Confirmed:</strong> Professional accepted, service scheduled</li>
+            <li><strong>In Progress:</strong> Service is currently being performed</li>
+            <li><strong>Completed:</strong> Service finished, payment processed</li>
+            <li><strong>Cancelled:</strong> Booking cancelled by customer or professional</li>
+            <li><strong>Refunded:</strong> Payment refunded due to cancellation</li>
+        </ul>
+
+        <h2>Review System Integration</h2>
+        <ul>
+            <li><strong>Review Prompts:</strong> Automatic prompts for completed services</li>
+            <li><strong>Review Requirements:</strong> 1-5 star rating + optional written review</li>
+            <li><strong>Photo Upload:</strong> Allow customers to upload photos with reviews</li>
+            <li><strong>Review Editing:</strong> Allow edits within 24 hours of submission</li>
+        </ul>
+
+        <h2>Notification Integration</h2>
+        <ul>
+            <li><strong>Status Updates:</strong> Real-time notifications for booking changes</li>
+            <li><strong>Reminders:</strong> Upcoming appointment notifications</li>
+            <li><strong>Review Requests:</strong> Gentle prompts to leave reviews</li>
+            <li><strong>Professional Messages:</strong> Communications from service providers</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Card-based layout</li>
+                        <li>Swipe actions for quick operations</li>
+                        <li>Collapsible booking details</li>
+                        <li>Bottom sheet for actions</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Two-column booking grid</li>
+                        <li>Side panel for details</li>
+                        <li>Persistent filter tabs</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Table view with expandable rows</li>
+                        <li>Sidebar with filters and search</li>
+                        <li>Bulk actions for multiple bookings</li>
+                        <li>Hover states for interactive elements</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

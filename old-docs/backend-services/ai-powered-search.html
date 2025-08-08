@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Search - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>AI-Powered Search</span>
+        </div>
+
+        <h1>AI-Powered Search</h1>
+        
+        <div class="alert alert-info">
+            <strong>Overview:</strong> Advanced semantic search system using Google AI embeddings to understand user intent and deliver highly relevant service matches.
+        </div>
+
+        <h2>Search Architecture</h2>
+        <div class="mermaid">
+        graph TB
+            Query[Search Query] --> Intent[Intent Analysis]
+            Intent --> Embedding[Generate Embeddings]
+            Embedding --> VectorDB[(Vector Database)]
+            
+            ServiceData[Service Content] --> ProcessContent[Content Processing]
+            ProcessContent --> Chunks[Text Chunking]
+            Chunks --> ServiceEmbedding[Service Embeddings]
+            ServiceEmbedding --> VectorDB
+            
+            VectorDB --> Similarity[Similarity Search]
+            Similarity --> Rerank[AI Reranking]
+            Rerank --> LocationFilter[Location Filter]
+            LocationFilter --> Results[Ranked Results]
+            
+            Results --> Hybrid[Hybrid Scoring]
+            Hybrid --> Final[Final Results]
+            
+            style Query fill:#ADD8E6
+            style Embedding fill:#FFD700
+            style VectorDB fill:#DDA0DD
+            style Final fill:#C8E6C9
+        </div>
+
+        <h2>Embedding Generation</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Google AI Integration</h3>
+                <ul>
+                    <li><strong>Model:</strong> text-embedding-004</li>
+                    <li><strong>Dimensions:</strong> 768-dimensional vectors</li>
+                    <li><strong>Languages:</strong> Multilingual support (PT, EN, ES)</li>
+                    <li><strong>Context Window:</strong> 2048 tokens</li>
+                    <li><strong>Batch Processing:</strong> Up to 100 texts per request</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Content Processing</h3>
+                <ul>
+                    <li><strong>Text Extraction:</strong> Service descriptions, titles, categories</li>
+                    <li><strong>Chunking Strategy:</strong> Semantic chunking with overlap</li>
+                    <li><strong>Metadata Enrichment:</strong> Location, price, ratings</li>
+                    <li><strong>Update Frequency:</strong> Real-time on service changes</li>
+                    <li><strong>Quality Filtering:</strong> Remove low-quality content</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Embeddings Service Implementation</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Embeddings Service</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>import { GoogleGenerativeAI } from '@google/generative-ai';
+import { env } from '~/env.js';
+
+export class EmbeddingsService {
+  private genAI: GoogleGenerativeAI;
+  private model: any;
+
+  constructor() {
+    this.genAI = new GoogleGenerativeAI(env.GOOGLE_AI_API_KEY);
+    this.model = this.genAI.getGenerativeModel({ model: 'text-embedding-004' });
+  }
+
+  async generateEmbedding(text: string): Promise&lt;number[]&gt; {
+    try {
+      // Clean and preprocess text
+      const cleanText = this.preprocessText(text);
+      
+      // Generate embedding
+      const result = await this.model.embedContent(cleanText);
+      const embedding = result.embedding.values;
+      
+      if (!embedding || embedding.length !== 768) {
+        throw new Error('Invalid embedding dimensions');
+      }
+      
+      return embedding;
+    } catch (error) {
+      console.error('Embedding generation failed:', error);
+      throw new Error('Failed to generate embedding');
+    }
+  }
+
+  async generateBatchEmbeddings(texts: string[]): Promise&lt;number[][]&gt; {
+    const batchSize = 100;
+    const results: number[][] = [];
+    
+    for (let i = 0; i &lt; texts.length; i += batchSize) {
+      const batch = texts.slice(i, i + batchSize);
+      const batchPromises = batch.map(text => this.generateEmbedding(text));
+      
+      try {
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+      } catch (error) {
+        console.error(`Batch ${i / batchSize + 1} failed:`, error);
+        // Add null results for failed batch
+        results.push(...Array(batch.length).fill(null));
+      }
+    }
+    
+    return results;
+  }
+
+  private preprocessText(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[^\w\sáéíóúàèìòùâêîôûãõç]/gi, '') // Keep Portuguese accents
+      .substring(0, 2000); // Limit length
+  }
+
+  async updateServiceEmbeddings(serviceId: string) {
+    const service = await db.service.findUnique({
+      where: { id: serviceId },
+      include: {
+        category: true,
+        professional: { select: { name: true } }
+      }
+    });
+
+    if (!service) return;
+
+    // Combine all searchable text
+    const searchableContent = [
+      service.title,
+      service.description,
+      service.category.name,
+      service.professional.name,
+      ...(service.tags || [])
+    ].join(' ');
+
+    // Generate embedding
+    const embedding = await this.generateEmbedding(searchableContent);
+
+    // Store in database
+    await db.serviceEmbedding.upsert({
+      where: { serviceId },
+      update: {
+        embedding,
+        content: searchableContent,
+        updatedAt: new Date()
+      },
+      create: {
+        serviceId,
+        embedding,
+        content: searchableContent
+      }
+    });
+  }
+}</code></pre>
+        </div>
+
+        <h2>Semantic Search Implementation</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Search Service</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>export class SemanticSearchService {
+  constructor(
+    private embeddingsService: EmbeddingsService,
+    private db: PrismaClient
+  ) {}
+
+  async searchServices(query: SearchQuery): Promise&lt;SearchResults&gt; {
+    // Generate query embedding
+    const queryEmbedding = await this.embeddingsService.generateEmbedding(
+      query.text
+    );
+    
+    // Perform vector similarity search
+    const vectorResults = await this.vectorSimilaritySearch(
+      queryEmbedding,
+      query.limit || 50
+    );
+    
+    // Apply business logic filters
+    const filteredResults = await this.applyFilters(vectorResults, query);
+    
+    // Hybrid scoring: combine semantic + traditional signals
+    const rankedResults = await this.hybridRanking(filteredResults, query);
+    
+    // Apply final limit and pagination
+    const finalResults = this.paginateResults(rankedResults, query);
+    
+    return {
+      services: finalResults,
+      total: vectorResults.length,
+      searchTime: Date.now() - query.startTime,
+      searchType: 'semantic'
+    };
+  }
+
+  private async vectorSimilaritySearch(
+    queryEmbedding: number[],
+    limit: number
+  ): Promise&lt;ServiceMatch[]&gt; {
+    // Using raw SQL for efficient vector similarity
+    const results = await this.db.$queryRaw`
+      SELECT 
+        se.service_id,
+        s.title,
+        s.description,
+        s.price,
+        p.name as professional_name,
+        p.rating,
+        c.name as category_name,
+        -- Cosine similarity calculation
+        (
+          SELECT SUM(a.val * b.val) / (
+            SQRT(SUM(a.val * a.val)) * SQRT(SUM(b.val * b.val))
+          )
+          FROM unnest(se.embedding) WITH ORDINALITY a(val, idx)
+          JOIN unnest(${queryEmbedding}::float[]) WITH ORDINALITY b(val, idx) 
+            ON a.idx = b.idx
+        ) as similarity_score
+      FROM service_embeddings se
+      JOIN services s ON se.service_id = s.id
+      JOIN users p ON s.professional_id = p.id
+      JOIN categories c ON s.category_id = c.id
+      WHERE s.status = 'active'
+        AND s.is_published = true
+      ORDER BY similarity_score DESC
+      LIMIT ${limit}
+    `;
+    
+    return results.map(row => ({
+      serviceId: row.service_id,
+      title: row.title,
+      description: row.description,
+      price: row.price,
+      professionalName: row.professional_name,
+      rating: row.rating,
+      categoryName: row.category_name,
+      semanticScore: row.similarity_score
+    }));
+  }
+
+  private async hybridRanking(
+    semanticResults: ServiceMatch[],
+    query: SearchQuery
+  ): Promise&lt;ServiceMatch[]&gt; {
+    return semanticResults.map(service => {
+      // Combine multiple ranking signals
+      const semanticScore = service.semanticScore || 0;
+      const ratingBoost = (service.rating || 0) / 5 * 0.3;
+      const recencyBoost = this.calculateRecencyBoost(service.createdAt);
+      const locationBoost = this.calculateLocationBoost(service, query.location);
+      const priceRelevance = this.calculatePriceRelevance(service.price, query);
+      
+      const hybridScore = (
+        semanticScore * 0.4 +
+        ratingBoost * 0.2 +
+        recencyBoost * 0.1 +
+        locationBoost * 0.2 +
+        priceRelevance * 0.1
+      );
+      
+      return {
+        ...service,
+        hybridScore,
+        debugScores: {
+          semantic: semanticScore,
+          rating: ratingBoost,
+          recency: recencyBoost,
+          location: locationBoost,
+          price: priceRelevance
+        }
+      };
+    }).sort((a, b) => (b.hybridScore || 0) - (a.hybridScore || 0));
+  }
+}</code></pre>
+        </div>
+
+        <h2>Search Query Processing</h2>
+        <div class="mermaid">
+        graph LR
+            RawQuery[Raw Query] --> Clean[Text Cleaning]
+            Clean --> Extract[Entity Extraction]
+            Extract --> Intent[Intent Classification]
+            
+            Intent -->|Service Type| ServiceIntent[Service Search]
+            Intent -->|Professional| ProfessionalIntent[Professional Search]
+            Intent -->|Location| LocationIntent[Location-Based Search]
+            
+            ServiceIntent --> Semantic[Semantic Analysis]
+            ProfessionalIntent --> Semantic
+            LocationIntent --> Geo[Geo Processing]
+            
+            Semantic --> QueryVector[Query Embedding]
+            Geo --> LocationFilter[Location Filter]
+            
+            QueryVector --> Search[Vector Search]
+            LocationFilter --> Search
+            
+            style RawQuery fill:#ADD8E6
+            style Intent fill:#FFD700
+            style Search fill:#C8E6C9
+        </div>
+
+        <h2>Query Enhancement Features</h2>
+        <div class="feature-list">
+            <li><strong>Spell Correction:</strong> Automatic typo correction using edit distance</li>
+            <li><strong>Synonym Expansion:</strong> Include related terms and synonyms</li>
+            <li><strong>Intent Recognition:</strong> Classify search intent (service, professional, location)</li>
+            <li><strong>Entity Extraction:</strong> Identify locations, service types, price ranges</li>
+            <li><strong>Query Expansion:</strong> Add related terms based on user history</li>
+            <li><strong>Multilingual Support:</strong> Portuguese, English, and Spanish queries</li>
+        </div>
+
+        <h2>Vector Database Schema</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>Prisma Schema - Embeddings</span>
+                <span class="code-language">PRISMA</span>
+            </div>
+            <pre><code>model ServiceEmbedding {
+  id          String   @id @default(cuid())
+  serviceId   String   @unique
+  service     Service  @relation(fields: [serviceId])
+  
+  // 768-dimensional embedding vector
+  embedding   Float[]  @db.Real[]
+  
+  // Source content used for embedding
+  content     String   @db.Text
+  
+  // Metadata for optimization
+  version     Int      @default(1)
+  modelUsed   String   @default("text-embedding-004")
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("service_embeddings")
+  @@index([serviceId])
+}
+
+model SearchQuery {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId])
+  
+  // Query details
+  queryText     String
+  searchType    String   // 'semantic', 'traditional', 'hybrid'
+  resultsCount  Int
+  responseTime  Int      // milliseconds
+  
+  // Context
+  location      Json?    // lat, lng, radius
+  filters       Json?    // category, price range, etc.
+  
+  // Analytics
+  clickedResults String[] // Array of clicked service IDs
+  sessionId     String?
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("search_queries")
+  @@index([userId, createdAt])
+  @@index([queryText])
+}</code></pre>
+        </div>
+
+        <h2>Search Performance Optimization</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Vector Search Optimization</h3>
+                <ul>
+                    <li><strong>Index Strategies:</strong> HNSW approximate nearest neighbor</li>
+                    <li><strong>Dimension Reduction:</strong> PCA for faster similarity calculation</li>
+                    <li><strong>Caching:</strong> Redis cache for frequent queries</li>
+                    <li><strong>Batch Processing:</strong> Optimize embedding generation</li>
+                    <li><strong>Query Preprocessing:</strong> Normalize and cache query embeddings</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Result Optimization</h3>
+                <ul>
+                    <li><strong>Pre-filtering:</strong> Apply business rules before vector search</li>
+                    <li><strong>Result Reranking:</strong> Machine learning reranking models</li>
+                    <li><strong>Personalization:</strong> User preference-based scoring</li>
+                    <li><strong>A/B Testing:</strong> Continuous algorithm improvement</li>
+                    <li><strong>Analytics:</strong> Click-through rate optimization</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Search Analytics & Monitoring</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Description</th>
+                    <th>Target</th>
+                    <th>Alert Threshold</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Search Latency</td>
+                    <td>Average response time</td>
+                    <td>&lt; 200ms</td>
+                    <td>&gt; 500ms</td>
+                </tr>
+                <tr>
+                    <td>Click-Through Rate</td>
+                    <td>Results clicked / searches</td>
+                    <td>&gt; 25%</td>
+                    <td>&lt; 15%</td>
+                </tr>
+                <tr>
+                    <td>Booking Conversion</td>
+                    <td>Bookings / search clicks</td>
+                    <td>&gt; 8%</td>
+                    <td>&lt; 5%</td>
+                </tr>
+                <tr>
+                    <td>Zero Results Rate</td>
+                    <td>Searches with no results</td>
+                    <td>&lt; 5%</td>
+                    <td>&gt; 10%</td>
+                </tr>
+                <tr>
+                    <td>Embedding Quality</td>
+                    <td>Similarity score distribution</td>
+                    <td>&gt; 0.7 avg</td>
+                    <td>&lt; 0.5 avg</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Search Personalization</h2>
+        <div class="mermaid">
+        graph LR
+            User[User Profile] --> History[Search History]
+            User --> Preferences[Preferences]
+            User --> Bookings[Past Bookings]
+            
+            History --> Model[Personalization Model]
+            Preferences --> Model
+            Bookings --> Model
+            
+            Query[Search Query] --> Base[Base Results]
+            Model --> Personalize[Personalization Layer]
+            Base --> Personalize
+            
+            Personalize --> Rerank[Personal Reranking]
+            Rerank --> Final[Personalized Results]
+            
+            style User fill:#ADD8E6
+            style Model fill:#DDA0DD
+            style Final fill:#C8E6C9
+        </div>
+
+        <h2>Multi-Modal Search</h2>
+        <div class="card">
+            <h3>Advanced Search Capabilities</h3>
+            <ul>
+                <li><strong>Image Search:</strong> Find services by uploading reference images</li>
+                <li><strong>Voice Search:</strong> Speech-to-text query processing</li>
+                <li><strong>Visual Similarity:</strong> Find services with similar portfolio images</li>
+                <li><strong>Document Search:</strong> Search within uploaded documents and portfolios</li>
+                <li><strong>Video Content:</strong> Search within service demonstration videos</li>
+            </ul>
+        </div>
+
+        <h2>Real-time Search Features</h2>
+        <div class="feature-list">
+            <li><strong>Auto-complete:</strong> Real-time query suggestions</li>
+            <li><strong>Instant Results:</strong> Results as you type</li>
+            <li><strong>Filter Updates:</strong> Dynamic filter options based on results</li>
+            <li><strong>Live Availability:</strong> Real-time professional availability</li>
+            <li><strong>Price Updates:</strong> Live pricing information</li>
+            <li><strong>Popular Searches:</strong> Trending search suggestions</li>
+        </div>
+
+        <h2>Search Quality Assurance</h2>
+        <div class="alert alert-success">
+            <strong>Quality Measures:</strong>
+            <ul>
+                <li><strong>Relevance Testing:</strong> Regular manual relevance evaluation</li>
+                <li><strong>A/B Testing:</strong> Continuous algorithm improvements</li>
+                <li><strong>User Feedback:</strong> "Was this helpful?" ratings on results</li>
+                <li><strong>Business Metrics:</strong> Track booking conversion rates</li>
+                <li><strong>Content Quality:</strong> Filter low-quality or spam services</li>
+                <li><strong>Bias Detection:</strong> Monitor for algorithmic bias in results</li>
+            </ul>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>Service Management:</strong> Automatic embedding updates on service changes</li>
+            <li><strong>User Analytics:</strong> Search behavior tracking and personalization</li>
+            <li><strong>Booking System:</strong> Search-to-booking conversion optimization</li>
+            <li><strong>Geographic Services:</strong> Location-based search and filtering</li>
+            <li><strong>Review System:</strong> Include review sentiment in search ranking</li>
+            <li><strong>Admin Dashboard:</strong> Search performance monitoring and tuning</li>
+        </ul>
+    </div>
+</body>
+</html>

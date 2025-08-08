@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Real-time Notifications Setup - Services Marketplace Documentation</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="./index.html">Documentation</a>
+            <span class="breadcrumb-separator">→</span>
+            <span>WebSocket Real-time Notifications Setup</span>
+        </nav>
+
+        <h1>WebSocket Real-time Notifications Setup</h1>
+        <span class="badge badge-success">Real-time</span>
+        <span class="badge badge-primary">Built-in</span>
+
+        <p>This marketplace includes real-time notifications using WebSocket connections for instant updates on bookings and payments.</p>
+
+        <div class="content-section">
+            <h2>Features</h2>
+
+            <ul class="feature-list">
+                <li>Real-time booking notifications (new, accepted, declined)</li>
+                <li>Real-time payment notifications (received, confirmed)</li>
+                <li>Automatic reconnection on connection loss</li>
+                <li>Heartbeat/ping-pong for connection health</li>
+                <li>Multi-device support (same user on multiple devices)</li>
+                <li>Browser notifications support</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Architecture</h2>
+
+            <h3>Server-Side</h3>
+            <ul class="feature-list">
+                <li>WebSocket server integrated with Next.js</li>
+                <li>Session-based authentication</li>
+                <li>Per-user connection management</li>
+                <li>Automatic cleanup of dead connections</li>
+            </ul>
+
+            <h3>Client-Side</h3>
+            <ul class="feature-list">
+                <li>React hooks for WebSocket integration</li>
+                <li>Automatic reconnection logic</li>
+                <li>Queue for offline messages</li>
+                <li>Browser notification API integration</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Usage</h2>
+
+            <h3>Using the WebSocket Hook</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript React
+                    <span class="code-language">TSX</span>
+                </div>
+                <pre><code>import { useWebSocket } from "~/hooks/use-websocket";
+
+function MyComponent() {
+  const { isConnected, sendMessage } = useWebSocket({
+    onBookingUpdate: (data) => {
+      console.log("Booking update:", data);
+    },
+    onPaymentUpdate: (data) => {
+      console.log("Payment update:", data);
+    },
+    onNotification: (data) => {
+      console.log("General notification:", data);
+    }
+  });
+
+  return (
+    &lt;div&gt;
+      Status: {isConnected ? "Connected" : "Disconnected"}
+    &lt;/div&gt;
+  );
+}</code></pre>
+            </div>
+
+            <h3>Using Real-time Notifications Component</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript React
+                    <span class="code-language">TSX</span>
+                </div>
+                <pre><code>import { RealtimeNotifications } from "~/components/notifications/realtime-notifications";
+
+function Header() {
+  return (
+    &lt;header&gt;
+      &lt;RealtimeNotifications /&gt;
+    &lt;/header&gt;
+  );
+}</code></pre>
+            </div>
+
+            <h3>Server-Side Broadcasting</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript Server
+                    <span class="code-language">TS</span>
+                </div>
+                <pre><code>import { wsServer } from "~/server/websocket/websocket-server";
+
+// Send to specific user
+wsServer.sendToUser(userId, {
+  type: "notification",
+  data: {
+    message: "Your service was booked!",
+    timestamp: new Date().toISOString()
+  }
+});
+
+// Send booking update
+wsServer.sendBookingUpdate(userId, {
+  type: "new_booking",
+  bookingId: "abc123",
+  serviceName: "House Cleaning",
+  message: "New booking received"
+});
+
+// Send payment update
+wsServer.sendPaymentUpdate(userId, {
+  type: "payment_received",
+  paymentId: "pay123",
+  amount: "150.00",
+  message: "Payment received"
+});</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Message Types</h2>
+
+            <h3>Booking Updates</h3>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Message Type</th>
+                        <th>Description</th>
+                        <th>When Triggered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="api-method get">new_booking</code></td>
+                        <td>New booking created</td>
+                        <td>Customer books a service</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method post">booking_accepted</code></td>
+                        <td>Booking accepted by provider</td>
+                        <td>Provider accepts booking request</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method delete">booking_declined</code></td>
+                        <td>Booking declined by provider</td>
+                        <td>Provider declines booking request</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method delete">booking_cancelled</code></td>
+                        <td>Booking cancelled</td>
+                        <td>Either party cancels booking</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method post">booking_completed</code></td>
+                        <td>Service completed</td>
+                        <td>Provider marks service as completed</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Payment Updates</h3>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Message Type</th>
+                        <th>Description</th>
+                        <th>When Triggered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code class="api-method post">payment_received</code></td>
+                        <td>Payment received by provider</td>
+                        <td>Escrow releases payment</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method post">payment_confirmed</code></td>
+                        <td>Payment confirmed for client</td>
+                        <td>Payment processing completes</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method delete">payment_failed</code></td>
+                        <td>Payment processing failed</td>
+                        <td>Payment gateway error</td>
+                    </tr>
+                    <tr>
+                        <td><code class="api-method put">payment_refunded</code></td>
+                        <td>Payment refunded</td>
+                        <td>Refund processed successfully</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>General Notifications</h3>
+            <ul class="feature-list">
+                <li><code class="env-var">notification</code> - General notification message</li>
+                <li><code class="env-var">ping</code> - Heartbeat ping</li>
+                <li><code class="env-var">pong</code> - Heartbeat response</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Configuration</h2>
+
+            <div class="alert alert-success">
+                <p><strong>No additional configuration needed!</strong> WebSocket server starts automatically with the Next.js server.</p>
+            </div>
+
+            <h3>Browser Notifications</h3>
+            <p>The system automatically requests browser notification permissions. Users can:</p>
+            <ol class="setup-steps">
+                <li>Allow notifications when prompted</li>
+                <li>Receive browser notifications even when the app is in background</li>
+                <li>Manage permissions in browser settings</li>
+            </ol>
+        </div>
+
+        <div class="content-section">
+            <h2>Security</h2>
+
+            <ul class="feature-list">
+                <li>Session-based authentication required</li>
+                <li>Connections validated against active sessions</li>
+                <li>Automatic disconnection on session expiry</li>
+                <li>No sensitive data in WebSocket messages</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Troubleshooting</h2>
+
+            <div class="alert alert-warning">
+                <h3>Connection Issues</h3>
+                <ul>
+                    <li>Check if user is authenticated</li>
+                    <li>Verify browser supports WebSockets</li>
+                    <li>Check for proxy/firewall blocking WebSocket connections</li>
+                    <li>Look for errors in browser console</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <h3>Notifications Not Showing</h3>
+                <ul>
+                    <li>Check browser notification permissions</li>
+                    <li>Ensure HTTPS is used (required for notifications)</li>
+                    <li>Verify notification data format</li>
+                    <li>Check if notifications are blocked by OS</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-danger">
+                <h3>Performance Issues</h3>
+                <ul>
+                    <li>Monitor number of active connections</li>
+                    <li>Check for message flooding</li>
+                    <li>Verify heartbeat interval is appropriate</li>
+                    <li>Consider implementing message throttling</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Development Tips</h2>
+
+            <h3>1. Testing WebSockets</h3>
+            <ul class="feature-list">
+                <li>Use browser DevTools WebSocket inspector</li>
+                <li>Test reconnection by killing server</li>
+                <li>Simulate network issues with throttling</li>
+            </ul>
+
+            <h3>2. Debugging</h3>
+            <ul class="feature-list">
+                <li>Enable verbose logging in development</li>
+                <li>Monitor WebSocket frames in DevTools</li>
+                <li>Check server logs for connection issues</li>
+            </ul>
+
+            <h3>3. Best Practices</h3>
+            <ul class="feature-list">
+                <li>Keep messages small and focused</li>
+                <li>Use appropriate message types</li>
+                <li>Handle reconnection gracefully</li>
+                <li>Clean up connections on unmount</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>WebSocket Connection Flow</h2>
+            <div class="mermaid">
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Auth
+    participant Database
+
+    Client->>Server: WebSocket Connection Request
+    Server->>Auth: Validate Session
+    Auth-->>Server: Session Valid
+    Server->>Database: Store Connection
+    Server-->>Client: Connection Established
+    
+    loop Heartbeat
+        Client->>Server: Ping
+        Server-->>Client: Pong
+    end
+    
+    Note over Server,Database: Business Logic Triggers
+    Database->>Server: New Booking/Payment
+    Server->>Client: Real-time Notification
+    Client->>Client: Display Notification
+    Client->>Client: Browser Notification (if enabled)
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Future Enhancements</h2>
+
+            <ul class="feature-list">
+                <li>Message persistence for offline delivery</li>
+                <li>WebSocket scaling with Redis pub/sub</li>
+                <li>End-to-end encryption for messages</li>
+                <li>Push notifications for mobile apps</li>
+                <li>Message read receipts</li>
+                <li>Typing indicators for chat features</li>
+            </ul>
+        </div>
+
+        <nav class="breadcrumb">
+            <a href="./index.html">← Back to Documentation</a>
+        </nav>
+    </div>
+</body>
+</html>

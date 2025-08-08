@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Flow - Savoir Link</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="./index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Authentication Flow</span>
+        </div>
+
+        <h1>Authentication Flow</h1>
+        
+        <div class="alert alert-info">
+            <strong>Overview:</strong> Complete authentication system using NextAuth.js with Google OAuth, magic links, and session management.
+        </div>
+
+        <h2>Authentication Methods</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3 class="gradient-text">Google OAuth</h3>
+                <ul>
+                    <li>One-click sign in</li>
+                    <li>Automatic profile import</li>
+                    <li>Secure OAuth 2.0 flow</li>
+                    <li>No password required</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">Magic Link</h3>
+                <ul>
+                    <li>Passwordless login</li>
+                    <li>Email verification</li>
+                    <li>Secure token generation</li>
+                    <li>Time-limited links</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">Credentials</h3>
+                <ul>
+                    <li>Email and password</li>
+                    <li>Secure hashing (bcrypt)</li>
+                    <li>Password recovery</li>
+                    <li>Remember me option</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Authentication Flow Diagram</h2>
+        <div class="mermaid">
+        graph TB
+            User[User] -->|Visit Protected Page| Check{Authenticated?}
+            Check -->|No| SignIn[Sign In Page]
+            Check -->|Yes| Protected[Protected Content]
+            
+            SignIn --> Method{Choose Method}
+            Method -->|Google| OAuth[Google OAuth]
+            Method -->|Email| Magic[Magic Link]
+            Method -->|Credentials| Creds[Email/Password]
+            
+            OAuth --> Google[Google Login]
+            Google -->|Success| Callback[OAuth Callback]
+            Google -->|Cancel| SignIn
+            
+            Magic --> EmailInput[Enter Email]
+            EmailInput --> SendLink[Send Magic Link]
+            SendLink --> CheckEmail[Check Email]
+            CheckEmail -->|Click Link| Verify[Verify Token]
+            
+            Creds --> Form[Login Form]
+            Form -->|Submit| Validate[Validate Credentials]
+            Validate -->|Valid| Session
+            Validate -->|Invalid| Error[Show Error]
+            
+            Callback --> Session[Create Session]
+            Verify -->|Valid| Session
+            Session --> SetCookie[Set Session Cookie]
+            SetCookie --> Protected
+            
+            Error --> SignIn
+            
+            style User fill:#ADD8E6
+            style SignIn fill:#FFD700
+            style Protected fill:#C8E6C9
+            style Session fill:#DDA0DD
+            style Error fill:#FFCDD2
+        </div>
+
+        <h2>Implementation Details</h2>
+
+        <h3>NextAuth Configuration</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - NextAuth Config</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// src/server/auth/config.ts
+import { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { db } from "~/server/db";
+import { env } from "~/env.js";
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(db),
+  providers: [
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
+    }),
+    EmailProvider({
+      server: {
+        host: env.EMAIL_SERVER_HOST,
+        port: env.EMAIL_SERVER_PORT,
+        auth: {
+          user: env.EMAIL_SERVER_USER,
+          pass: env.EMAIL_SERVER_PASSWORD
+        }
+      },
+      from: env.EMAIL_FROM
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        const user = await db.user.findUnique({
+          where: { email: credentials?.email }
+        });
+        
+        if (user && await verifyPassword(credentials?.password, user.password)) {
+          return { id: user.id, email: user.email, name: user.name };
+        }
+        return null;
+      }
+    })
+  ],
+  pages: {
+    signIn: "/auth/signin",
+    signOut: "/auth/signout",
+    error: "/auth/error",
+    verifyRequest: "/auth/verify-request"
+  },
+  callbacks: {
+    async session({ session, token, user }) {
+      if (session.user) {
+        session.user.id = user?.id || token?.sub;
+        session.user.role = user?.role || "customer";
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    }
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60 // 30 days
+  }
+};</code></pre>
+        </div>
+
+        <h3>Sign In Page Component</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>React Component - Sign In</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>// app/auth/signin/page.tsx
+export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  return (
+    &lt;div className="flex min-h-screen items-center justify-center bg-gray-50"&gt;
+      &lt;div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg"&gt;
+        &lt;div className="text-center"&gt;
+          &lt;h2 className="text-3xl font-bold text-gray-900"&gt;
+            Welcome to Savoir Link
+          &lt;/h2&gt;
+          &lt;p className="mt-2 text-gray-600"&gt;
+            Sign in to access your account
+          &lt;/p&gt;
+        &lt;/div&gt;
+        
+        {/* Google Sign In */}
+        &lt;button
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+          className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 hover:bg-gray-50"
+        &gt;
+          &lt;GoogleIcon className="h-5 w-5" /&gt;
+          Continue with Google
+        &lt;/button&gt;
+        
+        &lt;div className="relative"&gt;
+          &lt;div className="absolute inset-0 flex items-center"&gt;
+            &lt;div className="w-full border-t border-gray-300" /&gt;
+          &lt;/div&gt;
+          &lt;div className="relative flex justify-center text-sm"&gt;
+            &lt;span className="bg-white px-2 text-gray-500"&gt;Or&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        
+        {/* Magic Link */}
+        &lt;form onSubmit={handleMagicLink} className="space-y-4"&gt;
+          &lt;input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3"
+            required
+          /&gt;
+          &lt;button
+            type="submit"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-white hover:bg-indigo-700 disabled:opacity-50"
+          &gt;
+            {isLoading ? "Sending..." : "Send Magic Link"}
+          &lt;/button&gt;
+        &lt;/form&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h2>Session Management</h2>
+        <div class="feature-list">
+            <li><strong>JWT Tokens:</strong> Stateless session management with signed JWTs</li>
+            <li><strong>Secure Cookies:</strong> HttpOnly, Secure, SameSite cookies for CSRF protection</li>
+            <li><strong>Session Refresh:</strong> Automatic token refresh before expiration</li>
+            <li><strong>Role-Based Access:</strong> User roles embedded in session for authorization</li>
+            <li><strong>Device Management:</strong> Track and manage active sessions across devices</li>
+        </div>
+
+        <h2>Protected Routes</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Route Pattern</th>
+                    <th>Protection Level</th>
+                    <th>Required Role</th>
+                    <th>Redirect</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>/dashboard/*</td>
+                    <td>Authenticated</td>
+                    <td>professional</td>
+                    <td>/become-professional</td>
+                </tr>
+                <tr>
+                    <td>/bookings/*</td>
+                    <td>Authenticated</td>
+                    <td>any</td>
+                    <td>/auth/signin</td>
+                </tr>
+                <tr>
+                    <td>/settings/*</td>
+                    <td>Authenticated</td>
+                    <td>any</td>
+                    <td>/auth/signin</td>
+                </tr>
+                <tr>
+                    <td>/admin/*</td>
+                    <td>Authenticated</td>
+                    <td>admin</td>
+                    <td>/403</td>
+                </tr>
+                <tr>
+                    <td>/api/trpc/*</td>
+                    <td>Varies</td>
+                    <td>procedure-specific</td>
+                    <td>401 response</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Security Features</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Attack Prevention</h3>
+                <ul>
+                    <li>CSRF token validation</li>
+                    <li>Rate limiting on auth endpoints</li>
+                    <li>Brute force protection</li>
+                    <li>SQL injection prevention</li>
+                    <li>XSS protection headers</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Data Protection</h3>
+                <ul>
+                    <li>Password hashing (bcrypt)</li>
+                    <li>Encrypted session tokens</li>
+                    <li>Secure cookie flags</li>
+                    <li>HTTPS enforcement</li>
+                    <li>Sensitive data masking</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>OAuth Flow Details</h2>
+        <div class="mermaid">
+        graph LR
+            A[User] -->|1. Click Login| B[NextAuth]
+            B -->|2. Redirect| C[Google OAuth]
+            C -->|3. User Consent| D[Google Auth]
+            D -->|4. Auth Code| E[Callback URL]
+            E -->|5. Exchange Code| F[Access Token]
+            F -->|6. Get Profile| G[User Data]
+            G -->|7. Create/Update User| H[Database]
+            H -->|8. Create Session| I[JWT Token]
+            I -->|9. Set Cookie| J[Browser]
+            J -->|10. Redirect| K[Protected Page]
+            
+            style A fill:#ADD8E6
+            style C fill:#87CEEB
+            style H fill:#DDA0DD
+            style K fill:#C8E6C9
+        </div>
+
+        <h2>Magic Link Flow</h2>
+        <ol class="setup-steps">
+            <li>User enters email address on sign-in page</li>
+            <li>System generates unique, time-limited token</li>
+            <li>Token is stored in database with expiration</li>
+            <li>Email sent with magic link containing token</li>
+            <li>User clicks link in email</li>
+            <li>System verifies token validity and expiration</li>
+            <li>If valid, session is created and token deleted</li>
+            <li>User is redirected to intended destination</li>
+        </ol>
+
+        <h2>Error Handling</h2>
+        <div class="alert alert-danger">
+            <strong>Common Authentication Errors:</strong>
+            <ul>
+                <li><code>OAUTH_CALLBACK_ERROR</code> - OAuth provider returned an error</li>
+                <li><code>INVALID_CREDENTIALS</code> - Wrong email or password</li>
+                <li><code>TOKEN_EXPIRED</code> - Magic link or session token expired</li>
+                <li><code>ACCOUNT_NOT_LINKED</code> - Email already exists with different provider</li>
+                <li><code>ACCESS_DENIED</code> - User cancelled OAuth consent</li>
+            </ul>
+        </div>
+
+        <h2>Middleware Configuration</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Auth Middleware</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// src/middleware.ts
+import { withAuth } from "next-auth/middleware";
+
+export default withAuth({
+  callbacks: {
+    authorized({ req, token }) {
+      const path = req.nextUrl.pathname;
+      
+      // Admin routes require admin role
+      if (path.startsWith("/admin")) {
+        return token?.role === "admin";
+      }
+      
+      // Dashboard requires professional role
+      if (path.startsWith("/dashboard")) {
+        return token?.role === "professional" || token?.role === "admin";
+      }
+      
+      // Other protected routes just need authentication
+      return !!token;
+    }
+  }
+});
+
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/bookings/:path*",
+    "/settings/:path*"
+  ]
+};</code></pre>
+        </div>
+
+        <h2>Best Practices</h2>
+        <div class="alert alert-success">
+            <strong>Security Recommendations:</strong>
+            <ul>
+                <li>Always use HTTPS in production</li>
+                <li>Implement rate limiting on authentication endpoints</li>
+                <li>Use secure session configuration with proper expiration</li>
+                <li>Validate and sanitize all user inputs</li>
+                <li>Implement proper CORS policies</li>
+                <li>Regular security audits and dependency updates</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

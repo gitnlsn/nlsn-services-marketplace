@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Notifications: Keeping Users Informed</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+    <h1>Notifications: Keeping Users Informed</h1>
+
+    <p>Timely and relevant notifications are crucial for a positive user experience. Our notification system is designed to keep users in the loop about the events that matter most to them, using the channels they prefer.</p>
+
+    <h2>The Power of Twilio</h2>
+
+    <p>We use Twilio as our communications backbone. Twilio is a robust and scalable platform that allows us to reliably send notifications across multiple channels:</p>
+
+    <ul>
+        <li><strong>SMS:</strong> For urgent, time-sensitive alerts.</li>
+        <li><strong>WhatsApp:</strong> For rich, interactive conversations and notifications.</li>
+        <li><strong>Email:</strong> For more detailed, non-urgent information and summaries.</li>
+    </ul>
+
+    <h2>Key Notification Events</h2>
+
+    <p>The system will automatically send notifications for the following key events:</p>
+
+    <ul>
+        <li><strong>New Booking:</strong> A professional receives an alert when a client books their service.</li>
+        <li><strong>Booking Confirmation:</strong> A client receives a confirmation once their payment is successful.</li>
+        
+        <li><strong>Service Completed:</strong> A notification is sent when a service is marked as complete, prompting the client to leave a review.</li>
+        <li><strong>Withdrawal Successful:</strong> A professional is notified when their withdrawal has been processed.</li>
+    </ul>
+
+    <h2>Diagram: Notification Flow</h2>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant Backend
+            participant Twilio
+            participant User
+
+            Backend->>Backend: An event occurs (e.g., new booking)
+            Backend->>Twilio: API call with notification details (channel, recipient, message)
+            Twilio->>User: Delivers message via SMS, WhatsApp, or Email
+            Twilio-->>Backend: Returns delivery status
+    </pre>
+    </div>
+</body>
+</html>

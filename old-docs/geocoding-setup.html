@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geocoding Setup Guide - Services Marketplace Documentation</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="./index.html">Documentation</a>
+            <span class="breadcrumb-separator">→</span>
+            <span>Geocoding Setup Guide</span>
+        </nav>
+
+        <h1>Geocoding Setup Guide</h1>
+
+        <p>This marketplace supports two geocoding providers: OpenStreetMap (free) and Google Maps. You can choose based on your needs.</p>
+
+        <div class="content-section">
+            <h2>OpenStreetMap (Default)</h2>
+            <span class="badge badge-success">Free</span>
+            <span class="badge badge-primary">Default</span>
+
+            <p>OpenStreetMap Nominatim is the default geocoding provider. It's free and doesn't require any API keys.</p>
+
+            <h3>Features</h3>
+            <ul class="feature-list">
+                <li>Free to use</li>
+                <li>No API key required</li>
+                <li>Good for basic geocoding needs</li>
+                <li>Rate limited (1 request per second)</li>
+                <li>Less accurate than Google Maps in some regions</li>
+            </ul>
+
+            <div class="alert alert-success">
+                <h3>Configuration</h3>
+                <p>No configuration needed! OpenStreetMap is the default provider.</p>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Google Maps Geocoding</h2>
+            <span class="badge badge-warning">Paid</span>
+            <span class="badge badge-primary">High Accuracy</span>
+
+            <p>Google Maps provides more accurate geocoding with additional features.</p>
+
+            <h3>Features</h3>
+            <ul class="feature-list">
+                <li>Higher accuracy</li>
+                <li>Better support for business names</li>
+                <li>Reverse geocoding support</li>
+                <li>Place IDs for consistent references</li>
+                <li>Higher rate limits</li>
+                <li>Costs apply after free tier</li>
+            </ul>
+
+            <h3>Setup</h3>
+
+            <h4>1. Get Google Maps API Key</h4>
+            <ol class="setup-steps">
+                <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud Console</a></li>
+                <li>Create a new project or select existing one</li>
+                <li>Enable the following APIs:
+                    <ul>
+                        <li>Geocoding API</li>
+                        <li>Maps JavaScript API (if using Google Maps display)</li>
+                    </ul>
+                </li>
+                <li>Create credentials (API Key)</li>
+                <li>Restrict the API key:
+                    <ul>
+                        <li>Application restrictions: HTTP referrers</li>
+                        <li>API restrictions: Select enabled APIs only</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>2. Configure Environment Variables</h4>
+            <p>Add to your <code class="env-var">.env</code> file:</p>
+
+            <div class="code-section">
+                <div class="code-header">
+                    Environment Variables
+                    <span class="code-language">ENV</span>
+                </div>
+                <pre><code># Google Maps API Key
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+
+# Set geocoding provider to Google
+GEOCODING_PROVIDER=google</code></pre>
+            </div>
+
+            <h4>3. Set Up Billing</h4>
+            <div class="alert alert-warning">
+                <ol>
+                    <li>Enable billing in Google Cloud Console</li>
+                    <li>Set up budget alerts to monitor usage</li>
+                    <li>Free tier includes:
+                        <ul>
+                            <li>$200 monthly credit</li>
+                            <li>40,000 geocoding requests per month</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Usage in the Application</h2>
+
+            <p>The application automatically uses the configured geocoding provider.</p>
+
+            <h3>Check Provider Status</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data } = api.geocoding.getProviderStatus.useQuery();
+console.log(data);
+// Output: { provider: 'google', providers: { openstreetmap: true, google: true } }</code></pre>
+            </div>
+
+            <h3>Geocode an Address</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data } = api.geocoding.geocode.useQuery({ 
+  address: "Av. Paulista, 1000, São Paulo" 
+});</code></pre>
+            </div>
+
+            <h3>Batch Geocode</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data } = api.geocoding.batchGeocode.useQuery({ 
+  addresses: ["Address 1", "Address 2", "Address 3"] 
+});</code></pre>
+            </div>
+
+            <h3>Reverse Geocode <span class="badge badge-warning">Google Maps only</span></h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data } = api.geocoding.reverseGeocode.useQuery({ 
+  lat: -23.5505, 
+  lng: -46.6333 
+});</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Provider Comparison</h2>
+
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>OpenStreetMap</th>
+                        <th>Google Maps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cost</strong></td>
+                        <td><span class="badge badge-success">Free</span></td>
+                        <td><span class="badge badge-warning">Pay per use</span> after free tier</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Key</strong></td>
+                        <td>Not required</td>
+                        <td>Required</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Accuracy</strong></td>
+                        <td>Good</td>
+                        <td><span class="badge badge-success">Excellent</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rate Limit</strong></td>
+                        <td>1 req/sec</td>
+                        <td>50 req/sec</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Batch Support</strong></td>
+                        <td>Yes (5 at a time)</td>
+                        <td>Yes (10 at a time)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reverse Geocoding</strong></td>
+                        <td>Limited</td>
+                        <td>Full support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Place IDs</strong></td>
+                        <td>No</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Business Names</strong></td>
+                        <td>Limited</td>
+                        <td>Excellent</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Coverage</strong></td>
+                        <td>Global</td>
+                        <td>Global</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="content-section">
+            <h2>Best Practices</h2>
+
+            <h3>For OpenStreetMap:</h3>
+            <ul class="feature-list">
+                <li>Respect rate limits (1 request per second)</li>
+                <li>Cache results to minimize API calls</li>
+                <li>Add delays between batch requests</li>
+                <li>Include country in address for better results</li>
+            </ul>
+
+            <h3>For Google Maps:</h3>
+            <ul class="feature-list">
+                <li>Monitor usage in Google Cloud Console</li>
+                <li>Set up billing alerts</li>
+                <li>Use place IDs for consistent results</li>
+                <li>Enable only required APIs</li>
+                <li>Restrict API keys properly</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Switching Providers</h2>
+
+            <p>To switch between providers:</p>
+
+            <ol class="setup-steps">
+                <li>Update <code class="env-var">GEOCODING_PROVIDER</code> in <code class="env-var">.env</code></li>
+                <li>Ensure Google Maps API key is configured (if switching to Google)</li>
+                <li>Restart the application</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <p>The system will automatically use the new provider. Cached results from the previous provider remain valid.</p>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Troubleshooting</h2>
+
+            <div class="alert alert-warning">
+                <h3>OpenStreetMap Issues</h3>
+                <ul>
+                    <li><strong>No results</strong>: Try adding more context (city, state, country)</li>
+                    <li><strong>Rate limit errors</strong>: Implement delays between requests</li>
+                    <li><strong>Inaccurate results</strong>: Consider switching to Google Maps</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-danger">
+                <h3>Google Maps Issues</h3>
+                <ul>
+                    <li><strong>API key errors</strong>: Verify key is enabled for Geocoding API</li>
+                    <li><strong>Billing not enabled</strong>: Set up billing in Google Cloud Console</li>
+                    <li><strong>CORS errors</strong>: Check API key restrictions</li>
+                    <li><strong>No results</strong>: Verify address format and country</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <h3>General Issues</h3>
+                <ul>
+                    <li>Check <code class="env-var">GEOCODING_PROVIDER</code> environment variable</li>
+                    <li>Monitor browser console for errors</li>
+                    <li>Check server logs for detailed error messages</li>
+                    <li>Verify network connectivity</li>
+                </ul>
+            </div>
+        </div>
+
+        <nav class="breadcrumb">
+            <a href="./index.html">← Back to Documentation</a>
+        </nav>
+    </div>
+</body>
+</html>

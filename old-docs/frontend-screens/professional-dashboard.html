@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Professional Dashboard - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>Professional Dashboard</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The Professional Dashboard serves as the central command center for service providers, offering a comprehensive overview of their business performance, active services, booking requests, and earnings. This dashboard enables professionals to efficiently manage their marketplace presence, track key metrics, and make informed decisions about their service offerings.</p>
+            <p><strong>Primary Purpose:</strong> Provide professionals with actionable insights and streamlined management tools to optimize their service delivery, maximize earnings, and maintain high customer satisfaction.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Header Summary Cards:</strong>
+                    <ul>
+                        <li>Total Earnings (this month)</li>
+                        <li>Pending Bookings count</li>
+                        <li>Active Services count</li>
+                        <li>Customer Rating average</li>
+                        <li>Response Rate percentage</li>
+                    </ul>
+                </li>
+                <li><strong>Quick Action Buttons:</strong>
+                    <ul>
+                        <li>Create New Service</li>
+                        <li>View All Bookings</li>
+                        <li>Request Withdrawal</li>
+                        <li>Update Profile</li>
+                        <li>View Analytics</li>
+                    </ul>
+                </li>
+                <li><strong>Pending Bookings Section:</strong>
+                    <ul>
+                        <li>List of recent booking requests</li>
+                        <li>Quick accept/decline actions</li>
+                        <li>Time remaining to respond</li>
+                        <li>"View All" link to full bookings page</li>
+                    </ul>
+                </li>
+                <li><strong>Active Services Widget:</strong>
+                    <ul>
+                        <li>Service performance metrics</li>
+                        <li>View/booking counts</li>
+                        <li>Edit/deactivate options</li>
+                        <li>Service status indicators</li>
+                    </ul>
+                </li>
+                <li><strong>Earnings Overview:</strong>
+                    <ul>
+                        <li>Monthly earnings chart</li>
+                        <li>Available balance</li>
+                        <li>Pending payments</li>
+                        <li>Withdrawal history</li>
+                    </ul>
+                </li>
+                <li><strong>Performance Metrics:</strong>
+                    <ul>
+                        <li>Customer reviews summary</li>
+                        <li>Booking completion rate</li>
+                        <li>Average response time</li>
+                        <li>Service popularity trends</li>
+                    </ul>
+                </li>
+                <li><strong>Notifications Panel:</strong> Platform updates, policy changes, tips for improvement</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>dashboard.getSummary(professionalId)</code> - Fetch dashboard overview data</li>
+                <li><code>bookings.getPending(professionalId, limit)</code> - Get recent pending bookings</li>
+                <li><code>services.getActive(professionalId)</code> - Fetch active service listings</li>
+                <li><code>earnings.getMonthly(professionalId)</code> - Calculate monthly earnings</li>
+                <li><code>reviews.getRecent(professionalId, limit)</code> - Get latest customer reviews</li>
+                <li><code>analytics.getPerformance(professionalId, period)</code> - Fetch performance metrics</li>
+                <li><code>notifications.getUnread(professionalId)</code> - Get unread notifications</li>
+                <li><code>bookings.respondQuick(bookingId, action)</code> - Quick accept/decline from dashboard</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Professional Logs In] --> B[Load Dashboard Data]
+    B --> C[Display Dashboard Overview]
+    
+    C --> D{User Action}
+    
+    D -->|View Pending Bookings| E[Click Pending Bookings]
+    E --> F[Show Booking Details]
+    F --> G{Quick Action}
+    G -->|Accept| H[Quick Accept Booking]
+    G -->|Decline| I[Quick Decline Booking]
+    G -->|View More| J[Navigate to Full Bookings]
+    
+    D -->|Manage Services| K[Click Active Services]
+    K --> L[Show Service Performance]
+    L --> M{Service Action}
+    M -->|Edit| N[Navigate to Edit Service]
+    M -->|View Stats| O[Show Service Analytics]
+    M -->|Deactivate| P[Confirm Deactivation]
+    
+    D -->|Check Earnings| Q[Click Earnings Widget]
+    Q --> R[Show Detailed Earnings]
+    R --> S{Earnings Action}
+    S -->|Request Withdrawal| T[Navigate to Withdrawal]
+    S -->|View History| U[Show Payment History]
+    
+    D -->|Create Service| V[Click Create Service]
+    V --> W[Navigate to Service Creation]
+    
+    D -->|Update Profile| X[Click Profile Update]
+    X --> Y[Navigate to Profile Edit]
+    
+    D -->|View Analytics| Z[Click Analytics]
+    Z --> AA[Show Performance Dashboard]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#FFD700,stroke:#333,stroke-width:2px
+    style G fill:#FFD700,stroke:#333,stroke-width:2px
+    style M fill:#FFD700,stroke:#333,stroke-width:2px
+    style S fill:#FFD700,stroke:#333,stroke-width:2px
+    style H fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style I fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style W fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style Y fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style AA fill:#87CEEB,stroke:#333,stroke-width:2px
+    style T fill:#87CEEB,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Dashboard Metrics</h2>
+        <ul>
+            <li><strong>Financial Metrics:</strong>
+                <ul>
+                    <li>Monthly revenue trends</li>
+                    <li>Average booking value</li>
+                    <li>Revenue per service</li>
+                    <li>Seasonal performance patterns</li>
+                </ul>
+            </li>
+            <li><strong>Performance Indicators:</strong>
+                <ul>
+                    <li>Booking acceptance rate</li>
+                    <li>Service completion rate</li>
+                    <li>Customer satisfaction scores</li>
+                    <li>Response time averages</li>
+                </ul>
+            </li>
+            <li><strong>Growth Metrics:</strong>
+                <ul>
+                    <li>New customer acquisition</li>
+                    <li>Repeat customer rate</li>
+                    <li>Service view-to-booking conversion</li>
+                    <li>Profile view analytics</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>Business Intelligence</h2>
+        <ul>
+            <li><strong>Trend Analysis:</strong> Identify peak booking times and seasonal patterns</li>
+            <li><strong>Competitive Insights:</strong> Compare performance against category averages</li>
+            <li><strong>Optimization Suggestions:</strong> AI-powered recommendations for improvement</li>
+            <li><strong>Market Opportunities:</strong> Alerts for new service categories or high-demand areas</li>
+        </ul>
+
+        <h2>Notification System</h2>
+        <ul>
+            <li><strong>Urgent Alerts:</strong> Time-sensitive booking requests</li>
+            <li><strong>Performance Updates:</strong> Weekly/monthly performance summaries</li>
+            <li><strong>Platform News:</strong> Policy updates, new features, marketplace announcements</li>
+            <li><strong>Growth Tips:</strong> Personalized recommendations for business growth</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Simplified card-based layout</li>
+                        <li>Priority information first</li>
+                        <li>Swipeable metric cards</li>
+                        <li>Prominent action buttons</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Two-column widget layout</li>
+                        <li>Expandable chart sections</li>
+                        <li>Side navigation panel</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Multi-column dashboard grid</li>
+                        <li>Interactive charts and graphs</li>
+                        <li>Sidebar with quick actions</li>
+                        <li>Advanced filtering options</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

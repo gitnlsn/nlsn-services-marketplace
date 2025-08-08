@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Screen - Frontend</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Frontend Screens</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Settings</span>
+        </div>
+
+        <h1>Settings Screen</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Centralized user preferences, account settings, privacy controls, and platform configuration.
+        </div>
+
+        <h2>Screen Layout</h2>
+        <p>The Settings screen provides a comprehensive interface for users to manage their account preferences, security settings, notification preferences, and platform-specific configurations. It adapts based on user role (customer vs professional).</p>
+
+        <h2>Settings Categories</h2>
+        <div class="mermaid">
+        graph TB
+            Settings[Settings Page] --> Account[Account Settings]
+            Settings --> Security[Security & Privacy]
+            Settings --> Notif[Notifications]
+            Settings --> Payment[Payment Methods]
+            Settings --> Prof[Professional Settings]
+            Settings --> Display[Display & Accessibility]
+            Settings --> Data[Data & Storage]
+            
+            Account --> Profile[Profile Info]
+            Account --> Email[Email & Phone]
+            Account --> Language[Language & Region]
+            
+            Security --> Password[Change Password]
+            Security --> TwoFA[Two-Factor Auth]
+            Security --> Sessions[Active Sessions]
+            Security --> Privacy[Privacy Controls]
+            
+            Notif --> Push[Push Notifications]
+            Notif --> EmailNotif[Email Preferences]
+            Notif --> SMS[SMS Alerts]
+            
+            style Settings fill:#FFD700
+            style Account fill:#ADD8E6
+            style Security fill:#DDA0DD
+            style Notif fill:#90EE90
+        </div>
+
+        <h2>Component Structure</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>React Component - Settings Page</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>// app/settings/page.tsx
+export default function SettingsPage() {
+  const { data: session } = useSession();
+  const [activeSection, setActiveSection] = useState('account');
+  
+  const settingsSections = [
+    { id: 'account', title: 'Account', icon: UserIcon },
+    { id: 'security', title: 'Security & Privacy', icon: ShieldIcon },
+    { id: 'notifications', title: 'Notifications', icon: BellIcon },
+    { id: 'payment', title: 'Payment Methods', icon: CreditCardIcon },
+    ...(session?.user?.role === 'professional' 
+      ? [{ id: 'professional', title: 'Professional', icon: BriefcaseIcon }] 
+      : []),
+    { id: 'display', title: 'Display & Accessibility', icon: EyeIcon },
+    { id: 'data', title: 'Data & Storage', icon: DatabaseIcon }
+  ];
+  
+  return (
+    &lt;div className="min-h-screen bg-gray-50"&gt;
+      &lt;div className="mx-auto max-w-7xl px-4 py-8"&gt;
+        &lt;h1 className="mb-8 text-3xl font-bold text-gray-900"&gt;Settings&lt;/h1&gt;
+        
+        &lt;div className="grid gap-8 lg:grid-cols-4"&gt;
+          {/* Sidebar Navigation */}
+          &lt;aside className="lg:col-span-1"&gt;
+            &lt;nav className="space-y-1 rounded-lg bg-white p-4 shadow"&gt;
+              {settingsSections.map((section) => (
+                &lt;button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex w-full items-center rounded-lg px-4 py-3 text-left transition-colors ${
+                    activeSection === section.id
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                &gt;
+                  &lt;section.icon className="mr-3 h-5 w-5" /&gt;
+                  {section.title}
+                &lt;/button&gt;
+              ))}
+            &lt;/nav&gt;
+          &lt;/aside&gt;
+          
+          {/* Settings Content */}
+          &lt;main className="lg:col-span-3"&gt;
+            &lt;div className="rounded-lg bg-white p-6 shadow"&gt;
+              {renderSettingsSection(activeSection)}
+            &lt;/div&gt;
+          &lt;/main&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h2>Account Settings</h2>
+        <div class="card">
+            <h3>Profile Information</h3>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Validation</th>
+                        <th>Editable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Display Name</td>
+                        <td>Text</td>
+                        <td>3-50 characters</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>Email</td>
+                        <td>Valid email format</td>
+                        <td>With verification</td>
+                    </tr>
+                    <tr>
+                        <td>Phone Number</td>
+                        <td>Phone</td>
+                        <td>Valid phone format</td>
+                        <td>With OTP</td>
+                    </tr>
+                    <tr>
+                        <td>Profile Photo</td>
+                        <td>Image</td>
+                        <td>Max 5MB, JPG/PNG</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Bio</td>
+                        <td>Textarea</td>
+                        <td>Max 500 characters</td>
+                        <td>Yes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Security & Privacy</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Password Management</h3>
+                <ul>
+                    <li>Current password verification</li>
+                    <li>New password strength indicator</li>
+                    <li>Password requirements display</li>
+                    <li>Confirmation field</li>
+                    <li>Last changed timestamp</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Two-Factor Authentication</h3>
+                <ul>
+                    <li>Enable/disable 2FA</li>
+                    <li>SMS verification option</li>
+                    <li>Authenticator app setup</li>
+                    <li>Backup codes generation</li>
+                    <li>Trusted devices management</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Notification Preferences</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>Notification Settings Component</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>function NotificationSettings() {
+  const [preferences, setPreferences] = useState({
+    email: {
+      bookingConfirmation: true,
+      bookingReminder: true,
+      paymentReceipt: true,
+      marketing: false,
+      weeklyDigest: true
+    },
+    push: {
+      bookingUpdates: true,
+      messages: true,
+      reviews: true,
+      promotions: false
+    },
+    sms: {
+      bookingConfirmation: true,
+      urgentAlerts: true,
+      reminders: false
+    }
+  });
+  
+  return (
+    &lt;div className="space-y-6"&gt;
+      &lt;h2 className="text-xl font-semibold"&gt;Notification Preferences&lt;/h2&gt;
+      
+      {/* Email Notifications */}
+      &lt;div className="border-b pb-6"&gt;
+        &lt;h3 className="mb-4 font-medium"&gt;Email Notifications&lt;/h3&gt;
+        {Object.entries(preferences.email).map(([key, value]) => (
+          &lt;div key={key} className="flex items-center justify-between py-2"&gt;
+            &lt;label className="text-sm text-gray-700"&gt;
+              {formatLabel(key)}
+            &lt;/label&gt;
+            &lt;Switch
+              checked={value}
+              onChange={(checked) => updatePreference('email', key, checked)}
+            /&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+      
+      {/* Similar sections for Push and SMS */}
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h2>Payment Methods</h2>
+        <div class="feature-list">
+            <li><strong>Saved Cards:</strong> View and manage saved credit/debit cards</li>
+            <li><strong>Bank Accounts:</strong> Link and verify bank accounts for withdrawals</li>
+            <li><strong>PIX Keys:</strong> Manage PIX keys for instant transfers</li>
+            <li><strong>Default Method:</strong> Set preferred payment method</li>
+            <li><strong>Transaction History:</strong> Link to payment history</li>
+            <li><strong>Auto-pay Settings:</strong> Configure recurring payment preferences</li>
+        </div>
+
+        <h2>Professional Settings</h2>
+        <div class="alert alert-warning">
+            <strong>Note:</strong> This section only appears for users with professional accounts.
+        </div>
+
+        <div class="card">
+            <h3>Professional Configuration</h3>
+            <ul>
+                <li><strong>Service Radius:</strong> Set maximum distance for service delivery</li>
+                <li><strong>Response Time:</strong> Average response time commitment</li>
+                <li><strong>Vacation Mode:</strong> Temporarily pause service availability</li>
+                <li><strong>Instant Booking:</strong> Enable/disable automatic booking acceptance</li>
+                <li><strong>Pricing Strategy:</strong> Fixed, hourly, or custom pricing</li>
+                <li><strong>Commission Settings:</strong> View platform fees and earnings</li>
+            </ul>
+        </div>
+
+        <h2>Display & Accessibility</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Setting</th>
+                    <th>Options</th>
+                    <th>Default</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Theme</td>
+                    <td>Light, Dark, System</td>
+                    <td>System</td>
+                </tr>
+                <tr>
+                    <td>Font Size</td>
+                    <td>Small, Medium, Large, Extra Large</td>
+                    <td>Medium</td>
+                </tr>
+                <tr>
+                    <td>High Contrast</td>
+                    <td>On/Off</td>
+                    <td>Off</td>
+                </tr>
+                <tr>
+                    <td>Reduce Motion</td>
+                    <td>On/Off</td>
+                    <td>Off</td>
+                </tr>
+                <tr>
+                    <td>Language</td>
+                    <td>Portuguese, English, Spanish</td>
+                    <td>Portuguese</td>
+                </tr>
+                <tr>
+                    <td>Date Format</td>
+                    <td>DD/MM/YYYY, MM/DD/YYYY</td>
+                    <td>DD/MM/YYYY</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Data & Storage</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Privacy Controls</h3>
+                <ul>
+                    <li>Profile visibility settings</li>
+                    <li>Search engine indexing</li>
+                    <li>Data sharing preferences</li>
+                    <li>Cookie preferences</li>
+                    <li>Location services</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Data Management</h3>
+                <ul>
+                    <li>Download my data</li>
+                    <li>Clear search history</li>
+                    <li>Delete saved addresses</li>
+                    <li>Remove payment methods</li>
+                    <li>Delete account option</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Mobile Considerations</h2>
+        <div class="card">
+            <h3>Mobile UI Adaptations</h3>
+            <ul>
+                <li>Bottom sheet navigation instead of sidebar</li>
+                <li>Collapsible sections with chevron indicators</li>
+                <li>Touch-friendly toggle switches</li>
+                <li>Swipe gestures for section navigation</li>
+                <li>Biometric authentication options</li>
+                <li>Native share sheet integration</li>
+            </ul>
+        </div>
+
+        <h2>Save & Sync Behavior</h2>
+        <div class="feature-list">
+            <li><strong>Auto-save:</strong> Changes saved automatically with debounce</li>
+            <li><strong>Optimistic Updates:</strong> Immediate UI feedback with rollback on error</li>
+            <li><strong>Sync Indicator:</strong> Visual feedback for save status</li>
+            <li><strong>Conflict Resolution:</strong> Handle concurrent edits from multiple devices</li>
+            <li><strong>Offline Support:</strong> Queue changes for sync when online</li>
+        </div>
+
+        <h2>Danger Zone</h2>
+        <div class="alert alert-danger">
+            <strong>Account Actions:</strong>
+            <ul>
+                <li><strong>Deactivate Account:</strong> Temporarily disable account (reversible)</li>
+                <li><strong>Delete Account:</strong> Permanently remove account and data (requires confirmation)</li>
+                <li><strong>Export Data:</strong> Download all personal data before deletion</li>
+                <li><strong>Transfer Ownership:</strong> For professional accounts with active bookings</li>
+            </ul>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>User Service:</strong> Update user preferences and profile</li>
+            <li><strong>Auth Service:</strong> Password changes and 2FA setup</li>
+            <li><strong>Notification Service:</strong> Update notification preferences</li>
+            <li><strong>Payment Service:</strong> Manage payment methods</li>
+            <li><strong>Storage Service:</strong> Handle profile photo uploads</li>
+            <li><strong>Analytics Service:</strong> Track settings usage patterns</li>
+        </ul>
+    </div>
+</body>
+</html>

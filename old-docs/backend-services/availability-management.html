@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Availability Management - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Availability Management</span>
+        </div>
+
+        <h1>Availability Management</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Manages professional availability schedules, working hours, and calendar integration for service providers.
+        </div>
+
+        <h2>Overview</h2>
+        <p>The Availability Management system allows professionals to set their working hours, manage time slots, handle bookings, and integrate with external calendar systems like Google Calendar. It ensures efficient scheduling and prevents double-booking.</p>
+
+        <h2>Core Features</h2>
+        <ul class="feature-list">
+            <li><strong>Working Hours:</strong> Set recurring weekly schedules</li>
+            <li><strong>Time Slots:</strong> Define service duration and buffer times</li>
+            <li><strong>Blackout Dates:</strong> Mark unavailable dates and holidays</li>
+            <li><strong>Google Calendar Sync:</strong> Two-way synchronization with external calendars</li>
+            <li><strong>Automatic Conflict Detection:</strong> Prevent double-booking</li>
+            <li><strong>Time Zone Support:</strong> Handle bookings across different time zones</li>
+            <li><strong>Availability Rules:</strong> Set minimum notice periods and maximum advance booking</li>
+        </ul>
+
+        <h2>System Architecture</h2>
+        <div class="mermaid">
+        graph TB
+            Client[Client Request] -->|Check Availability| Router[Availability Router]
+            Router --> Service[Availability Service]
+            
+            Service --> DB[(Database)]
+            Service --> GCal[Google Calendar API]
+            Service --> Cache[Redis Cache]
+            
+            DB --> Schedule[Schedule Rules]
+            DB --> Bookings[Existing Bookings]
+            DB --> Blackouts[Blackout Dates]
+            
+            GCal -->|Sync Events| Service
+            Cache -->|Fast Lookup| Service
+            
+            Service -->|Available Slots| Client
+            
+            style Client fill:#ADD8E6
+            style Router fill:#FFD700
+            style Service fill:#DDA0DD
+            style GCal fill:#87CEEB
+            style Cache fill:#90EE90
+        </div>
+
+        <h2>Data Models</h2>
+
+        <h3>Availability Schedule</h3>
+        <pre><code>model AvailabilitySchedule {
+  id              String   @id @default(cuid())
+  professionalId  String
+  professional    User     @relation(fields: [professionalId])
+  
+  // Working hours by day
+  monday          Json?    // { start: "09:00", end: "17:00" }
+  tuesday         Json?
+  wednesday       Json?
+  thursday        Json?
+  friday          Json?
+  saturday        Json?
+  sunday          Json?
+  
+  // Time slot configuration
+  slotDuration    Int      @default(60) // minutes
+  bufferTime      Int      @default(15) // minutes between bookings
+  
+  // Booking rules
+  minNoticeHours  Int      @default(24)
+  maxAdvanceDays  Int      @default(30)
+  
+  timeZone        String   @default("America/Sao_Paulo")
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}</code></pre>
+
+        <h3>Blackout Dates</h3>
+        <pre><code>model BlackoutDate {
+  id              String   @id @default(cuid())
+  professionalId  String
+  professional    User     @relation(fields: [professionalId])
+  
+  startDate       DateTime
+  endDate         DateTime
+  reason          String?
+  isRecurring     Boolean  @default(false)
+  recurringRule   Json?    // RRULE for recurring events
+  
+  createdAt       DateTime @default(now())
+}</code></pre>
+
+        <h2>API Endpoints</h2>
+
+        <h3>Set Working Hours</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Set Schedule</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>setWorkingHours: protectedProcedure
+  .input(z.object({
+    schedule: z.object({
+      monday: z.object({ start: z.string(), end: z.string() }).optional(),
+      tuesday: z.object({ start: z.string(), end: z.string() }).optional(),
+      wednesday: z.object({ start: z.string(), end: z.string() }).optional(),
+      thursday: z.object({ start: z.string(), end: z.string() }).optional(),
+      friday: z.object({ start: z.string(), end: z.string() }).optional(),
+      saturday: z.object({ start: z.string(), end: z.string() }).optional(),
+      sunday: z.object({ start: z.string(), end: z.string() }).optional(),
+    }),
+    slotDuration: z.number().min(15).max(480),
+    bufferTime: z.number().min(0).max(60),
+    timeZone: z.string()
+  }))
+  .mutation(async ({ ctx, input }) => {
+    const availabilityService = createAvailabilityService({
+      db: ctx.db,
+      userId: ctx.session.user.id
+    });
+    return await availabilityService.setWorkingHours(input);
+  })</code></pre>
+        </div>
+
+        <h3>Get Available Slots</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Check Availability</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>getAvailableSlots: publicProcedure
+  .input(z.object({
+    professionalId: z.string(),
+    serviceId: z.string(),
+    date: z.string(), // YYYY-MM-DD
+    timeZone: z.string().optional()
+  }))
+  .query(async ({ ctx, input }) => {
+    const availabilityService = createAvailabilityService({ db: ctx.db });
+    
+    // Get service duration
+    const service = await ctx.db.service.findUnique({
+      where: { id: input.serviceId },
+      select: { duration: true }
+    });
+    
+    // Calculate available slots
+    const slots = await availabilityService.getAvailableSlots({
+      professionalId: input.professionalId,
+      date: input.date,
+      duration: service.duration,
+      timeZone: input.timeZone
+    });
+    
+    return slots;
+  })</code></pre>
+        </div>
+
+        <h2>Availability Algorithm</h2>
+        <div class="mermaid">
+        graph LR
+            Start[Request Date] --> Check1{Working Day?}
+            Check1 -->|No| NoSlots[No Slots Available]
+            Check1 -->|Yes| GetHours[Get Working Hours]
+            
+            GetHours --> Check2{Blackout Date?}
+            Check2 -->|Yes| NoSlots
+            Check2 -->|No| GenSlots[Generate Time Slots]
+            
+            GenSlots --> Check3{Existing Bookings?}
+            Check3 -->|Yes| Filter[Filter Booked Slots]
+            Check3 -->|No| Check4{Google Calendar?}
+            
+            Filter --> Check4
+            Check4 -->|Yes| GCalCheck[Check External Events]
+            Check4 -->|No| Return[Return Available Slots]
+            
+            GCalCheck --> FilterExternal[Filter Busy Times]
+            FilterExternal --> Return
+            
+            style Start fill:#ADD8E6
+            style NoSlots fill:#FFCDD2
+            style Return fill:#C8E6C9
+            style GCalCheck fill:#87CEEB
+        </div>
+
+        <h2>Google Calendar Integration</h2>
+        <div class="alert alert-success">
+            <strong>Two-way Sync:</strong> The system supports bidirectional synchronization with Google Calendar, automatically blocking time slots when events are added to the external calendar.
+        </div>
+
+        <h3>Sync Process</h3>
+        <pre><code>// Google Calendar sync service
+async syncWithGoogleCalendar(professionalId: string) {
+  // 1. Get Google Calendar events
+  const events = await googleCalendarService.getEvents({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    timeMax: addDays(new Date(), 30).toISOString()
+  });
+  
+  // 2. Convert to blackout periods
+  const blackouts = events.map(event => ({
+    startDate: event.start.dateTime,
+    endDate: event.end.dateTime,
+    reason: `Google Calendar: ${event.summary}`,
+    externalId: event.id
+  }));
+  
+  // 3. Update availability
+  await this.updateExternalBlackouts(professionalId, blackouts);
+  
+  // 4. Push bookings to Google Calendar
+  const bookings = await this.getUpcomingBookings(professionalId);
+  await this.pushBookingsToCalendar(bookings);
+}</code></pre>
+
+        <h2>Caching Strategy</h2>
+        <div class="card">
+            <h3>Redis Cache Implementation</h3>
+            <p>Availability data is cached for performance optimization:</p>
+            <ul>
+                <li><strong>Cache Key:</strong> <code>availability:${professionalId}:${date}</code></li>
+                <li><strong>TTL:</strong> 5 minutes for real-time accuracy</li>
+                <li><strong>Invalidation:</strong> On booking creation, cancellation, or schedule update</li>
+            </ul>
+            <pre><code>// Cache availability slots
+const cacheKey = `availability:${professionalId}:${date}`;
+const cached = await redis.get(cacheKey);
+
+if (cached) {
+  return JSON.parse(cached);
+}
+
+const slots = await calculateAvailableSlots(...);
+await redis.setex(cacheKey, 300, JSON.stringify(slots));
+return slots;</code></pre>
+        </div>
+
+        <h2>Time Zone Handling</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Scenario</th>
+                    <th>Professional TZ</th>
+                    <th>Client TZ</th>
+                    <th>Storage</th>
+                    <th>Display</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Booking Creation</td>
+                    <td>America/Sao_Paulo</td>
+                    <td>America/New_York</td>
+                    <td>UTC</td>
+                    <td>Local to viewer</td>
+                </tr>
+                <tr>
+                    <td>Availability Check</td>
+                    <td>Europe/London</td>
+                    <td>Asia/Tokyo</td>
+                    <td>UTC</td>
+                    <td>Professional's TZ</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Business Rules</h2>
+        <div class="feature-list">
+            <li><strong>Minimum Notice:</strong> Bookings must be made at least X hours in advance</li>
+            <li><strong>Maximum Advance:</strong> Cannot book more than Y days in the future</li>
+            <li><strong>Buffer Time:</strong> Automatic gap between consecutive bookings</li>
+            <li><strong>Overtime Protection:</strong> Last slot must end before working hours end</li>
+            <li><strong>Weekend/Holiday Rules:</strong> Different rates or availability for non-business days</li>
+        </div>
+
+        <h2>Error Scenarios</h2>
+        <div class="alert alert-danger">
+            <strong>Common Issues:</strong>
+            <ul>
+                <li><code>SLOT_UNAVAILABLE</code> - Selected time slot is no longer available</li>
+                <li><code>OUTSIDE_WORKING_HOURS</code> - Requested time is outside professional's schedule</li>
+                <li><code>INSUFFICIENT_NOTICE</code> - Booking attempted with less than minimum notice</li>
+                <li><code>CALENDAR_SYNC_FAILED</code> - Google Calendar integration error</li>
+                <li><code>TIMEZONE_MISMATCH</code> - Invalid timezone conversion</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Create Service Screen - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>Create Service Screen</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The Create Service Screen enables professionals to list new services on the marketplace. This comprehensive form guides users through all necessary steps to create attractive, complete service listings that effectively communicate their offerings to potential customers and maximize booking opportunities.</p>
+            <p><strong>Primary Purpose:</strong> Provide a user-friendly interface for professionals to create detailed, compelling service listings that attract customers and drive bookings while ensuring all required information is captured.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Progress Indicator:</strong> Step-by-step progress bar showing completion status</li>
+                <li><strong>Basic Information Section:</strong>
+                    <ul>
+                        <li>Service title (required)</li>
+                        <li>Category and subcategory dropdowns</li>
+                        <li>Service description textarea</li>
+                        <li>Keywords/tags input</li>
+                    </ul>
+                </li>
+                <li><strong>Pricing Section:</strong>
+                    <ul>
+                        <li>Pricing model selection (fixed, hourly, custom)</li>
+                        <li>Base price input</li>
+                        <li>Additional options/add-ons</li>
+                        <li>Discount settings</li>
+                    </ul>
+                </li>
+                <li><strong>Service Details:</strong>
+                    <ul>
+                        <li>Duration estimate</li>
+                        <li>Service location options</li>
+                        <li>What's included list</li>
+                        <li>Requirements from customer</li>
+                        <li>Cancellation policy selection</li>
+                    </ul>
+                </li>
+                <li><strong>Media Upload:</strong>
+                    <ul>
+                        <li>Primary service image upload</li>
+                        <li>Additional image gallery (up to 10)</li>
+                        <li>Video upload option</li>
+                        <li>Image editing tools</li>
+                    </ul>
+                </li>
+                <li><strong>Availability Settings:</strong>
+                    <ul>
+                        <li>Working hours configuration</li>
+                        <li>Blackout dates</li>
+                        <li>Advance booking requirements</li>
+                        <li>Buffer time between bookings</li>
+                    </ul>
+                </li>
+                <li><strong>Preview Section:</strong> Live preview of how the service will appear to customers</li>
+                <li><strong>Action Buttons:</strong> Save as Draft, Preview, Publish Service</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>categories.getAll()</code> - Fetch available service categories</li>
+                <li><code>services.create(serviceData)</code> - Create new service listing</li>
+                <li><code>services.saveDraft(serviceData)</code> - Save incomplete service as draft</li>
+                <li><code>media.upload(files)</code> - Upload service images/videos</li>
+                <li><code>services.validateData(serviceData)</code> - Validate service information</li>
+                <li><code>pricing.calculateFees(price)</code> - Calculate platform fees</li>
+                <li><code>location.validateCoverage(area)</code> - Check service area coverage</li>
+                <li><code>services.checkDuplicates(title, description)</code> - Prevent duplicate listings</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Professional Clicks Create Service] --> B[Load Service Creation Form]
+    B --> C[Display Step 1: Basic Info]
+    
+    C --> D[Fill Service Details]
+    D --> E{Continue to Next Step?}
+    E -->|Yes| F[Step 2: Pricing]
+    E -->|Save Draft| G[Save Draft to Database]
+    
+    F --> H[Configure Pricing Model]
+    H --> I[Step 3: Service Details]
+    I --> J[Add Requirements & Policies]
+    J --> K[Step 4: Media Upload]
+    
+    K --> L[Upload Images/Videos]
+    L --> M{Media Upload Complete?}
+    M -->|No| N[Show Upload Errors]
+    N --> L
+    M -->|Yes| O[Step 5: Availability]
+    
+    O --> P[Set Working Hours]
+    P --> Q[Configure Booking Rules]
+    Q --> R[Step 6: Preview]
+    
+    R --> S[Show Service Preview]
+    S --> T{Review Complete?}
+    T -->|Edit Required| U[Return to Specific Step]
+    U --> D
+    T -->|Approve| V[Submit for Publication]
+    
+    V --> W[Validate All Data]
+    W --> X{Validation Passed?}
+    X -->|No| Y[Show Validation Errors]
+    Y --> U
+    X -->|Yes| Z[Publish Service]
+    Z --> AA[Show Success Message]
+    AA --> AB[Navigate to My Services]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style E fill:#FFD700,stroke:#333,stroke-width:2px
+    style M fill:#FFD700,stroke:#333,stroke-width:2px
+    style T fill:#FFD700,stroke:#333,stroke-width:2px
+    style X fill:#FFD700,stroke:#333,stroke-width:2px
+    style Z fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style AB fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style G fill:#87CEEB,stroke:#333,stroke-width:2px
+    style N fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style Y fill:#FFCDD2,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Form Validation Rules</h2>
+        <ul>
+            <li><strong>Required Fields:</strong> Title, category, description, price, duration</li>
+            <li><strong>Text Limits:</strong> Title (100 chars), description (500 words), requirements (200 words)</li>
+            <li><strong>Price Validation:</strong> Minimum price thresholds, maximum pricing limits</li>
+            <li><strong>Image Requirements:</strong> Minimum 1 image, max file size 5MB, specific dimensions</li>
+            <li><strong>Duplicate Prevention:</strong> Check for similar existing services</li>
+        </ul>
+
+        <h2>Smart Features</h2>
+        <ul>
+            <li><strong>Auto-Save:</strong> Periodic saving of form data to prevent loss</li>
+            <li><strong>Smart Suggestions:</strong> AI-powered title and description recommendations</li>
+            <li><strong>Pricing Intelligence:</strong> Market rate suggestions based on category</li>
+            <li><strong>SEO Optimization:</strong> Keyword suggestions for better discoverability</li>
+            <li><strong>Template Library:</strong> Pre-built service templates for common categories</li>
+        </ul>
+
+        <h2>Quality Assurance</h2>
+        <ul>
+            <li><strong>Content Moderation:</strong> Automated screening for inappropriate content</li>
+            <li><strong>Image Analysis:</strong> Quality checking and automatic enhancement suggestions</li>
+            <li><strong>Completeness Score:</strong> Real-time scoring of listing completeness</li>
+            <li><strong>Review Process:</strong> Admin review for first-time service creators</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Single-step mobile-optimized flow</li>
+                        <li>Touch-friendly form elements</li>
+                        <li>Camera integration for photos</li>
+                        <li>Simplified validation messages</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Two-column form layout</li>
+                        <li>Preview sidebar</li>
+                        <li>Drag-and-drop image upload</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Multi-column form with live preview</li>
+                        <li>Advanced image editing tools</li>
+                        <li>Bulk upload capabilities</li>
+                        <li>Keyboard shortcuts for efficiency</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

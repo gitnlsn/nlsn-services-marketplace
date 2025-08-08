@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication: The Key to the Kingdom</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+    <h1>Authentication: The Key to the Kingdom</h1>
+
+    <p>Authentication is the gateway to our platform. We've designed it to be as seamless and secure as possible.</p>
+
+    <h2>The Philosophy: Simplicity and Security</h2>
+
+    <p>We believe that users shouldn't have to remember yet another password. That's why we've chosen to integrate with Google, a trusted identity provider that billions of people use every day. This approach offers several advantages:</p>
+
+    <ul>
+        <li><strong>Effortless Onboarding:</strong> New users can join with a single click, without filling out lengthy registration forms.</li>
+        <li><strong>Enhanced Security:</strong> We leverage Google's robust security measures, including two-factor authentication, to protect our users' accounts.</li>
+        <li><strong>No Password Liability:</strong> By not storing passwords, we eliminate a major security risk.</li>
+    </ul>
+
+    <h2>The Technology: NextAuth.js</h2>
+
+    <p>We use NextAuth.js, a flexible and powerful authentication library for Next.js. It handles the complexities of OAuth 2.0, session management, and token issuance, allowing us to focus on building a great user experience.</p>
+
+    <h3>The Flow</h3>
+
+    <ol>
+        <li><strong>The Spark:</strong> A user clicks the "Sign in with Google" button.</li>
+        <li><strong>The Handshake:</strong> Our frontend redirects the user to Google's authentication page.</li>
+        <li><strong>The Consent:</strong> The user grants our application permission to access their basic profile information.</li>
+        <li><strong>The Callback:</strong> Google redirects the user back to our application with an authorization code.</li>
+        <li><strong>The Verification:</strong> Our backend exchanges the authorization code for an access token and a refresh token.</li>
+        <li><strong>The Session:</strong> NextAuth.js creates a secure, HTTP-only cookie containing a JSON Web Token (JWT). This token is our key to identifying the user in subsequent requests.</li>
+        <li><strong>The Welcome:</strong> The user is now authenticated and can access all the features of the platform.</li>
+    </ol>
+
+    <h2>Diagram</h2>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant User
+            participant Frontend
+            participant Backend
+            participant NextAuth
+            participant Google
+
+            User->>Frontend: Clicks "Sign in with Google"
+            Frontend->>Backend: Initiates OAuth flow
+            Backend->>Google: Redirects user to Google
+            Google->>User: Presents consent screen
+            User->>Google: Grants permission
+            Google->>Backend: Sends authorization code
+            Backend->>Google: Exchanges code for tokens
+            Google-->>Backend: Returns access and refresh tokens
+            Backend->>NextAuth: Creates session
+            NextAuth-->>Frontend: Sets session cookie
+            Frontend-->>User: User is logged in
+    </pre>
+    </div>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Integration Guide - Services Marketplace Documentation</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="./index.html">Documentation</a>
+            <span class="breadcrumb-separator">→</span>
+            <span>Calendar Integration Guide</span>
+        </nav>
+
+        <h1>Calendar Integration Guide</h1>
+
+        <p>This marketplace integrates with Google Calendar to provide seamless availability management and booking synchronization.</p>
+
+        <div class="content-section">
+            <h2>Features</h2>
+
+            <h3>For Service Providers</h3>
+            <ul class="feature-list">
+                <li><strong>Two-way sync</strong> with Google Calendar</li>
+                <li><strong>Automatic availability</strong> based on calendar free/busy times</li>
+                <li><strong>Booking events</strong> created automatically in calendar</li>
+                <li><strong>Calendar selection</strong> - choose which calendar to sync</li>
+                <li><strong>Real-time updates</strong> when calendar changes</li>
+            </ul>
+
+            <h3>For Customers</h3>
+            <ul class="feature-list">
+                <li><strong>Real-time availability</strong> based on provider's actual calendar</li>
+                <li><strong>Booking confirmations</strong> sent as calendar invites</li>
+                <li><strong>Automatic reminders</strong> from Google Calendar</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Setup</h2>
+
+            <h3>1. Enable Google Calendar API</h3>
+            <ol class="setup-steps">
+                <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud Console</a></li>
+                <li>Create or select a project</li>
+                <li>Enable the Google Calendar API</li>
+                <li>Use the same OAuth 2.0 credentials as your Google login</li>
+            </ol>
+
+            <h3>2. Update OAuth Scopes</h3>
+            <p>The following scopes are automatically requested:</p>
+            <ul>
+                <li><code class="env-var">openid</code> - Basic authentication</li>
+                <li><code class="env-var">profile</code> - User profile information</li>
+                <li><code class="env-var">email</code> - Email address</li>
+                <li><code class="env-var">https://www.googleapis.com/auth/calendar.readonly</code> - Read calendar events</li>
+                <li><code class="env-var">https://www.googleapis.com/auth/calendar.events</code> - Create and manage events</li>
+            </ul>
+
+            <h3>3. Connect Calendar</h3>
+            <p>Providers can connect their Google Calendar:</p>
+            <ol class="setup-steps">
+                <li>Go to Professional Dashboard</li>
+                <li>Click "Availability Settings"</li>
+                <li>Click "Connect Google Calendar"</li>
+                <li>Authorize the application</li>
+                <li>Select which calendar to sync</li>
+            </ol>
+        </div>
+
+        <div class="content-section">
+            <h2>Usage</h2>
+
+            <h3>Setting Availability</h3>
+
+            <h4>Option 1: Manual Configuration</h4>
+            <ul class="feature-list">
+                <li>Set weekly recurring availability slots</li>
+                <li>Specify working hours for each day</li>
+                <li>Enable/disable specific time slots</li>
+            </ul>
+
+            <h4>Option 2: Google Calendar Sync</h4>
+            <ul class="feature-list">
+                <li>Import free time from Google Calendar</li>
+                <li>Automatically block busy times</li>
+                <li>Keep availability up-to-date</li>
+            </ul>
+
+            <h3>Managing Bookings</h3>
+            <p>When a booking is created:</p>
+            <ol class="setup-steps">
+                <li><strong>Time slot is reserved</strong> in the system</li>
+                <li><strong>Calendar event is created</strong> in Google Calendar</li>
+                <li><strong>Customer receives invite</strong> (if email provided)</li>
+                <li><strong>Reminders are set</strong> automatically</li>
+            </ol>
+
+            <h3>Syncing Strategy</h3>
+            <p>The system uses a hybrid approach:</p>
+            <ul>
+                <li><strong>Base availability</strong> from manual settings</li>
+                <li><strong>Real-time blocking</strong> from Google Calendar</li>
+                <li><strong>Conflict resolution</strong> favors calendar events</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>API Integration</h2>
+
+            <h3>Check Connection Status</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data: isConnected } = api.googleCalendar.isConnected.useQuery();</code></pre>
+            </div>
+
+            <h3>List Calendars</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data: calendars } = api.googleCalendar.listCalendars.useQuery();</code></pre>
+            </div>
+
+            <h3>Get Free/Busy Times</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data: busyTimes } = api.googleCalendar.getFreeBusy.useQuery({
+  startDate: new Date(),
+  endDate: addDays(new Date(), 7),
+  calendarId: "primary"
+});</code></pre>
+            </div>
+
+            <h3>Create Booking Event</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const createEvent = api.googleCalendar.createBookingEvent.useMutation();
+createEvent.mutate({ 
+  bookingId: "booking123",
+  calendarId: "primary" 
+});</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Components</h2>
+
+            <h3>GoogleCalendarIntegration</h3>
+            <p>Full integration component with:</p>
+            <ul>
+                <li>Connection status</li>
+                <li>Calendar selection</li>
+                <li>Sync controls</li>
+                <li>Settings management</li>
+            </ul>
+
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript React
+                    <span class="code-language">TSX</span>
+                </div>
+                <pre><code>import { GoogleCalendarIntegration } from "~/components/availability/google-calendar-integration";
+
+&lt;GoogleCalendarIntegration /&gt;</code></pre>
+            </div>
+
+            <h3>GoogleCalendarBookingButton</h3>
+            <p>Add booking to calendar button:</p>
+
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript React
+                    <span class="code-language">TSX</span>
+                </div>
+                <pre><code>import { GoogleCalendarBookingButton } from "~/components/availability/google-calendar-integration";
+
+&lt;GoogleCalendarBookingButton bookingId={booking.id} /&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Privacy & Permissions</h2>
+
+            <h3>Data Access</h3>
+            <ul class="feature-list">
+                <li><strong>Read access</strong> to view free/busy times</li>
+                <li><strong>Write access</strong> to create booking events</li>
+                <li><strong>No access</strong> to event details or attendees</li>
+                <li><strong>Scoped</strong> to selected calendar only</li>
+            </ul>
+
+            <h3>Data Storage</h3>
+            <ul class="feature-list">
+                <li>Only event IDs are stored</li>
+                <li>No calendar content is cached</li>
+                <li>Tokens are encrypted and secure</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Troubleshooting</h2>
+
+            <div class="alert alert-warning">
+                <h3>Connection Issues</h3>
+                <ol>
+                    <li><strong>"Unauthorized" error</strong>
+                        <ul>
+                            <li>Re-authenticate with Google</li>
+                            <li>Check if calendar permissions were granted</li>
+                            <li>Ensure tokens haven't expired</li>
+                        </ul>
+                    </li>
+                    <li><strong>"Calendar not found"</strong>
+                        <ul>
+                            <li>Verify calendar still exists</li>
+                            <li>Check sharing permissions</li>
+                            <li>Try selecting a different calendar</li>
+                        </ul>
+                    </li>
+                    <li><strong>Events not syncing</strong>
+                        <ul>
+                            <li>Check Google Calendar API quotas</li>
+                            <li>Verify event creation permissions</li>
+                            <li>Look for conflicting events</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="alert alert-info">
+                <h3>Performance Tips</h3>
+                <ul>
+                    <li>Sync only necessary date ranges</li>
+                    <li>Use appropriate cache times</li>
+                    <li>Batch API requests when possible</li>
+                    <li>Monitor API usage in Google Console</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Best Practices</h2>
+
+            <h3>For Providers</h3>
+            <ol class="setup-steps">
+                <li><strong>Keep calendar updated</strong> - Mark busy times promptly</li>
+                <li><strong>Use descriptive titles</strong> - Help identify bookings</li>
+                <li><strong>Set buffer times</strong> - Add padding between appointments</li>
+                <li><strong>Review permissions</strong> - Audit calendar access regularly</li>
+            </ol>
+
+            <h3>For Implementation</h3>
+            <ol class="setup-steps">
+                <li><strong>Handle offline gracefully</strong> - Cache availability locally</li>
+                <li><strong>Respect rate limits</strong> - Implement exponential backoff</li>
+                <li><strong>Validate time zones</strong> - Always use consistent zones</li>
+                <li><strong>Log API errors</strong> - Monitor integration health</li>
+            </ol>
+        </div>
+
+        <div class="content-section">
+            <h2>Future Enhancements</h2>
+            <ul class="feature-list">
+                <li>Support for multiple calendar providers (Outlook, Apple)</li>
+                <li>Recurring appointment templates</li>
+                <li>Group booking coordination</li>
+                <li>Calendar analytics and insights</li>
+                <li>Automated rescheduling</li>
+                <li>Two-way sync for changes made in Google Calendar</li>
+            </ul>
+        </div>
+
+        <nav class="breadcrumb">
+            <a href="./index.html">← Back to Documentation</a>
+        </nav>
+    </div>
+</body>
+</html>

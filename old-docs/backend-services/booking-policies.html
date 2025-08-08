@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Policies - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Booking Policies</span>
+        </div>
+
+        <h1>Booking Policies</h1>
+        
+        <div class="alert alert-info">
+            <strong>Overview:</strong> Manages cancellation policies, refund rules, rescheduling terms, and service-specific booking requirements.
+        </div>
+
+        <h2>Policy Types</h2>
+        <p>The Booking Policies system allows professionals to define rules that govern how their services can be booked, modified, and cancelled. These policies protect both service providers and customers.</p>
+
+        <h2>Cancellation Policy Tiers</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3 class="gradient-text">Flexible</h3>
+                <ul>
+                    <li>Full refund up to 24 hours before</li>
+                    <li>50% refund up to 12 hours before</li>
+                    <li>No refund within 12 hours</li>
+                    <li>Best for low-cost services</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">Moderate</h3>
+                <ul>
+                    <li>Full refund up to 48 hours before</li>
+                    <li>50% refund up to 24 hours before</li>
+                    <li>No refund within 24 hours</li>
+                    <li>Standard for most services</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">Strict</h3>
+                <ul>
+                    <li>Full refund up to 7 days before</li>
+                    <li>50% refund up to 48 hours before</li>
+                    <li>No refund within 48 hours</li>
+                    <li>For high-value or custom services</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Policy Flow Diagram</h2>
+        <div class="mermaid">
+        graph TB
+            Booking[Booking Created] --> Active[Active Booking]
+            Active --> Request{Modification Request}
+            
+            Request -->|Cancel| CancelCheck{Check Policy}
+            Request -->|Reschedule| RescheduleCheck{Check Policy}
+            
+            CancelCheck -->|Within Grace Period| FullRefund[100% Refund]
+            CancelCheck -->|Partial Period| PartialRefund[Partial Refund]
+            CancelCheck -->|No Refund Period| NoRefund[No Refund]
+            
+            RescheduleCheck -->|Free Period| FreeChange[Free Reschedule]
+            RescheduleCheck -->|Fee Period| PaidChange[Reschedule with Fee]
+            RescheduleCheck -->|Not Allowed| Denied[Change Denied]
+            
+            FullRefund --> Cancelled[Booking Cancelled]
+            PartialRefund --> Cancelled
+            NoRefund --> Cancelled
+            FreeChange --> Updated[Booking Updated]
+            PaidChange --> Updated
+            
+            style Booking fill:#ADD8E6
+            style CancelCheck fill:#FFD700
+            style RescheduleCheck fill:#FFD700
+            style FullRefund fill:#C8E6C9
+            style PartialRefund fill:#FFF4E6
+            style NoRefund fill:#FFCDD2
+        </div>
+
+        <h2>Data Model</h2>
+        <pre><code>model BookingPolicy {
+  id                    String   @id @default(cuid())
+  professionalId        String?
+  serviceId             String?
+  
+  // Cancellation rules
+  cancellationType      String   // 'flexible', 'moderate', 'strict', 'custom'
+  cancellationRules     Json     // Array of time-based rules
+  
+  // Refund percentages
+  fullRefundHours       Int      // Hours before service for full refund
+  partialRefundHours    Int      // Hours for partial refund
+  partialRefundPercent  Float    // Percentage for partial refund
+  
+  // Rescheduling rules
+  freeRescheduleHours   Int      // Hours before service for free reschedule
+  rescheduleFeePecent   Float    // Fee as percentage of service cost
+  maxReschedules        Int      // Maximum number of reschedules allowed
+  
+  // Booking requirements
+  requiresDeposit       Boolean  @default(false)
+  depositPercent        Float?   // Percentage of total as deposit
+  requiresConfirmation  Boolean  @default(false)
+  autoConfirmHours      Int?     // Auto-confirm after X hours
+  
+  // No-show policy
+  noShowFeePercent      Float    @default(100)
+  noShowGraceMins       Int      @default(15)
+  
+  // Terms and conditions
+  customTerms           String?  @db.Text
+  agreementRequired     Boolean  @default(false)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}</code></pre>
+
+        <h2>Policy Implementation</h2>
+
+        <h3>Creating a Policy</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Policy Creation</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>createPolicy: protectedProcedure
+  .input(z.object({
+    serviceId: z.string().optional(),
+    cancellationType: z.enum(['flexible', 'moderate', 'strict', 'custom']),
+    customRules: z.object({
+      fullRefundHours: z.number().min(0),
+      partialRefundHours: z.number().min(0),
+      partialRefundPercent: z.number().min(0).max(100),
+      freeRescheduleHours: z.number().min(0),
+      rescheduleFeePecent: z.number().min(0).max(100),
+      maxReschedules: z.number().min(0).max(10)
+    }).optional(),
+    requirements: z.object({
+      requiresDeposit: z.boolean(),
+      depositPercent: z.number().min(0).max(100).optional(),
+      requiresConfirmation: z.boolean(),
+      autoConfirmHours: z.number().optional()
+    }),
+    customTerms: z.string().optional()
+  }))
+  .mutation(async ({ ctx, input }) => {
+    const policyService = createBookingPolicyService({
+      db: ctx.db,
+      userId: ctx.session.user.id
+    });
+    
+    return await policyService.createPolicy(input);
+  })</code></pre>
+        </div>
+
+        <h3>Applying Policy to Cancellation</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Cancellation Logic</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>async calculateRefund(bookingId: string): Promise<RefundCalculation> {
+  const booking = await this.db.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      service: { include: { policy: true } },
+      payment: true
+    }
+  });
+  
+  const policy = booking.service.policy || this.getDefaultPolicy();
+  const hoursUntilService = differenceInHours(
+    booking.scheduledDate,
+    new Date()
+  );
+  
+  let refundPercent = 0;
+  let refundAmount = 0;
+  let cancellationFee = 0;
+  
+  if (hoursUntilService >= policy.fullRefundHours) {
+    refundPercent = 100;
+  } else if (hoursUntilService >= policy.partialRefundHours) {
+    refundPercent = policy.partialRefundPercent;
+  } else {
+    refundPercent = 0;
+  }
+  
+  refundAmount = (booking.payment.amount * refundPercent) / 100;
+  cancellationFee = booking.payment.amount - refundAmount;
+  
+  return {
+    refundPercent,
+    refundAmount,
+    cancellationFee,
+    policyType: policy.cancellationType,
+    hoursUntilService
+  };
+}</code></pre>
+        </div>
+
+        <h2>Rescheduling Rules</h2>
+        <div class="mermaid">
+        graph LR
+            Request[Reschedule Request] --> TimeCheck{Check Time}
+            TimeCheck -->|Free Period| CheckLimit{Check Limit}
+            TimeCheck -->|Fee Period| ApplyFee[Apply Fee]
+            TimeCheck -->|Too Late| Deny[Deny Request]
+            
+            CheckLimit -->|Under Limit| Approve[Approve Free]
+            CheckLimit -->|Over Limit| Deny
+            
+            ApplyFee --> CalcFee[Calculate Fee]
+            CalcFee --> ChargeCustomer[Charge Customer]
+            ChargeCustomer --> Approve2[Approve with Fee]
+            
+            style Request fill:#ADD8E6
+            style TimeCheck fill:#FFD700
+            style Approve fill:#C8E6C9
+            style Approve2 fill:#C8E6C9
+            style Deny fill:#FFCDD2
+        </div>
+
+        <h2>No-Show Handling</h2>
+        <div class="alert alert-warning">
+            <strong>No-Show Policy:</strong> When a customer doesn't show up for a booking, the system automatically processes penalties based on the configured policy.
+        </div>
+
+        <h3>No-Show Process</h3>
+        <ol class="setup-steps">
+            <li>Grace period expires (default: 15 minutes after scheduled time)</li>
+            <li>Professional marks booking as no-show</li>
+            <li>System calculates penalty fee (default: 100% of service cost)</li>
+            <li>Customer is charged the no-show fee</li>
+            <li>Professional receives payment minus platform fee</li>
+            <li>Incident is recorded in customer's history</li>
+        </ol>
+
+        <h2>Deposit Requirements</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Service Type</th>
+                    <th>Deposit Required</th>
+                    <th>Deposit Amount</th>
+                    <th>When Charged</th>
+                    <th>Refundable</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Standard Service</td>
+                    <td>No</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Premium Service</td>
+                    <td>Yes</td>
+                    <td>25%</td>
+                    <td>At booking</td>
+                    <td>Per policy</td>
+                </tr>
+                <tr>
+                    <td>Custom Work</td>
+                    <td>Yes</td>
+                    <td>50%</td>
+                    <td>At confirmation</td>
+                    <td>Non-refundable</td>
+                </tr>
+                <tr>
+                    <td>Event Service</td>
+                    <td>Yes</td>
+                    <td>30%</td>
+                    <td>At booking</td>
+                    <td>Per policy</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Custom Terms & Conditions</h2>
+        <div class="card">
+            <h3>Professional-Specific Terms</h3>
+            <p>Professionals can add custom terms that customers must agree to:</p>
+            <ul>
+                <li>Special preparation requirements</li>
+                <li>Equipment or space needs</li>
+                <li>Health and safety protocols</li>
+                <li>Liability limitations</li>
+                <li>Intellectual property rights</li>
+            </ul>
+            <pre><code>// Example custom terms
+{
+  "customTerms": "Customer must ensure a cleared workspace of at least 10x10 feet. All fragile items must be removed from the work area. Professional is not liable for pre-existing damage.",
+  "agreementRequired": true,
+  "agreementText": "I have read and agree to the service terms"
+}</code></pre>
+        </div>
+
+        <h2>Policy Enforcement</h2>
+        <div class="feature-list">
+            <li><strong>Automatic Enforcement:</strong> System automatically applies policies to all bookings</li>
+            <li><strong>Override Capability:</strong> Professionals can manually override for specific cases</li>
+            <li><strong>Dispute Resolution:</strong> Admin panel for handling policy disputes</li>
+            <li><strong>Policy History:</strong> Track all policy changes and applications</li>
+            <li><strong>Customer Notifications:</strong> Automatic alerts about policy implications</li>
+        </div>
+
+        <h2>Integration with Other Services</h2>
+        <ul>
+            <li><strong>Payment Service:</strong> Processes refunds and fees based on policies</li>
+            <li><strong>Notification Service:</strong> Sends policy-related alerts to users</li>
+            <li><strong>Booking Service:</strong> Enforces policies during booking lifecycle</li>
+            <li><strong>Analytics Service:</strong> Tracks policy effectiveness and patterns</li>
+            <li><strong>Admin Service:</strong> Handles policy disputes and overrides</li>
+        </ul>
+
+        <h2>Best Practices</h2>
+        <div class="alert alert-success">
+            <strong>Recommendations:</strong>
+            <ul>
+                <li>Choose policies that match your service type and value</li>
+                <li>Clearly communicate policies before booking confirmation</li>
+                <li>Be consistent in policy application</li>
+                <li>Consider seasonal adjustments for peak periods</li>
+                <li>Review and update policies based on customer feedback</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

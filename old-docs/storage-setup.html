@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Setup Guide - Services Marketplace Documentation</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="./index.html">Documentation</a>
+            <span class="breadcrumb-separator">→</span>
+            <span>Storage Setup Guide</span>
+        </nav>
+
+        <h1>Storage Setup Guide</h1>
+
+        <p>This marketplace supports two storage providers: Cloudinary and AWS S3. You can choose either one based on your needs.</p>
+
+        <div class="content-section">
+            <h2>AWS S3 Setup</h2>
+            <span class="badge badge-warning">Paid</span>
+            <span class="badge badge-primary">Scalable</span>
+
+            <h3>1. Install Required Packages</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    Terminal
+                    <span class="code-language">BASH</span>
+                </div>
+                <pre><code>npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner uuid
+npm install --save-dev @types/uuid</code></pre>
+            </div>
+
+            <h3>2. Configure Environment Variables</h3>
+            <p>Add the following to your <code class="env-var">.env</code> file:</p>
+
+            <div class="code-section">
+                <div class="code-header">
+                    Environment Variables
+                    <span class="code-language">ENV</span>
+                </div>
+                <pre><code># AWS S3 Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_S3_BUCKET_NAME=your-bucket-name
+
+# Set storage provider to S3
+STORAGE_PROVIDER=s3</code></pre>
+            </div>
+
+            <h3>3. Create S3 Bucket</h3>
+            <ol class="setup-steps">
+                <li>Go to AWS S3 Console</li>
+                <li>Create a new bucket</li>
+                <li>Configure bucket settings:
+                    <ul>
+                        <li>Enable public access if you want images to be publicly accessible</li>
+                        <li>OR configure CloudFront for CDN delivery</li>
+                        <li>Set up CORS policy:</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <div class="code-section">
+                <div class="code-header">
+                    CORS Policy
+                    <span class="code-language">JSON</span>
+                </div>
+                <pre><code>[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "AllowedOrigins": ["http://localhost:3000", "https://yourdomain.com"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]</code></pre>
+            </div>
+
+            <h3>4. Create IAM User</h3>
+            <ol class="setup-steps">
+                <li>Go to AWS IAM Console</li>
+                <li>Create a new user with programmatic access</li>
+                <li>Attach policy with S3 permissions:</li>
+            </ol>
+
+            <div class="code-section">
+                <div class="code-header">
+                    IAM Policy
+                    <span class="code-language">JSON</span>
+                </div>
+                <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": "arn:aws:s3:::your-bucket-name/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::your-bucket-name"
+    }
+  ]
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Cloudinary Setup</h2>
+            <span class="badge badge-success">Free Tier</span>
+            <span class="badge badge-primary">Default</span>
+
+            <h3>1. Configure Environment Variables</h3>
+            <div class="code-section">
+                <div class="code-header">
+                    Environment Variables
+                    <span class="code-language">ENV</span>
+                </div>
+                <pre><code># Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Set storage provider to Cloudinary (optional, it's the default)
+STORAGE_PROVIDER=cloudinary</code></pre>
+            </div>
+
+            <h3>2. Get Cloudinary Credentials</h3>
+            <ol class="setup-steps">
+                <li>Sign up at <a href="https://cloudinary.com" target="_blank" rel="noopener">https://cloudinary.com</a></li>
+                <li>Go to Dashboard</li>
+                <li>Copy your Cloud Name, API Key, and API Secret</li>
+            </ol>
+        </div>
+
+        <div class="content-section">
+            <h2>Usage in the Application</h2>
+
+            <p>The application automatically uses the configured storage provider. The storage service handles:</p>
+
+            <ul class="feature-list">
+                <li>File uploads</li>
+                <li>File deletion</li>
+                <li>Signed URL generation for direct uploads</li>
+                <li>Image optimization (Cloudinary only)</li>
+            </ul>
+
+            <h3>Upload Images</h3>
+            <p>Images can be uploaded through:</p>
+            <ol>
+                <li>Service creation/editing forms</li>
+                <li>Profile image updates</li>
+                <li>Any form with the ImageUpload component</li>
+            </ol>
+
+            <h3>Storage Provider Status</h3>
+            <p>You can check which storage provider is configured by calling the <code class="env-var">getStorageStatus</code> API:</p>
+
+            <div class="code-section">
+                <div class="code-header">
+                    TypeScript
+                    <span class="code-language">API</span>
+                </div>
+                <pre><code>const { data } = api.upload.getStorageStatus.useQuery();
+console.log(data); 
+// Output: { provider: 's3', configured: true, providers: { cloudinary: false, s3: true } }</code></pre>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Switching Storage Providers</h2>
+
+            <p>To switch between providers:</p>
+
+            <ol class="setup-steps">
+                <li>Update the <code class="env-var">STORAGE_PROVIDER</code> environment variable</li>
+                <li>Ensure the required credentials are configured</li>
+                <li>Restart the application</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <p><strong>Note:</strong> Existing images will remain accessible from their original provider. The system stores the full URL for each image.</p>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Best Practices</h2>
+
+            <h3>For AWS S3:</h3>
+            <ul class="feature-list">
+                <li>Use CloudFront for global CDN delivery</li>
+                <li>Enable versioning for backup</li>
+                <li>Set up lifecycle policies for old images</li>
+                <li>Monitor costs with AWS Cost Explorer</li>
+            </ul>
+
+            <h3>For Cloudinary:</h3>
+            <ul class="feature-list">
+                <li>Use transformations for on-the-fly image optimization</li>
+                <li>Set up upload presets for consistent processing</li>
+                <li>Monitor usage to stay within free tier limits</li>
+                <li>Use auto-tagging for better organization</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h2>Provider Comparison</h2>
+
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>AWS S3</th>
+                        <th>Cloudinary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cost</strong></td>
+                        <td><span class="badge badge-warning">Pay per use</span></td>
+                        <td><span class="badge badge-success">Free tier</span> available</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Setup Complexity</strong></td>
+                        <td>Medium</td>
+                        <td><span class="badge badge-success">Simple</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Image Optimization</strong></td>
+                        <td>Manual/External</td>
+                        <td><span class="badge badge-success">Built-in</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Global CDN</strong></td>
+                        <td>CloudFront (extra setup)</td>
+                        <td>Built-in</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Storage Limits</strong></td>
+                        <td>Unlimited</td>
+                        <td>Plan-based</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transformations</strong></td>
+                        <td>No</td>
+                        <td><span class="badge badge-success">Yes</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="content-section">
+            <h2>Troubleshooting</h2>
+
+            <div class="alert alert-danger">
+                <h3>S3 Upload Fails</h3>
+                <ul>
+                    <li>Check IAM permissions</li>
+                    <li>Verify bucket exists and region is correct</li>
+                    <li>Ensure CORS is properly configured</li>
+                    <li>Check if bucket allows public access (if needed)</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warning">
+                <h3>Cloudinary Upload Fails</h3>
+                <ul>
+                    <li>Verify API credentials</li>
+                    <li>Check upload preset settings</li>
+                    <li>Monitor API rate limits</li>
+                    <li>Ensure file size is within limits</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <h3>General Issues</h3>
+                <ul>
+                    <li>Check <code class="env-var">STORAGE_PROVIDER</code> environment variable</li>
+                    <li>Verify all required credentials are set</li>
+                    <li>Check browser console for errors</li>
+                    <li>Monitor server logs for detailed error messages</li>
+                </ul>
+            </div>
+        </div>
+
+        <nav class="breadcrumb">
+            <a href="./index.html">← Back to Documentation</a>
+        </nav>
+    </div>
+</body>
+</html>

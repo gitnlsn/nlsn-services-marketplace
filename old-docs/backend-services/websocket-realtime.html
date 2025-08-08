@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Real-time System - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>WebSocket Real-time System</span>
+        </div>
+
+        <h1>WebSocket Real-time System</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Real-time bidirectional communication system for instant updates, live notifications, and interactive features across the platform.
+        </div>
+
+        <h2>Real-time Features</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3 class="gradient-text">📢 Live Notifications</h3>
+                <ul>
+                    <li>Instant booking updates</li>
+                    <li>New message alerts</li>
+                    <li>Payment confirmations</li>
+                    <li>Service status changes</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">💬 Live Messaging</h3>
+                <ul>
+                    <li>Real-time chat between users</li>
+                    <li>Typing indicators</li>
+                    <li>Message delivery status</li>
+                    <li>File sharing notifications</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">📊 Live Updates</h3>
+                <ul>
+                    <li>Booking status changes</li>
+                    <li>Professional availability</li>
+                    <li>System announcements</li>
+                    <li>Dashboard metrics</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>WebSocket Architecture</h2>
+        <div class="mermaid">
+        graph TB
+            Client[Client Connection] --> Gateway[WebSocket Gateway]
+            Gateway --> Auth[Authentication]
+            Auth -->|Valid| Manager[Connection Manager]
+            Auth -->|Invalid| Reject[Reject Connection]
+            
+            Manager --> Rooms[Room Management]
+            Manager --> Events[Event Handlers]
+            Manager --> Heartbeat[Heartbeat Monitor]
+            
+            Events --> BookingEvents[Booking Events]
+            Events --> MessageEvents[Message Events]
+            Events --> NotificationEvents[Notification Events]
+            
+            BookingEvents --> DB[(Database)]
+            MessageEvents --> DB
+            NotificationEvents --> DB
+            
+            DB --> Broadcast[Event Broadcasting]
+            Broadcast --> TargetClients[Target Clients]
+            
+            Rooms --> UserRooms[User Rooms]
+            Rooms --> ServiceRooms[Service Rooms]
+            Rooms --> AdminRooms[Admin Rooms]
+            
+            style Client fill:#ADD8E6
+            style Gateway fill:#FFD700
+            style Manager fill:#DDA0DD
+            style Broadcast fill:#C8E6C9
+            style Reject fill:#FFCDD2
+        </div>
+
+        <h2>WebSocket Server Implementation</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - WebSocket Server</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>import { WebSocketServer, WebSocket } from 'ws';
+import { IncomingMessage } from 'http';
+import { parse } from 'url';
+import jwt from 'jsonwebtoken';
+
+interface AuthenticatedWebSocket extends WebSocket {
+  userId: string;
+  userRole: string;
+  subscriptions: Set&lt;string&gt;;
+  lastHeartbeat: number;
+}
+
+export class WebSocketManager {
+  private wss: WebSocketServer;
+  private connections = new Map&lt;string, AuthenticatedWebSocket&gt;();
+  private rooms = new Map&lt;string, Set&lt;string&gt;&gt;();
+  private heartbeatInterval: NodeJS.Timeout;
+
+  constructor(server: any) {
+    this.wss = new WebSocketServer({
+      server,
+      path: '/ws',
+      verifyClient: this.verifyClient.bind(this)
+    });
+
+    this.wss.on('connection', this.handleConnection.bind(this));
+    this.startHeartbeat();
+  }
+
+  private async verifyClient(info: { req: IncomingMessage }): Promise&lt;boolean&gt; {
+    try {
+      const url = parse(info.req.url || '', true);
+      const token = url.query.token as string;
+      
+      if (!token) return false;
+      
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
+      return !!decoded.sub;
+    } catch {
+      return false;
+    }
+  }
+
+  private async handleConnection(ws: AuthenticatedWebSocket, req: IncomingMessage) {
+    try {
+      // Extract user info from token
+      const url = parse(req.url || '', true);
+      const token = url.query.token as string;
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any;
+      
+      // Set up authenticated connection
+      ws.userId = decoded.sub;
+      ws.userRole = decoded.role || 'customer';
+      ws.subscriptions = new Set();
+      ws.lastHeartbeat = Date.now();
+
+      // Store connection
+      this.connections.set(ws.userId, ws);
+      
+      // Join user's personal room
+      this.joinRoom(ws.userId, `user:${ws.userId}`);
+      
+      // Send welcome message
+      this.sendToClient(ws.userId, {
+        type: 'connection',
+        status: 'connected',
+        userId: ws.userId,
+        timestamp: new Date().toISOString()
+      });
+
+      // Set up event handlers
+      ws.on('message', (data) => this.handleMessage(ws, data));
+      ws.on('close', () => this.handleDisconnection(ws));
+      ws.on('error', (error) => this.handleError(ws, error));
+      ws.on('pong', () => { ws.lastHeartbeat = Date.now(); });
+
+    } catch (error) {
+      console.error('WebSocket connection error:', error);
+      ws.close(1008, 'Authentication failed');
+    }
+  }
+
+  private handleMessage(ws: AuthenticatedWebSocket, data: any) {
+    try {
+      const message = JSON.parse(data.toString());
+      
+      switch (message.type) {
+        case 'subscribe':
+          this.handleSubscription(ws, message.room);
+          break;
+        case 'unsubscribe':
+          this.handleUnsubscription(ws, message.room);
+          break;
+        case 'heartbeat':
+          ws.lastHeartbeat = Date.now();
+          ws.pong();
+          break;
+        case 'message':
+          this.handleChatMessage(ws, message);
+          break;
+        default:
+          console.warn('Unknown message type:', message.type);
+      }
+    } catch (error) {
+      console.error('Message handling error:', error);
+    }
+  }
+
+  public broadcast(roomId: string, message: any, excludeUserId?: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+
+    const messageStr = JSON.stringify({
+      ...message,
+      timestamp: new Date().toISOString()
+    });
+
+    room.forEach(userId => {
+      if (excludeUserId && userId === excludeUserId) return;
+      
+      const connection = this.connections.get(userId);
+      if (connection && connection.readyState === WebSocket.OPEN) {
+        connection.send(messageStr);
+      }
+    });
+  }
+
+  private joinRoom(userId: string, roomId: string) {
+    if (!this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Set());
+    }
+    
+    this.rooms.get(roomId)!.add(userId);
+    
+    const connection = this.connections.get(userId);
+    if (connection) {
+      connection.subscriptions.add(roomId);
+    }
+  }
+
+  private startHeartbeat() {
+    this.heartbeatInterval = setInterval(() => {
+      const now = Date.now();
+      const timeout = 30000; // 30 seconds
+      
+      this.connections.forEach((ws, userId) => {
+        if (now - ws.lastHeartbeat > timeout) {
+          console.log(`Closing stale connection for user ${userId}`);
+          ws.close(1000, 'Heartbeat timeout');
+          this.connections.delete(userId);
+        } else {
+          ws.ping();
+        }
+      });
+    }, 15000); // Check every 15 seconds
+  }
+}</code></pre>
+        </div>
+
+        <h2>Event Broadcasting System</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Event Broadcasting</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>export class EventBroadcaster {
+  constructor(private wsManager: WebSocketManager) {}
+
+  // Booking-related events
+  async broadcastBookingUpdate(bookingId: string, update: BookingUpdate) {
+    const booking = await db.booking.findUnique({
+      where: { id: bookingId },
+      include: { customer: true, professional: true, service: true }
+    });
+
+    if (!booking) return;
+
+    // Notify customer
+    this.wsManager.broadcast(`user:${booking.customerId}`, {
+      type: 'booking_update',
+      bookingId,
+      status: update.status,
+      message: this.generateBookingMessage(update, 'customer'),
+      booking: {
+        id: booking.id,
+        serviceName: booking.service.title,
+        professionalName: booking.professional.name,
+        scheduledDate: booking.scheduledDate,
+        status: update.status
+      }
+    });
+
+    // Notify professional
+    this.wsManager.broadcast(`user:${booking.professionalId}`, {
+      type: 'booking_update',
+      bookingId,
+      status: update.status,
+      message: this.generateBookingMessage(update, 'professional'),
+      booking: {
+        id: booking.id,
+        serviceName: booking.service.title,
+        customerName: booking.customer.name,
+        scheduledDate: booking.scheduledDate,
+        status: update.status
+      }
+    });
+  }
+
+  // Message events
+  async broadcastNewMessage(messageData: NewMessage) {
+    const { conversationId, senderId, recipientId, content, messageType } = messageData;
+
+    // Notify recipient
+    this.wsManager.broadcast(`user:${recipientId}`, {
+      type: 'new_message',
+      conversationId,
+      message: {
+        id: messageData.id,
+        senderId,
+        content,
+        messageType,
+        timestamp: messageData.createdAt,
+        senderName: messageData.senderName
+      }
+    });
+
+    // Update conversation room
+    this.wsManager.broadcast(`conversation:${conversationId}`, {
+      type: 'conversation_update',
+      conversationId,
+      lastMessage: content,
+      lastMessageAt: messageData.createdAt,
+      unreadCount: messageData.unreadCount
+    }, senderId);
+  }
+
+  // Payment events
+  async broadcastPaymentUpdate(paymentId: string, status: PaymentStatus) {
+    const payment = await db.payment.findUnique({
+      where: { id: paymentId },
+      include: { 
+        booking: { 
+          include: { 
+            customer: true, 
+            professional: true, 
+            service: true 
+          } 
+        } 
+      }
+    });
+
+    if (!payment) return;
+
+    const notification = {
+      type: 'payment_update',
+      paymentId,
+      status,
+      amount: payment.amount,
+      serviceName: payment.booking.service.title,
+      bookingId: payment.booking.id
+    };
+
+    // Notify customer
+    this.wsManager.broadcast(`user:${payment.booking.customerId}`, {
+      ...notification,
+      message: this.generatePaymentMessage(status, 'customer')
+    });
+
+    // Notify professional
+    this.wsManager.broadcast(`user:${payment.booking.professionalId}`, {
+      ...notification,
+      message: this.generatePaymentMessage(status, 'professional')
+    });
+  }
+
+  // System announcements
+  async broadcastSystemAnnouncement(announcement: SystemAnnouncement) {
+    const { title, message, priority, targetAudience } = announcement;
+
+    const notification = {
+      type: 'system_announcement',
+      title,
+      message,
+      priority,
+      timestamp: new Date().toISOString()
+    };
+
+    switch (targetAudience) {
+      case 'all':
+        this.wsManager.connections.forEach((ws, userId) => {
+          this.wsManager.broadcast(`user:${userId}`, notification);
+        });
+        break;
+      
+      case 'professionals':
+        this.wsManager.connections.forEach((ws, userId) => {
+          if (ws.userRole === 'professional') {
+            this.wsManager.broadcast(`user:${userId}`, notification);
+          }
+        });
+        break;
+      
+      case 'customers':
+        this.wsManager.connections.forEach((ws, userId) => {
+          if (ws.userRole === 'customer') {
+            this.wsManager.broadcast(`user:${userId}`, notification);
+          }
+        });
+        break;
+    }
+  }
+}</code></pre>
+        </div>
+
+        <h2>Client-Side WebSocket Integration</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript React Hook - useWebSocket</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>import { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+
+interface WebSocketMessage {
+  type: string;
+  data: any;
+  timestamp: string;
+}
+
+export function useWebSocket() {
+  const { data: session } = useSession();
+  const [isConnected, setIsConnected] = useState(false);
+  const [messages, setMessages] = useState&lt;WebSocketMessage[]&gt;([]);
+  const wsRef = useRef&lt;WebSocket | null&gt;(null);
+  const reconnectTimeoutRef = useRef&lt;NodeJS.Timeout | null&gt;(null);
+  const reconnectAttempts = useRef(0);
+
+  const connect = useCallback(() => {
+    if (!session?.user) return;
+
+    try {
+      const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/ws?token=${session.accessToken}`;
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        reconnectAttempts.current = 0;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          setMessages(prev => [...prev.slice(-99), message]); // Keep last 100 messages
+          
+          // Handle different message types
+          handleIncomingMessage(message);
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
+        setIsConnected(false);
+        wsRef.current = null;
+        
+        // Attempt to reconnect with exponential backoff
+        if (event.code !== 1000) { // Not a normal closure
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          reconnectAttempts.current++;
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (reconnectAttempts.current <= 5) {
+              connect();
+            }
+          }, delay);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      wsRef.current = ws;
+    } catch (error) {
+      console.error('Failed to connect WebSocket:', error);
+    }
+  }, [session]);
+
+  const sendMessage = useCallback((message: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
+  }, []);
+
+  const subscribe = useCallback((room: string) => {
+    sendMessage({ type: 'subscribe', room });
+  }, [sendMessage]);
+
+  const unsubscribe = useCallback((room: string) => {
+    sendMessage({ type: 'unsubscribe', room });
+  }, [sendMessage]);
+
+  useEffect(() => {
+    if (session?.user) {
+      connect();
+    }
+
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Component unmounting');
+      }
+    };
+  }, [session, connect]);
+
+  return {
+    isConnected,
+    messages,
+    sendMessage,
+    subscribe,
+    unsubscribe
+  };
+}</code></pre>
+        </div>
+
+        <h2>Room Management System</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Room Type</th>
+                    <th>Pattern</th>
+                    <th>Purpose</th>
+                    <th>Auto-Subscribe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>User Rooms</td>
+                    <td>user:{userId}</td>
+                    <td>Personal notifications</td>
+                    <td>Yes</td>
+                </tr>
+                <tr>
+                    <td>Booking Rooms</td>
+                    <td>booking:{bookingId}</td>
+                    <td>Booking-specific updates</td>
+                    <td>On booking creation</td>
+                </tr>
+                <tr>
+                    <td>Conversation Rooms</td>
+                    <td>conversation:{conversationId}</td>
+                    <td>Chat messages</td>
+                    <td>On conversation join</td>
+                </tr>
+                <tr>
+                    <td>Service Rooms</td>
+                    <td>service:{serviceId}</td>
+                    <td>Service availability updates</td>
+                    <td>Manual</td>
+                </tr>
+                <tr>
+                    <td>Professional Rooms</td>
+                    <td>professional:{userId}</td>
+                    <td>Professional-specific updates</td>
+                    <td>For professional accounts</td>
+                </tr>
+                <tr>
+                    <td>Admin Rooms</td>
+                    <td>admin:global</td>
+                    <td>System administration</td>
+                    <td>Admin role only</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Message Types & Handlers</h2>
+        <div class="mermaid">
+        graph LR
+            Incoming[Incoming Message] --> Router[Message Router]
+            Router -->|booking_update| BookingHandler[Booking Handler]
+            Router -->|new_message| MessageHandler[Message Handler]
+            Router -->|payment_update| PaymentHandler[Payment Handler]
+            Router -->|system_announcement| SystemHandler[System Handler]
+            
+            BookingHandler --> UI1[Update Booking UI]
+            MessageHandler --> UI2[Update Chat UI]
+            PaymentHandler --> UI3[Update Payment Status]
+            SystemHandler --> UI4[Show Notification]
+            
+            UI1 --> Toast[Toast Notification]
+            UI2 --> Badge[Unread Badge]
+            UI3 --> StatusUpdate[Status Update]
+            UI4 --> Banner[System Banner]
+            
+            style Incoming fill:#ADD8E6
+            style Router fill:#FFD700
+            style Toast fill:#C8E6C9
+        </div>
+
+        <h2>Real-time Notification Components</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>React Component - Notification Handler</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>export function RealtimeNotifications() {
+  const { messages } = useWebSocket();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    messages.forEach(message => {
+      switch (message.type) {
+        case 'booking_update':
+          toast({
+            title: "Booking Update",
+            description: message.message,
+            variant: getBookingVariant(message.status)
+          });
+          break;
+
+        case 'new_message':
+          toast({
+            title: `New message from ${message.senderName}`,
+            description: message.content.substring(0, 100),
+            action: &lt;ToastAction altText="View"&gt;View&lt;/ToastAction&gt;
+          });
+          break;
+
+        case 'payment_update':
+          toast({
+            title: "Payment Update",
+            description: `Payment ${message.status} for ${message.serviceName}`,
+            variant: message.status === 'completed' ? 'success' : 'default'
+          });
+          break;
+
+        case 'system_announcement':
+          if (message.priority === 'high') {
+            toast({
+              title: message.title,
+              description: message.message,
+              variant: 'destructive',
+              duration: 10000
+            });
+          }
+          break;
+      }
+    });
+  }, [messages, toast]);
+
+  return null; // This component only handles side effects
+}</code></pre>
+        </div>
+
+        <h2>Performance & Scaling</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Connection Management</h3>
+                <ul>
+                    <li><strong>Connection Pooling:</strong> Efficient memory usage</li>
+                    <li><strong>Heartbeat Monitoring:</strong> Detect and clean stale connections</li>
+                    <li><strong>Graceful Degradation:</strong> Fallback to polling if WebSocket fails</li>
+                    <li><strong>Rate Limiting:</strong> Prevent message spam and abuse</li>
+                    <li><strong>Load Balancing:</strong> Distribute connections across servers</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Message Optimization</h3>
+                <ul>
+                    <li><strong>Message Compression:</strong> Reduce bandwidth usage</li>
+                    <li><strong>Batch Updates:</strong> Group related messages</li>
+                    <li><strong>Priority Queuing:</strong> Critical messages first</li>
+                    <li><strong>Deduplication:</strong> Prevent duplicate messages</li>
+                    <li><strong>Offline Queuing:</strong> Queue messages for offline users</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Security Measures</h2>
+        <div class="alert alert-warning">
+            <strong>Security Implementation:</strong>
+            <ul>
+                <li><strong>JWT Authentication:</strong> Secure token-based connection auth</li>
+                <li><strong>Room Authorization:</strong> Verify user access to specific rooms</li>
+                <li><strong>Message Validation:</strong> Sanitize and validate all incoming messages</li>
+                <li><strong>Rate Limiting:</strong> Prevent DoS attacks and spam</li>
+                <li><strong>Connection Monitoring:</strong> Track suspicious connection patterns</li>
+                <li><strong>Message Encryption:</strong> End-to-end encryption for sensitive data</li>
+            </ul>
+        </div>
+
+        <h2>Monitoring & Analytics</h2>
+        <div class="feature-list">
+            <li><strong>Connection Metrics:</strong> Active connections, connection duration</li>
+            <li><strong>Message Throughput:</strong> Messages per second, delivery success rate</li>
+            <li><strong>Room Activity:</strong> Most active rooms and message patterns</li>
+            <li><strong>Error Tracking:</strong> Connection failures and message errors</li>
+            <li><strong>Performance Metrics:</strong> Message latency and server resources</li>
+            <li><strong>User Engagement:</strong> Real-time feature usage statistics</li>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>Booking System:</strong> Real-time booking status updates</li>
+            <li><strong>Messaging System:</strong> Instant message delivery and typing indicators</li>
+            <li><strong>Payment Processing:</strong> Live payment status notifications</li>
+            <li><strong>Notification Service:</strong> Immediate alert delivery</li>
+            <li><strong>Admin Dashboard:</strong> Real-time system monitoring</li>
+            <li><strong>Analytics Service:</strong> Live user activity tracking</li>
+        </ul>
+    </div>
+</body>
+</html>

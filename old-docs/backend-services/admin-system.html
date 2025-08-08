@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin System - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Admin System</span>
+        </div>
+
+        <h1>Admin System</h1>
+        
+        <div class="alert alert-info">
+            <strong>Access Level:</strong> This service requires admin role authentication. Only users with admin privileges can access these endpoints.
+        </div>
+
+        <h2>Overview</h2>
+        <p>The Admin System provides comprehensive administrative controls for managing users, services, bookings, and system-wide operations. It includes analytics, moderation tools, and system health monitoring.</p>
+
+        <h2>Key Features</h2>
+        <ul class="feature-list">
+            <li><strong>User Management:</strong> View, edit, suspend, or delete user accounts</li>
+            <li><strong>Service Moderation:</strong> Approve, reject, or flag service listings</li>
+            <li><strong>Booking Oversight:</strong> Monitor and manage all platform bookings</li>
+            <li><strong>Analytics Dashboard:</strong> View platform metrics and performance data</li>
+            <li><strong>Payment Management:</strong> Handle disputes and payment issues</li>
+            <li><strong>System Configuration:</strong> Manage platform-wide settings</li>
+            <li><strong>Report Handling:</strong> Review and act on user reports</li>
+        </ul>
+
+        <h2>API Flow</h2>
+        <div class="mermaid">
+        graph TB
+            Admin[Admin User] -->|Authenticated Request| API[Admin API Router]
+            API -->|Check Role| Auth[Authorization Check]
+            Auth -->|Admin Role| Service[Admin Service]
+            Auth -->|Not Admin| Error[403 Forbidden]
+            
+            Service -->|User Operations| UserDB[(User Database)]
+            Service -->|Service Operations| ServiceDB[(Service Database)]
+            Service -->|Booking Operations| BookingDB[(Booking Database)]
+            Service -->|Analytics| AnalyticsDB[(Analytics Database)]
+            
+            Service -->|Response| Admin
+            
+            style Admin fill:#FFD700
+            style Auth fill:#90EE90
+            style Service fill:#DDA0DD
+            style Error fill:#FFCDD2
+        </div>
+
+        <h2>Core Operations</h2>
+
+        <h3>User Management</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Admin Router</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// Get all users with filters
+getAllUsers: adminProcedure
+  .input(z.object({
+    role: z.enum(['customer', 'professional', 'admin']).optional(),
+    status: z.enum(['active', 'suspended', 'deleted']).optional(),
+    page: z.number().default(1),
+    limit: z.number().default(20)
+  }))
+  .query(async ({ ctx, input }) => {
+    return adminService.getAllUsers(input);
+  }),
+
+// Suspend user account
+suspendUser: adminProcedure
+  .input(z.object({
+    userId: z.string(),
+    reason: z.string(),
+    duration: z.number().optional() // hours
+  }))
+  .mutation(async ({ ctx, input }) => {
+    return adminService.suspendUser(input);
+  })</code></pre>
+        </div>
+
+        <h3>Service Moderation</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Service Moderation</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// Review pending services
+reviewService: adminProcedure
+  .input(z.object({
+    serviceId: z.string(),
+    action: z.enum(['approve', 'reject', 'flag']),
+    feedback: z.string().optional()
+  }))
+  .mutation(async ({ ctx, input }) => {
+    return adminService.reviewService(input);
+  }),
+
+// Bulk operations
+bulkModerateServices: adminProcedure
+  .input(z.object({
+    serviceIds: z.array(z.string()),
+    action: z.enum(['approve', 'reject', 'delete'])
+  }))
+  .mutation(async ({ ctx, input }) => {
+    return adminService.bulkModerate(input);
+  })</code></pre>
+        </div>
+
+        <h2>Analytics & Metrics</h2>
+        <div class="mermaid">
+        graph LR
+            A[Analytics Request] --> B{Metric Type}
+            B -->|Users| C[User Metrics]
+            B -->|Revenue| D[Revenue Metrics]
+            B -->|Services| E[Service Metrics]
+            B -->|Bookings| F[Booking Metrics]
+            
+            C --> G[Growth Rate]
+            C --> H[Retention]
+            C --> I[Activity]
+            
+            D --> J[Total Revenue]
+            D --> K[Commission]
+            D --> L[Trends]
+            
+            E --> M[Popular Categories]
+            E --> N[Service Quality]
+            
+            F --> O[Completion Rate]
+            F --> P[Cancellations]
+            
+            style A fill:#ADD8E6
+            style B fill:#FFD700
+            style G fill:#C8E6C9
+            style J fill:#C8E6C9
+            style M fill:#C8E6C9
+            style O fill:#C8E6C9
+        </div>
+
+        <h2>System Configuration</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Configuration</th>
+                    <th>Description</th>
+                    <th>Default Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>PLATFORM_FEE</code></td>
+                    <td>Commission percentage on transactions</td>
+                    <td>10%</td>
+                </tr>
+                <tr>
+                    <td><code>ESCROW_PERIOD</code></td>
+                    <td>Days to hold payment in escrow</td>
+                    <td>15 days</td>
+                </tr>
+                <tr>
+                    <td><code>MAX_SERVICE_IMAGES</code></td>
+                    <td>Maximum images per service</td>
+                    <td>10</td>
+                </tr>
+                <tr>
+                    <td><code>REVIEW_MODERATION</code></td>
+                    <td>Auto-moderate reviews</td>
+                    <td>true</td>
+                </tr>
+                <tr>
+                    <td><code>SUSPENSION_THRESHOLD</code></td>
+                    <td>Reports before auto-suspension</td>
+                    <td>5</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Security Considerations</h2>
+        <div class="alert alert-warning">
+            <strong>Important:</strong> All admin operations are logged for audit purposes. Each action records the admin user ID, timestamp, affected resources, and IP address.
+        </div>
+
+        <h3>Audit Log Structure</h3>
+        <pre><code>{
+  "adminId": "admin_123",
+  "action": "SUSPEND_USER",
+  "targetResource": "user_456",
+  "metadata": {
+    "reason": "Terms of Service violation",
+    "duration": 168
+  },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "ipAddress": "192.168.1.100"
+}</code></pre>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>Authentication Service:</strong> Verifies admin role and permissions</li>
+            <li><strong>Analytics Service:</strong> Aggregates platform metrics</li>
+            <li><strong>Notification Service:</strong> Sends alerts for critical actions</li>
+            <li><strong>Payment Service:</strong> Handles refunds and disputes</li>
+            <li><strong>Monitoring Service:</strong> Tracks system health and performance</li>
+        </ul>
+
+        <h2>Error Handling</h2>
+        <div class="alert alert-danger">
+            <strong>Common Errors:</strong>
+            <ul>
+                <li><code>UNAUTHORIZED</code> - User lacks admin privileges</li>
+                <li><code>RESOURCE_NOT_FOUND</code> - Target user/service doesn't exist</li>
+                <li><code>OPERATION_FAILED</code> - Database operation failed</li>
+                <li><code>INVALID_ACTION</code> - Attempted invalid state transition</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Search Results Screen - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>Search Results Screen</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The Search Results Screen displays services matching the user's search query or category selection. It provides comprehensive filtering and sorting options to help users find exactly what they're looking for. The screen includes service cards with key information, allowing users to compare options before making a selection.</p>
+            <p><strong>Primary Purpose:</strong> Present relevant search results in an organized, filterable format that enables users to quickly evaluate and select services that meet their needs.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Search Bar:</strong> Pre-filled with current query, allows modification</li>
+                <li><strong>Results Summary:</strong> "X results found for 'query'" with location indicator</li>
+                <li><strong>Filter Sidebar:</strong>
+                    <ul>
+                        <li>Price range slider</li>
+                        <li>Rating filter (stars)</li>
+                        <li>Distance/Location radius</li>
+                        <li>Availability toggle</li>
+                        <li>Service type checkboxes</li>
+                        <li>Professional certifications</li>
+                    </ul>
+                </li>
+                <li><strong>Sort Dropdown:</strong> Relevance, Price (low to high/high to low), Rating, Distance</li>
+                <li><strong>Results Grid/List Toggle:</strong> Switch between grid and list view</li>
+                <li><strong>Service Cards:</strong> 
+                    <ul>
+                        <li>Service image/Professional photo</li>
+                        <li>Service title and professional name</li>
+                        <li>Rating with review count</li>
+                        <li>Price range/Starting price</li>
+                        <li>Brief description</li>
+                        <li>Distance from user</li>
+                        <li>Availability indicator</li>
+                        <li>"View Details" button</li>
+                    </ul>
+                </li>
+                <li><strong>Pagination:</strong> Page numbers or infinite scroll</li>
+                <li><strong>Map View Toggle:</strong> Switch to map-based results</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>search.query(params)</code> - Main search with query, filters, pagination</li>
+                <li><code>search.getFilters()</code> - Retrieves available filter options</li>
+                <li><code>services.getByIds(ids)</code> - Batch fetch service details for cards</li>
+                <li><code>location.geocode(address)</code> - Convert location to coordinates</li>
+                <li><code>favorites.checkBatch(serviceIds)</code> - Check if services are favorited</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[User Arrives from Search/Category] --> B[Display Initial Results]
+    B --> C[Show Loading State]
+    C --> D[Fetch Search Results]
+    D --> E{Results Found?}
+    
+    E -->|Yes| F[Display Service Cards]
+    E -->|No| G[Show No Results Message]
+    G --> H[Suggest Alternative Searches]
+    
+    F --> I{User Action}
+    
+    I -->|Apply Filter| J[Update Filter Selection]
+    J --> K[Refetch Results with Filters]
+    K --> L[Update Results Display]
+    
+    I -->|Change Sort| M[Select Sort Option]
+    M --> N[Reorder Current Results]
+    
+    I -->|Modify Search| O[Edit Search Query]
+    O --> P[Trigger New Search]
+    P --> C
+    
+    I -->|View Service| Q[Click Service Card]
+    Q --> R[Navigate to Service Details]
+    
+    I -->|Toggle View| S[Switch Grid/List/Map]
+    S --> T[Rerender Results in New Format]
+    
+    I -->|Paginate| U[Click Page/Scroll]
+    U --> V[Load More Results]
+    V --> W[Append/Replace Results]
+    
+    I -->|Save Filter| X[Click Save Search]
+    X --> Y[Store Search Preferences]
+    
+    I -->|Toggle Favorite| Z[Click Heart Icon]
+    Z --> AA[Update Favorites List]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style E fill:#FFD700,stroke:#333,stroke-width:2px
+    style I fill:#FFD700,stroke:#333,stroke-width:2px
+    style R fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style G fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style F fill:#90EE90,stroke:#333,stroke-width:2px
+    style L fill:#90EE90,stroke:#333,stroke-width:2px
+    style N fill:#90EE90,stroke:#333,stroke-width:2px
+    style T fill:#90EE90,stroke:#333,stroke-width:2px
+    style W fill:#90EE90,stroke:#333,stroke-width:2px
+    style Y fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style AA fill:#C8E6C9,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>State Management</h2>
+        <ul>
+            <li><strong>Search State:</strong> Current query, active filters, sort order, page number</li>
+            <li><strong>Results State:</strong> Array of services, total count, loading status</li>
+            <li><strong>View State:</strong> Grid/List/Map view preference</li>
+            <li><strong>Filter State:</strong> Active filter selections, available filter options</li>
+            <li><strong>Loading States:</strong> 
+                <ul>
+                    <li>Initial load skeleton</li>
+                    <li>Filter update spinner</li>
+                    <li>Pagination loader</li>
+                </ul>
+            </li>
+            <li><strong>Error States:</strong> Network errors, invalid filters, location errors</li>
+        </ul>
+
+        <h2>Performance Optimizations</h2>
+        <ul>
+            <li><strong>Debounced Search:</strong> Delay API calls while user types</li>
+            <li><strong>Filter Caching:</strong> Cache filter options to reduce API calls</li>
+            <li><strong>Infinite Scroll:</strong> Load results progressively as user scrolls</li>
+            <li><strong>Image Lazy Loading:</strong> Load service images only when visible</li>
+            <li><strong>Result Caching:</strong> Cache recent searches for quick back navigation</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Filters in bottom sheet or modal</li>
+                        <li>Single column results</li>
+                        <li>Sticky filter/sort bar</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Collapsible filter sidebar</li>
+                        <li>2-column grid</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Fixed filter sidebar</li>
+                        <li>3-4 column grid</li>
+                        <li>Hover effects on cards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

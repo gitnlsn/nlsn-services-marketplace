@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Service - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Analytics Service</h1>
+        
+        <p>The Analytics service provides comprehensive business intelligence, performance metrics, and insights for providers, services, and platform-wide operations.</p>
+
+        <h2>Analytics Overview</h2>
+        <ul>
+            <li><strong>Provider Analytics:</strong> Individual provider performance and growth metrics</li>
+            <li><strong>Service Analytics:</strong> Service-specific booking patterns and revenue</li>
+            <li><strong>Platform Analytics:</strong> System-wide metrics for administrators</li>
+            <li><strong>Revenue Analytics:</strong> Financial performance and projections</li>
+            <li><strong>Customer Analytics:</strong> Client behavior and satisfaction metrics</li>
+        </ul>
+
+        <h2>Analytics Architecture</h2>
+        <div class="mermaid">
+        graph TD
+            A[Raw Data Sources] --> B[Data Collection]
+            B --> C[Data Processing]
+            C --> D[Analytics Engine]
+            D --> E[Caching Layer]
+            E --> F[API Endpoints]
+            F --> G[Dashboard Views]
+            
+            A1[Bookings] --> B
+            A2[Payments] --> B
+            A3[Reviews] --> B
+            A4[User Activity] --> B
+            
+            D --> H[Insights Generator]
+            H --> I[AI Recommendations]
+            
+            style B fill:#ADD8E6
+            style D fill:#90EE90
+            style E fill:#DDA0DD
+            style I fill:#87CEEB
+        </div>
+
+        <h2>Core Analytics Types</h2>
+
+        <h3>Provider Analytics</h3>
+        <div class="mermaid">
+        graph LR
+            A[Provider Data] --> B[Revenue Metrics]
+            A --> C[Booking Performance] 
+            A --> D[Customer Satisfaction]
+            A --> E[Response Times]
+            
+            B --> F[Total Revenue]
+            B --> G[Revenue Growth]
+            B --> H[Average Order Value]
+            
+            C --> I[Booking Count]
+            C --> J[Acceptance Rate]
+            C --> K[Cancellation Rate]
+            
+            D --> L[Average Rating]
+            D --> M[Review Count]
+            D --> N[Repeat Customers]
+        </div>
+
+        <h3>Service Analytics</h3>
+        <ul>
+            <li><strong>Performance Metrics:</strong> Booking frequency, revenue per service</li>
+            <li><strong>Market Position:</strong> Competitive analysis and pricing insights</li>
+            <li><strong>Optimization Suggestions:</strong> Pricing, description, and availability recommendations</li>
+            <li><strong>Seasonal Patterns:</strong> Demand fluctuations and trend analysis</li>
+        </ul>
+
+        <h2>API Endpoints</h2>
+
+        <h3>Provider Analytics Dashboard</h3>
+        <pre><code>GET /api/trpc/analytics.getProviderAnalytics
+{
+  "providerId": "provider_id", // optional, defaults to current user
+  "period": "30d", // 7d, 30d, 90d, 6m, 1y
+  "startDate": "2024-01-01", // optional
+  "endDate": "2024-01-31" // optional
+}
+
+Response:
+{
+  "overview": {
+    "totalRevenue": 5000,
+    "totalBookings": 45,
+    "averageRating": 4.8,
+    "revenueGrowth": 15.5,
+    "bookingGrowth": 12.3
+  },
+  "trends": [...],
+  "topServices": [...],
+  "customerMetrics": {...}
+}</code></pre>
+
+        <h3>Service Analytics</h3>
+        <pre><code>GET /api/trpc/analytics.getServiceAnalytics
+{
+  "serviceId": "service_id",
+  "period": "30d",
+  "compareWithPrevious": true
+}
+
+Response:
+{
+  "performance": {
+    "bookings": 25,
+    "revenue": 2500,
+    "averageRating": 4.9,
+    "viewCount": 450
+  },
+  "comparison": {
+    "bookingChange": 8.5,
+    "revenueChange": 12.1
+  },
+  "insights": [...]
+}</code></pre>
+
+        <h3>Revenue Analytics</h3>
+        <pre><code>GET /api/trpc/analytics.getRevenueAnalytics
+{
+  "providerId": "provider_id",
+  "period": "90d",
+  "includeProjections": true
+}
+
+Response:
+{
+  "summary": {
+    "totalRevenue": 15000,
+    "projectedRevenue": 18000,
+    "averageMonthlyRevenue": 5000
+  },
+  "breakdown": {
+    "byService": [...],
+    "byMonth": [...],
+    "byPaymentMethod": [...]
+  },
+  "projections": {
+    "nextMonth": 5500,
+    "nextQuarter": 16500
+  }
+}</code></pre>
+
+        <h2>Analytics Insights</h2>
+        <div class="mermaid">
+        graph TD
+            A[Data Analysis] --> B[Pattern Detection]
+            B --> C[Insight Generation]
+            C --> D[Recommendation Engine]
+            
+            D --> E[Pricing Optimization]
+            D --> F[Schedule Optimization]
+            D --> G[Service Improvements]
+            D --> H[Marketing Suggestions]
+            
+            E --> I[Increase/Decrease Prices]
+            F --> J[Adjust Availability]
+            G --> K[Update Descriptions]
+            H --> L[Promote Top Services]
+            
+            style C fill:#90EE90
+            style D fill:#87CEEB
+            style I fill:#C8E6C9
+        </div>
+
+        <h2>Performance Metrics</h2>
+        <h3>Key Performance Indicators (KPIs)</h3>
+        <ul>
+            <li><strong>Revenue Growth:</strong> Month-over-month and year-over-year growth rates</li>
+            <li><strong>Booking Conversion:</strong> Views to booking conversion rates</li>
+            <li><strong>Customer Retention:</strong> Repeat booking percentages</li>
+            <li><strong>Response Time:</strong> Average time to respond to booking requests</li>
+            <li><strong>Satisfaction Score:</strong> Average rating and review sentiment</li>
+        </ul>
+
+        <h3>Business Intelligence Features</h3>
+        <ul>
+            <li><strong>Trend Analysis:</strong> Identify seasonal patterns and growth trends</li>
+            <li><strong>Comparative Analysis:</strong> Performance vs. previous periods</li>
+            <li><strong>Predictive Analytics:</strong> Revenue and demand forecasting</li>
+            <li><strong>Market Insights:</strong> Category performance and competition analysis</li>
+        </ul>
+
+        <h2>Caching Strategy</h2>
+        <ul>
+            <li><strong>Dashboard Summary:</strong> 5-minute cache for quick access</li>
+            <li><strong>Provider Analytics:</strong> 10-minute cache for individual metrics</li>
+            <li><strong>Platform Analytics:</strong> 15-minute cache for system-wide data</li>
+            <li><strong>Historical Data:</strong> Longer cache periods for older, stable data</li>
+        </ul>
+
+        <h2>Data Export</h2>
+        <pre><code>GET /api/trpc/analytics.exportAnalytics
+{
+  "type": "provider", // provider, service, revenue, bookings
+  "period": "30d",
+  "format": "json", // json, csv
+  "serviceId": "service_id" // optional for service analytics
+}
+
+Response:
+{
+  "data": {...},
+  "format": "json",
+  "exportedAt": "2024-03-15T10:30:00Z",
+  "type": "provider",
+  "period": "30d"
+}</code></pre>
+
+        <h2>Privacy & Security</h2>
+        <ul>
+            <li><strong>Data Anonymization:</strong> Personal information removed from aggregated data</li>
+            <li><strong>Access Control:</strong> Providers can only access their own analytics</li>
+            <li><strong>Admin Analytics:</strong> Platform-wide metrics restricted to administrators</li>
+            <li><strong>Data Retention:</strong> Historical data kept according to privacy policies</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Backend Services</a>
+        </nav>
+    </div>
+</body>
+</html>

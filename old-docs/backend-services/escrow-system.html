@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escrow System - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Escrow System</span>
+        </div>
+
+        <h1>Escrow System</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Secure payment holding system with 15-day escrow period to protect both customers and professionals during service transactions.
+        </div>
+
+        <h2>Escrow Flow Overview</h2>
+        <div class="mermaid">
+        graph TB
+            Payment[Customer Payment] -->|Authorized| Escrow[Funds in Escrow]
+            Escrow -->|Service Completed| Hold[15-Day Holding Period]
+            Hold -->|No Disputes| Release[Automatic Release]
+            Hold -->|Customer Dispute| DisputeProcess[Dispute Resolution]
+            
+            Release --> Professional[Professional Receives Payment]
+            DisputeProcess -->|Resolved in Favor| Professional
+            DisputeProcess -->|Resolved Against| Refund[Customer Refund]
+            
+            Hold -->|Early Release Request| EarlyReview[Admin Review]
+            EarlyReview -->|Approved| Professional
+            EarlyReview -->|Denied| Hold
+            
+            Professional -->|Platform Fee Deducted| Commission[Platform Commission]
+            
+            style Payment fill:#ADD8E6
+            style Escrow fill:#FFD700
+            style Hold fill:#DDA0DD
+            style Release fill:#C8E6C9
+            style DisputeProcess fill:#FFF4E6
+            style Refund fill:#FFCDD2
+        </div>
+
+        <h2>Escrow States</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Active States</h3>
+                <ul>
+                    <li><strong>PENDING:</strong> Payment authorized, awaiting service completion</li>
+                    <li><strong>HOLDING:</strong> Service completed, 15-day protection period active</li>
+                    <li><strong>DISPUTED:</strong> Customer has raised a dispute</li>
+                    <li><strong>EARLY_RELEASE_REQUESTED:</strong> Professional requested early release</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Final States</h3>
+                <ul>
+                    <li><strong>RELEASED:</strong> Funds released to professional</li>
+                    <li><strong>REFUNDED:</strong> Funds returned to customer</li>
+                    <li><strong>PARTIALLY_REFUNDED:</strong> Split resolution</li>
+                    <li><strong>EXPIRED:</strong> Automatic release after hold period</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Escrow Data Model</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>Prisma Schema - Escrow Model</span>
+                <span class="code-language">PRISMA</span>
+            </div>
+            <pre><code>model EscrowTransaction {
+  id                    String            @id @default(cuid())
+  bookingId             String            @unique
+  booking               Booking           @relation(fields: [bookingId])
+  
+  // Financial details
+  totalAmount           Decimal           @db.Decimal(10, 2)
+  platformFee           Decimal           @db.Decimal(10, 2)
+  professionalAmount    Decimal           @db.Decimal(10, 2)
+  
+  // Escrow status
+  status                EscrowStatus      @default(PENDING)
+  createdAt             DateTime          @default(now())
+  serviceCompletedAt    DateTime?
+  holdStartedAt         DateTime?
+  releaseScheduledAt    DateTime?
+  releasedAt            DateTime?
+  
+  // Dispute handling
+  disputeReason         String?           @db.Text
+  disputeEvidences      Json[]            @default([])
+  disputeResolutionAt   DateTime?
+  disputeResolvedBy     String?
+  
+  // Early release
+  earlyReleaseRequested Boolean           @default(false)
+  earlyReleaseReason    String?           @db.Text
+  earlyReleaseReviewedBy String?
+  earlyReleaseReviewedAt DateTime?
+  
+  // Payment tracking
+  pagarmeTransactionId  String?
+  refundTransactionId   String?
+  
+  @@map("escrow_transactions")
+}
+
+enum EscrowStatus {
+  PENDING
+  HOLDING
+  DISPUTED
+  EARLY_RELEASE_REQUESTED
+  RELEASED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  EXPIRED
+}</code></pre>
+        </div>
+
+        <h2>Escrow Router API</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Escrow Router</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>export const escrowRouter = createTRPCRouter({
+  getEscrowDetails: protectedProcedure
+    .input(z.object({
+      bookingId: z.string()
+    }))
+    .query(async ({ ctx, input }) => {
+      const escrowService = createEscrowService({
+        db: ctx.db,
+        pagarmeService: pagarmeService
+      });
+      
+      return await escrowService.getEscrowDetails({
+        bookingId: input.bookingId,
+        userId: ctx.session.user.id
+      });
+    }),
+
+  requestEarlyRelease: protectedProcedure
+    .input(z.object({
+      bookingId: z.string(),
+      reason: z.string().min(10).max(500)
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const escrowService = createEscrowService({
+        db: ctx.db,
+        userId: ctx.session.user.id
+      });
+      
+      return await escrowService.requestEarlyRelease({
+        bookingId: input.bookingId,
+        reason: input.reason,
+        professionalId: ctx.session.user.id
+      });
+    }),
+
+  raiseDispute: protectedProcedure
+    .input(z.object({
+      bookingId: z.string(),
+      reason: z.string().min(20).max(1000),
+      evidence: z.array(z.object({
+        type: z.enum(['photo', 'document', 'message']),
+        url: z.string().url(),
+        description: z.string().optional()
+      })).optional()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const escrowService = createEscrowService({
+        db: ctx.db,
+        notificationService: notificationService
+      });
+      
+      return await escrowService.raiseDispute({
+        bookingId: input.bookingId,
+        reason: input.reason,
+        evidence: input.evidence,
+        customerId: ctx.session.user.id
+      });
+    }),
+
+  getProfessionalEarnings: protectedProcedure
+    .input(z.object({
+      period: z.enum(['week', 'month', 'quarter', 'year']).default('month'),
+      status: z.enum(['all', 'pending', 'released', 'disputed']).default('all')
+    }))
+    .query(async ({ ctx, input }) => {
+      const escrowService = createEscrowService({
+        db: ctx.db
+      });
+      
+      return await escrowService.getProfessionalEarnings({
+        professionalId: ctx.session.user.id,
+        period: input.period,
+        status: input.status
+      });
+    })
+});</code></pre>
+        </div>
+
+        <h2>Automatic Release Process</h2>
+        <div class="mermaid">
+        graph LR
+            Complete[Service Marked Complete] -->|Start Timer| Hold[15-Day Hold Period]
+            Hold -->|Daily Check| Check{Dispute?}
+            Check -->|No Dispute| Count[Count Days]
+            Check -->|Dispute Raised| Pause[Pause Timer]
+            
+            Count -->|< 15 Days| Wait[Continue Waiting]
+            Count -->|≥ 15 Days| AutoRelease[Automatic Release]
+            
+            Wait --> Check
+            AutoRelease --> Transfer[Transfer to Professional]
+            Transfer --> Notify[Notify All Parties]
+            
+            Pause -->|Dispute Resolved| Resume[Resume Timer]
+            Resume --> Count
+            
+            style Complete fill:#ADD8E6
+            style Hold fill:#FFD700
+            style AutoRelease fill:#C8E6C9
+            style Pause fill:#FFF4E6
+        </div>
+
+        <h2>Early Release System</h2>
+        <div class="card">
+            <h3>Early Release Criteria</h3>
+            <ul>
+                <li><strong>Professional Request:</strong> Must provide detailed justification</li>
+                <li><strong>Customer Satisfaction:</strong> Service completed as expected</li>
+                <li><strong>No Red Flags:</strong> No customer complaints or quality issues</li>
+                <li><strong>Professional History:</strong> Good track record and ratings</li>
+                <li><strong>Service Type:</strong> Completed services with clear deliverables</li>
+            </ul>
+        </div>
+
+        <h3>Early Release Process</h3>
+        <ol class="setup-steps">
+            <li>Professional submits early release request with reason</li>
+            <li>Customer receives notification about the request</li>
+            <li>Customer has 24 hours to object or approve</li>
+            <li>If no objection, admin reviews the request</li>
+            <li>Admin approval triggers immediate release</li>
+            <li>All parties are notified of the decision</li>
+        </ol>
+
+        <h2>Dispute Resolution Workflow</h2>
+        <div class="mermaid">
+        graph TB
+            Dispute[Customer Raises Dispute] --> Evidence[Upload Evidence]
+            Evidence --> Notify[Notify Professional]
+            Notify --> Response[Professional Response Period]
+            
+            Response -->|Response Provided| Review[Admin Review]
+            Response -->|No Response| AutoDecision[Automatic Decision]
+            
+            Review --> Investigation[Evidence Analysis]
+            Investigation --> Decision{Resolution}
+            
+            Decision -->|Customer Favor| FullRefund[Full Refund]
+            Decision -->|Professional Favor| ReleasePayment[Release Payment]
+            Decision -->|Partial Fault| SplitPayment[Partial Refund]
+            
+            AutoDecision --> CustomerFavor[Default Customer Favor]
+            CustomerFavor --> FullRefund
+            
+            FullRefund --> CloseDispute[Close Dispute]
+            ReleasePayment --> CloseDispute
+            SplitPayment --> CloseDispute
+            
+            style Dispute fill:#ADD8E6
+            style Review fill:#DDA0DD
+            style FullRefund fill:#FFCDD2
+            style ReleasePayment fill:#C8E6C9
+            style SplitPayment fill:#FFF4E6
+        </div>
+
+        <h2>Financial Calculations</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Scenario</th>
+                    <th>Service Price</th>
+                    <th>Platform Fee (10%)</th>
+                    <th>Professional Receives</th>
+                    <th>Escrow Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Standard Service</td>
+                    <td>R$ 100.00</td>
+                    <td>R$ 10.00</td>
+                    <td>R$ 90.00</td>
+                    <td>R$ 100.00</td>
+                </tr>
+                <tr>
+                    <td>Premium Service</td>
+                    <td>R$ 500.00</td>
+                    <td>R$ 50.00</td>
+                    <td>R$ 450.00</td>
+                    <td>R$ 500.00</td>
+                </tr>
+                <tr>
+                    <td>Partial Refund (60%)</td>
+                    <td>R$ 200.00</td>
+                    <td>R$ 8.00</td>
+                    <td>R$ 72.00</td>
+                    <td>R$ 120.00 refunded</td>
+                </tr>
+                <tr>
+                    <td>Full Refund</td>
+                    <td>R$ 150.00</td>
+                    <td>R$ 0.00</td>
+                    <td>R$ 0.00</td>
+                    <td>R$ 150.00 refunded</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Escrow Service Implementation</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Escrow Service</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>export class EscrowService {
+  constructor(
+    private db: PrismaClient,
+    private pagarmeService: PagarmeService,
+    private notificationService: NotificationService
+  ) {}
+
+  async initiateEscrow(bookingId: string) {
+    const booking = await this.db.booking.findUnique({
+      where: { id: bookingId },
+      include: { service: true, payment: true }
+    });
+
+    if (!booking || !booking.payment) {
+      throw new Error('Booking or payment not found');
+    }
+
+    const totalAmount = booking.payment.amount;
+    const platformFee = totalAmount * 0.10; // 10% platform fee
+    const professionalAmount = totalAmount - platformFee;
+
+    const escrow = await this.db.escrowTransaction.create({
+      data: {
+        bookingId,
+        totalAmount,
+        platformFee,
+        professionalAmount,
+        status: 'PENDING',
+        pagarmeTransactionId: booking.payment.externalId
+      }
+    });
+
+    return escrow;
+  }
+
+  async markServiceCompleted(bookingId: string) {
+    const escrow = await this.db.escrowTransaction.findUnique({
+      where: { bookingId }
+    });
+
+    if (!escrow || escrow.status !== 'PENDING') {
+      throw new Error('Invalid escrow state for completion');
+    }
+
+    const holdStartedAt = new Date();
+    const releaseScheduledAt = addDays(holdStartedAt, 15);
+
+    await this.db.escrowTransaction.update({
+      where: { id: escrow.id },
+      data: {
+        status: 'HOLDING',
+        serviceCompletedAt: new Date(),
+        holdStartedAt,
+        releaseScheduledAt
+      }
+    });
+
+    // Schedule automatic release
+    await this.scheduleAutomaticRelease(escrow.id, releaseScheduledAt);
+
+    return { holdPeriodEnds: releaseScheduledAt };
+  }
+
+  async processAutomaticRelease(escrowId: string) {
+    const escrow = await this.db.escrowTransaction.findUnique({
+      where: { id: escrowId },
+      include: { booking: { include: { professional: true, customer: true } } }
+    });
+
+    if (!escrow || escrow.status !== 'HOLDING') {
+      return; // Already processed or invalid state
+    }
+
+    // Check if release date has been reached
+    if (new Date() < escrow.releaseScheduledAt!) {
+      return; // Not yet time to release
+    }
+
+    try {
+      // Transfer funds to professional
+      await this.pagarmeService.transferFunds({
+        amount: escrow.professionalAmount,
+        recipientId: escrow.booking.professional.pagarmeRecipientId,
+        transactionId: escrow.pagarmeTransactionId!
+      });
+
+      await this.db.escrowTransaction.update({
+        where: { id: escrowId },
+        data: {
+          status: 'RELEASED',
+          releasedAt: new Date()
+        }
+      });
+
+      // Notify both parties
+      await this.notificationService.sendEscrowReleaseNotification({
+        professionalId: escrow.booking.professional.id,
+        customerId: escrow.booking.customer.id,
+        amount: escrow.professionalAmount,
+        bookingId: escrow.bookingId
+      });
+
+    } catch (error) {
+      console.error('Escrow release failed:', error);
+      // Log error and retry later
+    }
+  }
+}</code></pre>
+        </div>
+
+        <h2>Monitoring & Analytics</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Key Metrics</h3>
+                <ul>
+                    <li>Total funds held in escrow</li>
+                    <li>Average holding period</li>
+                    <li>Dispute rate by service category</li>
+                    <li>Early release approval rate</li>
+                    <li>Automatic vs manual releases</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Alert Thresholds</h3>
+                <ul>
+                    <li>High dispute rate (>5% for professional)</li>
+                    <li>Delayed releases (>16 days)</li>
+                    <li>Failed transfer attempts</li>
+                    <li>Unusual refund patterns</li>
+                    <li>Large amount disputes (>R$ 1000)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Security & Compliance</h2>
+        <div class="alert alert-success">
+            <strong>Security Measures:</strong>
+            <ul>
+                <li><strong>Fund Security:</strong> All funds held securely by Pagarme</li>
+                <li><strong>Audit Trail:</strong> Complete transaction history logging</li>
+                <li><strong>Access Control:</strong> Role-based dispute resolution access</li>
+                <li><strong>Data Encryption:</strong> Sensitive financial data encrypted at rest</li>
+                <li><strong>Regulatory Compliance:</strong> Follows Brazilian financial regulations</li>
+                <li><strong>Fraud Prevention:</strong> Automated suspicious activity detection</li>
+            </ul>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>Booking Service:</strong> Service completion triggers escrow hold</li>
+            <li><strong>Payment Service:</strong> Payment authorization and transfer processing</li>
+            <li><strong>Notification Service:</strong> All parties notified of escrow events</li>
+            <li><strong>Admin Service:</strong> Dispute resolution and early release approvals</li>
+            <li><strong>Analytics Service:</strong> Financial metrics and performance tracking</li>
+            <li><strong>Cron Service:</strong> Automated release processing and monitoring</li>
+        </ul>
+    </div>
+</body>
+</html>

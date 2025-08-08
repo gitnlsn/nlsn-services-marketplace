@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>My Bookings Screen (Professional) - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>My Bookings Screen (Professional)</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The My Bookings Screen for professionals serves as the command center for managing incoming booking requests and tracking service appointments. This screen enables professionals to efficiently review pending requests, accept or decline bookings, manage their schedule, and communicate with customers throughout the service delivery process.</p>
+            <p><strong>Primary Purpose:</strong> Provide professionals with comprehensive booking management tools to optimize their schedule, respond to customer requests, and maintain high service delivery standards.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Status Filter Tabs:</strong>
+                    <ul>
+                        <li>All Bookings</li>
+                        <li>Pending Approval (requires action)</li>
+                        <li>Confirmed</li>
+                        <li>In Progress</li>
+                        <li>Completed</li>
+                        <li>Cancelled/Declined</li>
+                    </ul>
+                </li>
+                <li><strong>Booking Request Cards:</strong>
+                    <ul>
+                        <li>Customer name and profile photo</li>
+                        <li>Service requested</li>
+                        <li>Proposed date and time</li>
+                        <li>Service location/address</li>
+                        <li>Customer special instructions</li>
+                        <li>Booking value/earnings</li>
+                        <li>Request timestamp</li>
+                        <li>Customer booking history count</li>
+                    </ul>
+                </li>
+                <li><strong>Action Buttons:</strong>
+                    <ul>
+                        <li>Accept Booking (with time confirmation)</li>
+                        <li>Decline Booking (with reason selection)</li>
+                        <li>Request Reschedule</li>
+                        <li>Contact Customer</li>
+                        <li>View Customer Profile</li>
+                    </ul>
+                </li>
+                <li><strong>Quick Actions Toolbar:</strong>
+                    <ul>
+                        <li>Bulk accept/decline options</li>
+                        <li>Calendar view toggle</li>
+                        <li>Notification settings</li>
+                        <li>Export schedule</li>
+                    </ul>
+                </li>
+                <li><strong>Earnings Summary:</strong> Daily/weekly/monthly earnings from bookings</li>
+                <li><strong>Calendar Integration:</strong> Option to sync with external calendars</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>bookings.getByProfessional(professionalId, filters)</code> - Fetch professional's bookings</li>
+                <li><code>bookings.accept(bookingId, confirmationDetails)</code> - Accept booking request</li>
+                <li><code>bookings.decline(bookingId, reason)</code> - Decline booking with reason</li>
+                <li><code>bookings.requestReschedule(bookingId, proposedTimes)</code> - Suggest alternative times</li>
+                <li><code>customers.getProfile(customerId)</code> - View customer details</li>
+                <li><code>chat.initiate(customerId)</code> - Start conversation with customer</li>
+                <li><code>calendar.getAvailability(professionalId, dateRange)</code> - Check schedule conflicts</li>
+                <li><code>earnings.getSummary(professionalId, period)</code> - Calculate earnings</li>
+                <li><code>notifications.markRead(notificationIds)</code> - Mark booking notifications as read</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[Professional Accesses Bookings] --> B[Load Booking Requests]
+    B --> C[Display Categorized Bookings]
+    
+    C --> D{User Action}
+    
+    D -->|Review Pending| E[Select Pending Tab]
+    E --> F[Show Pending Requests]
+    F --> G{Decision on Booking}
+    
+    G -->|Accept| H[Click Accept]
+    H --> I[Confirm Time Slot]
+    I --> J[Send Acceptance Notification]
+    J --> K[Update Calendar]
+    
+    G -->|Decline| L[Click Decline]
+    L --> M[Select Decline Reason]
+    M --> N[Send Decline Notification]
+    N --> O[Free Up Time Slot]
+    
+    G -->|Need More Info| P[Contact Customer]
+    P --> Q[Open Chat/Call]
+    
+    D -->|View Customer Profile| R[Click Customer Name]
+    R --> S[Show Customer Details]
+    S --> T[View Previous Bookings]
+    
+    D -->|Reschedule Request| U[Propose New Times]
+    U --> V[Send Reschedule Options]
+    V --> W[Wait for Customer Response]
+    
+    D -->|Mark Complete| X[Click Complete Service]
+    X --> Y[Confirm Service Delivery]
+    Y --> Z[Trigger Payment Release]
+    
+    D -->|Filter/Search| AA[Apply Filters]
+    AA --> BB[Update Booking List]
+    
+    D -->|Calendar View| CC[Toggle Calendar]
+    CC --> DD[Show Schedule View]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#FFD700,stroke:#333,stroke-width:2px
+    style G fill:#FFD700,stroke:#333,stroke-width:2px
+    style J fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style N fill:#FFCDD2,stroke:#333,stroke-width:2px
+    style Q fill:#87CEEB,stroke:#333,stroke-width:2px
+    style Z fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style K fill:#90EE90,stroke:#333,stroke-width:2px
+    style O fill:#90EE90,stroke:#333,stroke-width:2px
+    style BB fill:#90EE90,stroke:#333,stroke-width:2px
+    style DD fill:#90EE90,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>Booking Management Features</h2>
+        <ul>
+            <li><strong>Auto-Accept Rules:</strong> Set criteria for automatic booking acceptance</li>
+            <li><strong>Decline Templates:</strong> Pre-written decline reasons for common scenarios</li>
+            <li><strong>Schedule Conflicts:</strong> Visual warnings for overlapping bookings</li>
+            <li><strong>Customer Rating Display:</strong> Show customer ratings and review history</li>
+            <li><strong>Booking Notes:</strong> Add private notes for each booking</li>
+            <li><strong>Service Preparation:</strong> Checklists and reminders for service delivery</li>
+        </ul>
+
+        <h2>Professional Dashboard Integration</h2>
+        <ul>
+            <li><strong>Performance Metrics:</strong> Acceptance rate, completion rate, customer satisfaction</li>
+            <li><strong>Revenue Tracking:</strong> Income from completed bookings</li>
+            <li><strong>Schedule Optimization:</strong> Suggestions for maximizing booking efficiency</li>
+            <li><strong>Customer Retention:</strong> Repeat customer identification and tracking</li>
+        </ul>
+
+        <h2>Communication Tools</h2>
+        <ul>
+            <li><strong>In-App Messaging:</strong> Direct chat with customers</li>
+            <li><strong>Phone Integration:</strong> Click-to-call functionality</li>
+            <li><strong>Template Messages:</strong> Quick responses for common inquiries</li>
+            <li><strong>Photo Sharing:</strong> Send progress photos or before/after images</li>
+        </ul>
+
+        <h2>Quality Assurance</h2>
+        <ul>
+            <li><strong>Service Verification:</strong> Photo proof of service completion</li>
+            <li><strong>Customer Feedback:</strong> Real-time service quality feedback</li>
+            <li><strong>Dispute Resolution:</strong> Tools for handling service disputes</li>
+            <li><strong>Professional Standards:</strong> Compliance with platform policies</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Card-based booking layout</li>
+                        <li>Swipe gestures for quick accept/decline</li>
+                        <li>Priority inbox for urgent requests</li>
+                        <li>Push notifications for new bookings</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>Split view: bookings list + details</li>
+                        <li>Calendar integration sidebar</li>
+                        <li>Batch action capabilities</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Multi-panel dashboard layout</li>
+                        <li>Advanced filtering and search</li>
+                        <li>Keyboard shortcuts for common actions</li>
+                        <li>Detailed analytics and reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

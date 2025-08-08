@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication System - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Backend Services</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Communication System</span>
+        </div>
+
+        <h1>Communication System</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Multi-channel communication system powered by Twilio for SMS, WhatsApp, and email notifications across the platform.
+        </div>
+
+        <h2>Communication Channels</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3 class="gradient-text">📧 Email</h3>
+                <ul>
+                    <li>Transactional emails</li>
+                    <li>HTML/text templates</li>
+                    <li>Delivery tracking</li>
+                    <li>Bounce handling</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">📱 SMS</h3>
+                <ul>
+                    <li>Instant text messages</li>
+                    <li>Delivery confirmations</li>
+                    <li>International support</li>
+                    <li>Character optimization</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="gradient-text">💬 WhatsApp</h3>
+                <ul>
+                    <li>Rich media messages</li>
+                    <li>Template-based</li>
+                    <li>Interactive buttons</li>
+                    <li>Business API</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>System Architecture</h2>
+        <div class="mermaid">
+        graph TB
+            Trigger[Event Trigger] --> Router[Communication Router]
+            Router --> Service[Communication Service]
+            
+            Service --> Template[Template Engine]
+            Service --> Preference[User Preferences]
+            Service --> Channel{Select Channel}
+            
+            Channel -->|Email| EmailService[Email Service]
+            Channel -->|SMS| SMSService[SMS Service]
+            Channel -->|WhatsApp| WhatsAppService[WhatsApp Service]
+            
+            EmailService --> Twilio[Twilio SendGrid]
+            SMSService --> TwilioSMS[Twilio SMS]
+            WhatsAppService --> TwilioWA[Twilio WhatsApp]
+            
+            Twilio --> Delivery[Delivery Status]
+            TwilioSMS --> Delivery
+            TwilioWA --> Delivery
+            
+            Delivery --> Database[(Database)]
+            Database --> Analytics[Analytics & Metrics]
+            
+            style Trigger fill:#ADD8E6
+            style Router fill:#FFD700
+            style Service fill:#DDA0DD
+            style Delivery fill:#C8E6C9
+        </div>
+
+        <h2>Message Templates</h2>
+        
+        <h3>Template System</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Template Engine</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// Template configuration
+const messageTemplates = {
+  BOOKING_CONFIRMATION: {
+    email: {
+      subject: "Booking Confirmed - {{serviceName}}",
+      html: `
+        &lt;h2&gt;Your booking is confirmed!&lt;/h2&gt;
+        &lt;p&gt;Service: {{serviceName}}&lt;/p&gt;
+        &lt;p&gt;Date: {{bookingDate}}&lt;/p&gt;
+        &lt;p&gt;Professional: {{professionalName}}&lt;/p&gt;
+        &lt;a href="{{bookingUrl}}"&gt;View Booking Details&lt;/a&gt;
+      `,
+      text: "Your booking for {{serviceName}} on {{bookingDate}} is confirmed."
+    },
+    sms: {
+      body: "Booking confirmed: {{serviceName}} on {{bookingDate}} with {{professionalName}}. Details: {{shortUrl}}"
+    },
+    whatsapp: {
+      template: "booking_confirmation_template",
+      parameters: ["serviceName", "bookingDate", "professionalName"]
+    }
+  },
+  
+  PAYMENT_RECEIPT: {
+    email: {
+      subject: "Payment Receipt - R$ {{amount}}",
+      html: `
+        &lt;h2&gt;Payment Received&lt;/h2&gt;
+        &lt;p&gt;Amount: R$ {{amount}}&lt;/p&gt;
+        &lt;p&gt;Service: {{serviceName}}&lt;/p&gt;
+        &lt;p&gt;Transaction ID: {{transactionId}}&lt;/p&gt;
+        &lt;p&gt;Payment Method: {{paymentMethod}}&lt;/p&gt;
+      `
+    },
+    sms: {
+      body: "Payment of R$ {{amount}} received for {{serviceName}}. ID: {{transactionId}}"
+    }
+  }
+};</code></pre>
+        </div>
+
+        <h2>Communication Router API</h2>
+        
+        <h3>Send Multi-Channel Message</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Communication Router</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>export const communicationRouter = createTRPCRouter({
+  sendMessage: protectedProcedure
+    .input(z.object({
+      recipientId: z.string(),
+      templateId: z.enum([
+        'BOOKING_CONFIRMATION',
+        'PAYMENT_RECEIPT',
+        'SERVICE_REMINDER',
+        'REVIEW_REQUEST',
+        'PROFESSIONAL_NOTIFICATION'
+      ]),
+      data: z.record(z.any()),
+      channels: z.array(z.enum(['email', 'sms', 'whatsapp'])).optional(),
+      priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+      scheduleFor: z.date().optional()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const communicationService = createCommunicationService({
+        db: ctx.db,
+        twilioClient: twilioClient
+      });
+      
+      return await communicationService.sendMessage({
+        ...input,
+        senderId: ctx.session.user.id
+      });
+    }),
+
+  getMessageStatus: protectedProcedure
+    .input(z.object({
+      messageId: z.string()
+    }))
+    .query(async ({ ctx, input }) => {
+      const communicationService = createCommunicationService({
+        db: ctx.db
+      });
+      
+      return await communicationService.getMessageStatus(input.messageId);
+    }),
+
+  updateUserPreferences: protectedProcedure
+    .input(z.object({
+      email: z.boolean().optional(),
+      sms: z.boolean().optional(),
+      whatsapp: z.boolean().optional(),
+      categories: z.array(z.string()).optional()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.userCommunicationPreference.upsert({
+        where: { userId: ctx.session.user.id },
+        update: input,
+        create: { userId: ctx.session.user.id, ...input }
+      });
+    })
+});</code></pre>
+        </div>
+
+        <h2>User Preferences Management</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Preference Type</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                    <th>Override Conditions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Booking Notifications</td>
+                    <td>All channels</td>
+                    <td>Confirmations, reminders, updates</td>
+                    <td>Cannot disable confirmations</td>
+                </tr>
+                <tr>
+                    <td>Payment Notifications</td>
+                    <td>Email + SMS</td>
+                    <td>Receipts, refunds, disputes</td>
+                    <td>Cannot disable receipts</td>
+                </tr>
+                <tr>
+                    <td>Marketing Messages</td>
+                    <td>Email only</td>
+                    <td>Promotions, updates, newsletters</td>
+                    <td>Fully opt-out available</td>
+                </tr>
+                <tr>
+                    <td>System Alerts</td>
+                    <td>All channels</td>
+                    <td>Security, maintenance, urgent</td>
+                    <td>Cannot disable security alerts</td>
+                </tr>
+                <tr>
+                    <td>Professional Updates</td>
+                    <td>Email + WhatsApp</td>
+                    <td>New bookings, reviews, earnings</td>
+                    <td>Can disable non-critical</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Twilio Integration</h2>
+        
+        <h3>Service Configuration</h3>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Twilio Setup</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// Twilio service initialization
+class TwilioService {
+  private client: Twilio;
+  private emailClient: SendGridAPI;
+  private whatsappNumber: string;
+  
+  constructor() {
+    this.client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+    this.emailClient = sgMail;
+    this.emailClient.setApiKey(env.SENDGRID_API_KEY);
+    this.whatsappNumber = env.TWILIO_WHATSAPP_NUMBER;
+  }
+  
+  async sendSMS(to: string, body: string, options?: SMSOptions) {
+    try {
+      const message = await this.client.messages.create({
+        body,
+        from: env.TWILIO_PHONE_NUMBER,
+        to,
+        statusCallback: `${env.BASE_URL}/api/webhooks/twilio/sms-status`,
+        ...options
+      });
+      
+      return {
+        id: message.sid,
+        status: message.status,
+        provider: 'twilio-sms'
+      };
+    } catch (error) {
+      console.error('SMS sending failed:', error);
+      throw new Error('Failed to send SMS');
+    }
+  }
+  
+  async sendWhatsApp(to: string, template: string, parameters: string[]) {
+    try {
+      const message = await this.client.messages.create({
+        from: `whatsapp:${this.whatsappNumber}`,
+        to: `whatsapp:${to}`,
+        contentSid: template,
+        contentVariables: JSON.stringify(parameters),
+        statusCallback: `${env.BASE_URL}/api/webhooks/twilio/whatsapp-status`
+      });
+      
+      return {
+        id: message.sid,
+        status: message.status,
+        provider: 'twilio-whatsapp'
+      };
+    } catch (error) {
+      console.error('WhatsApp sending failed:', error);
+      throw new Error('Failed to send WhatsApp message');
+    }
+  }
+  
+  async sendEmail(to: string, subject: string, html: string, text?: string) {
+    try {
+      const msg = {
+        to,
+        from: env.FROM_EMAIL,
+        subject,
+        html,
+        text: text || this.stripHtml(html),
+        trackingSettings: {
+          clickTracking: { enable: true },
+          openTracking: { enable: true }
+        }
+      };
+      
+      const response = await this.emailClient.send(msg);
+      
+      return {
+        id: response[0].headers['x-message-id'],
+        status: 'sent',
+        provider: 'sendgrid'
+      };
+    } catch (error) {
+      console.error('Email sending failed:', error);
+      throw new Error('Failed to send email');
+    }
+  }
+}</code></pre>
+        </div>
+
+        <h2>Message Delivery Tracking</h2>
+        <div class="mermaid">
+        graph LR
+            Send[Send Message] --> Twilio[Twilio API]
+            Twilio --> Status1[Queued]
+            Status1 --> Status2[Sending]
+            Status2 --> Status3{Delivery Result}
+            
+            Status3 -->|Success| Delivered[Delivered]
+            Status3 -->|Failure| Failed[Failed]
+            Status3 -->|Temporary| Retry[Retry Queue]
+            
+            Delivered --> Webhook[Status Webhook]
+            Failed --> Webhook
+            Retry --> Twilio
+            
+            Webhook --> Database[(Update Status)]
+            Database --> Analytics[Delivery Analytics]
+            
+            style Send fill:#ADD8E6
+            style Delivered fill:#C8E6C9
+            style Failed fill:#FFCDD2
+            style Retry fill:#FFF4E6
+        </div>
+
+        <h2>Delivery Status Handling</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>TypeScript - Webhook Handler</span>
+                <span class="code-language">TS</span>
+            </div>
+            <pre><code>// Webhook endpoint for delivery status updates
+export async function POST(request: Request) {
+  const body = await request.formData();
+  const messageStatus = body.get('MessageStatus') as string;
+  const messageSid = body.get('MessageSid') as string;
+  const errorCode = body.get('ErrorCode') as string;
+  
+  try {
+    await db.communicationLog.update({
+      where: { externalId: messageSid },
+      data: {
+        status: messageStatus.toLowerCase(),
+        deliveredAt: messageStatus === 'delivered' ? new Date() : null,
+        failureReason: errorCode ? `Error ${errorCode}` : null,
+        updatedAt: new Date()
+      }
+    });
+    
+    // Handle failed messages
+    if (messageStatus === 'failed' || messageStatus === 'undelivered') {
+      await handleFailedMessage(messageSid, errorCode);
+    }
+    
+    return new Response('OK', { status: 200 });
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    return new Response('Error', { status: 500 });
+  }
+}</code></pre>
+        </div>
+
+        <h2>Communication Analytics</h2>
+        <div class="feature-list">
+            <li><strong>Delivery Rates:</strong> Track success rates across all channels</li>
+            <li><strong>User Engagement:</strong> Monitor open rates, click-through rates</li>
+            <li><strong>Cost Optimization:</strong> Analyze cost per message by channel</li>
+            <li><strong>Performance Metrics:</strong> Measure delivery speed and reliability</li>
+            <li><strong>User Preferences:</strong> Track opt-out rates and channel preferences</li>
+            <li><strong>Template Effectiveness:</strong> A/B test message templates</li>
+        </div>
+
+        <h2>Error Handling & Fallbacks</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Automatic Fallbacks</h3>
+                <ul>
+                    <li>WhatsApp fails → SMS fallback</li>
+                    <li>SMS fails → Email fallback</li>
+                    <li>All channels fail → Admin alert</li>
+                    <li>Template error → Plain text version</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Retry Logic</h3>
+                <ul>
+                    <li>Exponential backoff for temporary failures</li>
+                    <li>Maximum 3 retry attempts per message</li>
+                    <li>Different retry intervals by channel</li>
+                    <li>Dead letter queue for permanent failures</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Security & Compliance</h2>
+        <div class="alert alert-warning">
+            <strong>Privacy & Compliance:</strong>
+            <ul>
+                <li><strong>LGPD Compliance:</strong> Respect user opt-out preferences</li>
+                <li><strong>Rate Limiting:</strong> Prevent spam and abuse</li>
+                <li><strong>Data Protection:</strong> Encrypt sensitive message content</li>
+                <li><strong>Audit Logging:</strong> Track all communication attempts</li>
+                <li><strong>WhatsApp Business:</strong> Follow Meta's business messaging policies</li>
+            </ul>
+        </div>
+
+        <h2>Performance Optimization</h2>
+        <div class="card">
+            <h3>Optimization Strategies</h3>
+            <ul>
+                <li><strong>Batch Processing:</strong> Group similar messages for efficiency</li>
+                <li><strong>Queue Management:</strong> Prioritize urgent messages</li>
+                <li><strong>Template Caching:</strong> Cache compiled templates in Redis</li>
+                <li><strong>Connection Pooling:</strong> Reuse Twilio client connections</li>
+                <li><strong>Async Processing:</strong> Non-blocking message sending</li>
+                <li><strong>Smart Routing:</strong> Choose optimal channel based on cost/reliability</li>
+            </ul>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>Booking Service:</strong> Confirmation and reminder messages</li>
+            <li><strong>Payment Service:</strong> Transaction notifications and receipts</li>
+            <li><strong>User Service:</strong> Account updates and security alerts</li>
+            <li><strong>Review Service:</strong> Review requests and responses</li>
+            <li><strong>Analytics Service:</strong> Communication metrics and insights</li>
+            <li><strong>Admin Service:</strong> System alerts and administrative messages</li>
+        </ul>
+    </div>
+</body>
+</html>

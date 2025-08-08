@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>User Journeys - Platform Documentation</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        pre.mermaid { background: #e9ecef; border: 1px solid #ddd; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Journeys on the Platform</h1>
+        <p>This document outlines the key user journeys and interactions within the platform, detailing the steps users take to achieve their goals and how different user roles interact. Diagrams are rendered using Mermaid.</p>
+
+        <h2>High-Level User Use Cases</h2>
+        <pre class="mermaid">
+        graph TD
+            subgraph "Customer"
+                C[Customer]
+            end
+
+            subgraph "Professional"
+                P[Professional]
+            end
+
+            subgraph "System"
+                UC1[Manage Profile]
+                UC2[Search for Services]
+                UC3[View Service/Portfolio]
+                UC4[Book a Service]
+                UC5[Pay for Service]
+                UC7[Leave a Review]
+                UC8[Create/Edit Service Listing]
+                UC9[Upload Photos]
+                UC10[Manage Bookings]
+                UC10A[View Bookings]
+                UC10B[Accept Booking]
+                UC10C[Decline Booking]
+                UC10D[Cancel Booking]
+                UC11[View Earnings & Request Withdrawal]
+                UC12[Manage Notification Preferences]
+            end
+
+            C -- can --> UC1
+            P -- can --> UC1
+            C -- can --> UC2
+            UC2 --> UC3
+            UC3 --> UC4
+            UC4 --> UC5
+            UC5 --> UC7
+            P -- can --> UC8
+            UC8 -- includes --> UC9
+            P -- can --> UC10
+            UC10 -- includes --> UC10A
+            UC10 -- includes --> UC10B
+            UC10 -- includes --> UC10C
+            UC10 -- includes --> UC10D
+            P -- can --> UC11
+            C -- can --> UC12
+            P -- can --> UC12
+            C -- can --> UC10D
+
+            style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+            style P fill:#90EE90,stroke:#333,stroke-width:2px
+            style UC1 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC2 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC3 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC4 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC5 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC7 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC8 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC9 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC10 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC10A fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10B fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10C fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC10D fill:#DDA0DD,stroke:#333,stroke-width:2px
+            style UC11 fill:#FFD700,stroke:#333,stroke-width:2px
+            style UC12 fill:#FFD700,stroke:#333,stroke-width:2px
+            linkStyle 0 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 1 stroke:#90EE90,stroke-width:2px;
+            linkStyle 2 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 3 stroke:#FFD700,stroke-width:2px;
+            linkStyle 4 stroke:#FFD700,stroke-width:2px;
+            linkStyle 5 stroke:#FFD700,stroke-width:2px;
+            linkStyle 6 stroke:#FFD700,stroke-width:2px;
+            linkStyle 7 stroke:#90EE90,stroke-width:2px;
+            linkStyle 8 stroke:#FFD700,stroke-width:2px;
+            linkStyle 9 stroke:#90EE90,stroke-width:2px;
+            linkStyle 10 stroke:#FFD700,stroke-width:2px;
+            linkStyle 11 stroke:#FFD700,stroke-width:2px;
+            linkStyle 12 stroke:#FFD700,stroke-width:2px;
+            linkStyle 13 stroke:#FFD700,stroke-width:2px;
+            linkStyle 14 stroke:#90EE90,stroke-width:2px;
+            linkStyle 15 stroke:#ADD8E6,stroke-width:2px;
+            linkStyle 16 stroke:#90EE90,stroke-width:2px;
+            linkStyle 17 stroke:#ADD8E6,stroke-width:2px;
+    </pre>
+
+        <h2>Example Journey: Service Discovery & Hiring</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[User 1: Search Service] --> B{Service Found?}
+    B -- Yes --> C[User 1: View Service Page]
+    B -- No --> D[User 1: Refine Search / Browse Categories]
+
+    C --> E{Ready to Hire?}
+    E -- Yes --> F[User 1: Initiate Hiring Process]
+    E -- No --> G[User: Contact Provider / Save for Later]
+
+    F --> H[Platform: Process Payment & Booking]
+    H --> I[User 2: Receive Notification of New Booking]
+
+    I --> J{User 2: Accept Booking?}
+    J -- Yes --> K[User 2: Start Service Delivery]
+    J -- No --> L[User 2: Decline Booking / Propose Alternative]
+
+    K --> M[Platform: Notify User 1 - Service Started]
+    L --> N[Platform: Notify User 1 - Booking Declined]
+
+    subgraph User 1 Actions
+        A
+        C
+        D
+        F
+        G
+    end
+
+    subgraph User 2 Actions
+        I
+        J
+        K
+        L
+    end
+
+    subgraph Platform Processes
+        B
+        E
+        H
+        M
+        N
+    end
+
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style B fill:#FFD700,stroke:#333,stroke-width:2px
+    style C fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style D fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style E fill:#FFD700,stroke:#333,stroke-width:2px
+    style F fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style G fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style H fill:#90EE90,stroke:#333,stroke-width:2px
+    style I fill:#90EE90,stroke:#333,stroke-width:2px
+    style J fill:#FFD700,stroke:#333,stroke-width:2px
+    style K fill:#90EE90,stroke:#333,stroke-width:2px
+    style L fill:#90EE90,stroke:#333,stroke-width:2px
+    style M fill:#90EE90,stroke:#333,stroke-width:2px
+    style N fill:#90EE90,stroke:#333,stroke-width:2px
+
+    linkStyle 0 stroke:#333,stroke-width:1px;
+    linkStyle 1 stroke:#333,stroke-width:1px;
+    linkStyle 2 stroke:#333,stroke-width:1px;
+    linkStyle 3 stroke:#333,stroke-width:1px;
+    linkStyle 4 stroke:#333,stroke-width:1px;
+    linkStyle 5 stroke:#333,stroke-width:1px;
+    linkStyle 6 stroke:#333,stroke-width:1px;
+    linkStyle 7 stroke:#333,stroke-width:1px;
+    linkStyle 8 stroke:#333,stroke-width:1px;
+    linkStyle 9 stroke:#333,stroke-width:1px;
+    linkStyle 10 stroke:#333,stroke-width:1px;
+    linkStyle 11 stroke:#333,stroke-width:1px;
+    linkStyle 12 stroke:#333,stroke-width:1px;
+
+    classDef user1 fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    classDef user2 fill:#90EE90,stroke:#333,stroke-width:2px;
+    classDef platform fill:#FFD700,stroke:#333,stroke-width:2px;
+
+    class A,C,D,F,G user1;
+    class I,J,K,L user2;
+    class B,E,H,M,N platform;
+
+    A -- "User 1 is a client looking for a service." --> A;
+    I -- "User 2 is the service provider." --> I;
+</pre>
+
+        <!-- Add more user journeys below using Mermaid syntax within <pre class="mermaid"> tags -->
+
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

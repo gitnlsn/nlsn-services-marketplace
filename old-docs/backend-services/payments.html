@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Payments: The Engine of Commerce</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+    <h1>Payments: The Engine of Commerce</h1>
+
+    <p>Our payment system is designed to be secure, transparent, and fair to both clients and professionals.</p>
+
+    <h2>The Foundation: Pagarme</h2>
+
+    <p>We've partnered with Pagarme, a leading payment gateway in Brazil, to handle all of our payment processing. This allows us to offer a wide range of payment methods, including credit cards, Pix, and boleto, while ensuring the highest level of security.</p>
+
+    <h3>Payment via Checkout Link</h3>
+    <p>To keep the platform simple and secure, all payments are processed through Pagarme's hosted checkout links. This approach:</p>
+    <ul>
+        <li><strong>Reduces PCI Compliance Burden:</strong> Since we never handle credit card details directly, we don't need to worry about PCI DSS compliance</li>
+        <li><strong>Simplifies Integration:</strong> No need to build complex payment forms or handle sensitive payment data</li>
+        <li><strong>Enhances Security:</strong> All payment information is collected and processed directly by Pagarme on their secure infrastructure</li>
+        <li><strong>Supports All Payment Methods:</strong> Credit cards, debit cards, Pix, and boleto are all available through the same checkout experience</li>
+    </ul>
+
+    <h2>The Escrow Model: A Circle of Trust</h2>
+
+    <p>We use an escrow model to protect both parties in a transaction:</p>
+
+    <ol>
+        <li><strong>The Commitment:</strong> When a client books a service, they are redirected to Pagarme's secure checkout page to pay the full amount. This shows that they are serious about the service and have the funds to pay for it.</li>
+        <li><strong>The Safety Net:</strong> The funds are held in our Pagarme account until the service is completed. This gives the professional the confidence to start working, knowing that they will be paid.</li>
+        <li><strong>The Reward:</strong> Once either the client or the professional notifies the platform that the service is complete, the funds are released to the professional's platform account, minus our service fee. These funds become available for withdrawal after a 15-day holding period to allow for dispute resolution.</li>
+    </ol>
+
+    <h3>Payment Flow Details</h3>
+    <ol>
+        <li><strong>Checkout Link Creation:</strong> When a booking is initiated, our backend calls Pagarme's API to create a unique checkout link for the booking amount</li>
+        <li><strong>Customer Redirect:</strong> The customer is redirected to Pagarme's hosted checkout page where they can choose their payment method</li>
+        <li><strong>Payment Processing:</strong> Pagarme handles all payment processing, including fraud detection and payment method validation</li>
+        <li><strong>Webhook Notification:</strong> Once payment is successful, Pagarme sends a webhook to our backend confirming the payment</li>
+        <li><strong>Booking Confirmation:</strong> Our system updates the booking status and notifies both parties</li>
+    </ol>
+
+    <h2>The Withdrawal Process: Your Money, Your Way</h2>
+
+    <p>We want to make it as easy as possible for our users to access their earnings.</p>
+
+    <ol>
+        <li><strong>The Request:</strong> A user can request a withdrawal from their platform account at any time.</li>
+        <li><strong>The Transfer:</strong> We process the request and transfer the funds to the user's registered bank account via the Pagarme API.</li>
+        <li><strong>The Confirmation:</strong> The user receives a notification that the transfer is complete.</li>
+    </ol>
+
+    <h2>Diagrams</h2>
+
+    <h3>Booking Flow</h3>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant "User (as Client)"
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
+            participant Pagarme
+            participant Twilio
+
+            "User (as Client)"->>Frontend: Selects a service to book
+            Frontend->>Backend: POST /api/bookings (serviceId)
+            Backend->>Pagarme: Create checkout link
+            Pagarme-->>Backend: Returns checkout URL
+            Backend-->>Frontend: Returns checkout URL
+            Frontend->>"User (as Client)": Redirects to Pagarme checkout
+            "User (as Client)"->>Pagarme: Completes payment on Pagarme's hosted page
+            Pagarme->>Backend: Webhook notification (payment success)
+            Pagarme->>"User (as Client)": Redirects back to platform
+            Backend->>Backend: Update booking status to "Paid", credit professionals account balance
+            Backend->>Twilio: Send booking confirmation to Client
+            Backend->>Twilio: Send new booking alert to Professional
+            Backend->>Frontend: Notify client of success
+            "User (as Professional)"->>Backend: Notifies service complete
+            "User (as Client)"->>Backend: (Optional) Notifies service complete
+            Backend->>Backend: Funds held for 15 days
+            Backend->>"User (as Professional)": Funds available for withdrawal after 15 days
+
+            
+
+            
+    </pre>
+
+    <h3>Withdrawal Flow</h3>
+    <pre class="mermaid">
+        sequenceDiagram
+            participant "User (as Professional)"
+            participant Frontend
+            participant Backend
+            participant Pagarme
+            participant Twilio
+
+            "User (as Professional)"->>Frontend: Requests withdrawal
+            Frontend->>Backend: POST /api/withdrawals (amount)
+            Backend->>Backend: Verify user balance and process request
+            Backend->>Pagarme: Initiate Transfer to user\'s bank account
+            Pagarme-->>Backend: Confirmation of transfer
+            Backend->>Backend: Update user\'s balance
+            Backend->>Twilio: Send withdrawal confirmation to Professional
+            Backend-->>Frontend: Notify user of successful withdrawal
+
+            
+    </pre>
+    </div>
+</body>
+</html>

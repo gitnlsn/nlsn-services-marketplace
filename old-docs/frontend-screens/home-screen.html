@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Home Screen - Frontend</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; background-color: #f5f7fa; color: #333; }
+        .container { max-width: 1000px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #0056b3; text-decoration: none; margin-bottom: 24px; font-size: 14px; transition: all 0.2s; }
+        .back-link:hover { gap: 12px; color: #004494; }
+        h1 { color: #0056b3; margin-bottom: 8px; font-size: 32px; }
+        h2 { color: #2c3e50; margin-top: 32px; margin-bottom: 16px; font-size: 24px; }
+        h3 { color: #34495e; margin-top: 24px; margin-bottom: 12px; font-size: 18px; }
+        
+        .description { background: linear-gradient(135deg, #f8f9fa 0%, #e7f3ff 100%); padding: 24px; border-radius: 12px; margin: 24px 0; border-left: 4px solid #0056b3; }
+        .description p { margin: 8px 0; }
+        .description strong { color: #0056b3; }
+        
+        .section-card { background: #fff; border: 1px solid #e1e8ed; border-radius: 12px; padding: 24px; margin: 20px 0; transition: all 0.3s; }
+        .section-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        
+        .ui-elements { background: #e7f3ff; }
+        .api-calls { background: #fff3cd; }
+        
+        pre.mermaid { background: #f8f9fa; border: 2px solid #dee2e6; padding: 24px; border-radius: 12px; overflow-x: auto; margin: 24px 0; }
+        
+        ul { padding-left: 24px; }
+        li { margin: 8px 0; }
+        li strong { color: #2c3e50; }
+        
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #d73a49; }
+        
+        .responsive-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Frontend Screens</a>
+        
+        <h1>Home Screen</h1>
+        
+        <div class="description">
+            <h2>Description</h2>
+            <p>The Home Screen is the main landing page of the services marketplace. It serves as the entry point for both customers looking for services and professionals showcasing their offerings. The screen provides an intuitive interface for quick service discovery through featured services, search functionality, and category browsing.</p>
+            <p><strong>Primary Purpose:</strong> Enable users to quickly find services they need through multiple discovery methods while showcasing popular and featured services to drive engagement.</p>
+        </div>
+
+        <div class="section-card ui-elements">
+            <h2>UI Elements</h2>
+            <ul>
+                <li><strong>Navigation Bar:</strong> Logo, Search bar, Login/Register buttons (or User profile if logged in)</li>
+                <li><strong>Hero Section:</strong> Welcome message, main search bar with autocomplete, quick category buttons</li>
+                <li><strong>Featured Services Carousel:</strong> Horizontally scrollable cards showing top-rated services</li>
+                <li><strong>Service Categories Grid:</strong> Icon-based grid showing all available service categories</li>
+                <li><strong>Popular Services Section:</strong> List of most booked services in the area</li>
+                <li><strong>How It Works Section:</strong> 3-step process explanation for new users</li>
+                <li><strong>Footer:</strong> Links to About, Help, Terms, Contact</li>
+            </ul>
+        </div>
+
+        <div class="section-card api-calls">
+            <h2>API Calls</h2>
+            <ul>
+                <li><code>services.getFeatured()</code> - Fetches featured services for carousel</li>
+                <li><code>categories.getAll()</code> - Retrieves all service categories</li>
+                <li><code>services.getPopular()</code> - Gets popular services based on bookings</li>
+                <li><code>search.getSuggestions(query)</code> - Provides autocomplete suggestions</li>
+            </ul>
+        </div>
+
+        <h2>User Interaction Flow</h2>
+        <pre class="mermaid">
+flowchart TD
+    A[User Lands on Home Screen] --> B{Is User Logged In?}
+    B -->|Yes| C[Display Personalized Content]
+    B -->|No| D[Display General Content]
+    
+    C --> E[Show Recommended Services]
+    D --> E
+    
+    E --> F{User Action}
+    
+    F -->|Search| G[Enter Search Query]
+    G --> H[View Autocomplete Suggestions]
+    H --> I{Select Option}
+    I -->|Select Suggestion| J[Navigate to Search Results]
+    I -->|Submit Query| J
+    
+    F -->|Browse Categories| K[Click Category Icon]
+    K --> L[Navigate to Category Page]
+    
+    F -->|View Featured| M[Click Featured Service]
+    M --> N[Navigate to Service Details]
+    
+    F -->|Scroll Down| O[View Popular Services]
+    O --> P{Click Service?}
+    P -->|Yes| N
+    P -->|No| Q[Continue Browsing]
+    
+    F -->|Click How It Works| R[Scroll to Tutorial Section]
+    R --> S{User Type?}
+    S -->|Customer| T[View Customer Steps]
+    S -->|Professional| U[View Professional Steps]
+    
+    F -->|Login/Register| V[Navigate to Auth Screen]
+    
+    style A fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style B fill:#FFD700,stroke:#333,stroke-width:2px
+    style F fill:#FFD700,stroke:#333,stroke-width:2px
+    style I fill:#FFD700,stroke:#333,stroke-width:2px
+    style P fill:#FFD700,stroke:#333,stroke-width:2px
+    style S fill:#FFD700,stroke:#333,stroke-width:2px
+    style J fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style L fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style N fill:#C8E6C9,stroke:#333,stroke-width:2px
+    style V fill:#C8E6C9,stroke:#333,stroke-width:2px
+</pre>
+
+        <h2>State Management</h2>
+        <ul>
+            <li><strong>Loading States:</strong> Skeleton loaders for featured services and categories while data loads</li>
+            <li><strong>Error States:</strong> Fallback UI if API calls fail, with retry options</li>
+            <li><strong>Empty States:</strong> Helpful messages if no services are available in user's location</li>
+            <li><strong>Authentication State:</strong> Different UI elements based on logged in/out status</li>
+        </ul>
+
+        <div class="responsive-section">
+            <h2>Responsive Design</h2>
+            <div class="responsive-grid">
+                <div>
+                    <h3>📱 Mobile</h3>
+                    <ul>
+                        <li>Stacked layout</li>
+                        <li>Hamburger menu</li>
+                        <li>Full-width search bar</li>
+                        <li>Touch-friendly cards</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📱 Tablet</h3>
+                    <ul>
+                        <li>2-column grid for categories</li>
+                        <li>Condensed navigation</li>
+                        <li>Optimized carousel</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>💻 Desktop</h3>
+                    <ul>
+                        <li>Full layout with sidebar</li>
+                        <li>Multi-column grids</li>
+                        <li>Hover animations</li>
+                        <li>Promotional banners</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

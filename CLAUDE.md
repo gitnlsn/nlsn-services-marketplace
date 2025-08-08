@@ -7,12 +7,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Planning Before Execution
 **ALWAYS design and plan actions before executing them:**
 - **Understand the Task**: Fully comprehend what needs to be done before starting
+- **Get User Confirmation**: ALWAYS present your plan to the user and get confirmation before implementing
 - **Use TodoWrite Tool**: For any non-trivial task, use the TodoWrite tool to create a structured plan
 - **Break Down Complex Tasks**: Divide large tasks into smaller, manageable steps
 - **Consider Dependencies**: Identify what needs to be done first and what can be done in parallel
 - **Verify Requirements**: Ensure you understand all requirements before implementation
 - **Think Through Edge Cases**: Consider potential issues and edge cases during planning
 - **Plan Verification**: Include steps to verify the implementation works correctly
+
+### Frontend/UX-First Design (Planning Phase)
+**When DESIGNING features, think UI-first:**
+
+**Design Flow Order:**
+1. User needs and goals
+2. User interface mockups/wireframes
+3. User interaction flows
+4. Information requirements (what data is needed)
+5. User journey mapping
+6. Edge cases and states (empty, loading, error)
+7. Accessibility requirements
+8. **Validate Mermaid diagrams**: Run `npm run mermaid` to validate all diagrams
+
+**Key Concepts (UX Nomenclature):**
+- **User Journey**: The complete path a user takes to accomplish a goal
+- **User Flow**: Step-by-step interactions within a feature
+- **Information Architecture**: What information is displayed and where
+- **Interaction Patterns**: How users interact with elements (click, swipe, type)
+- **States**: Different conditions of the UI (empty, loading, error, success)
+- **Mockups/Wireframes**: Visual representations of the interface
+- **User Stories**: "As a [user], I want to [action] so that [outcome]"
+
+### Implementation Order (Building Phase)
+**When IMPLEMENTING features, build from database to frontend:**
+
+**Development Flow Order:**
+1. Database schema design
+2. Prisma migrations
+3. Service layer implementation
+4. tRPC procedures
+5. Frontend components
+6. Integration testing
+7. User acceptance testing
+
+**Key Concepts (Development Nomenclature):**
+- **Schema**: Database table structure and relationships
+- **Migration**: Database schema changes applied to the database
+- **Service Layer**: Business logic separated from API layer
+- **tRPC Procedures**: Type-safe API endpoints
+- **React Components**: UI building blocks
+- **Integration Testing**: Testing the complete flow
+- **Type Safety**: Ensuring data types match across all layers
 
 ### SOLID Principles
 - **Single Responsibility**: Each class/function should have one reason to change
@@ -39,13 +83,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Fullstack Feature Development with tRPC
 When implementing features using tRPC, adopt a fullstack mindset:
-- **Complete Feature Implementation**: Implement each feature completely from backend to frontend before starting the next one
+- **Complete Feature Implementation**: Implement each feature completely from database to frontend before starting the next one
 - **Type-Safe Integration**: Leverage tRPC's automatic TypeScript interface extension from backend to frontend
-- **Development Flow**:
-  1. Understand the Prisma schema requirements
-  2. Implement the complete backend logic (tRPC procedures)
-  3. Implement the frontend visualization and interaction
-  4. Verify the end-to-end flow works correctly
+- **Implementation Flow** (after UX design is complete):
+  1. Create/update Prisma schema based on data requirements identified during UX design
+  2. Generate Prisma client and run migrations
+  3. Implement the service layer with business logic
+  4. Create tRPC procedures that expose the services
+  5. Build the frontend components using the tRPC client
+  6. Test the complete user flow end-to-end
+  7. Verify it matches the original UX design
 - **Benefits**: This approach keeps everything connected throughout development, reduces context switching, and ensures type safety across the entire stack
 
 ### Service Layer Architecture
@@ -125,6 +172,9 @@ A clean output from all these tools means the project is healthy. Always run the
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run preview` - Build and preview production locally
+
+### Documentation
+- `npm run mermaid` - Validate all Mermaid diagrams in documentation (run after creating/updating diagrams)
 
 ### Database
 - `npm run db:push` - Push schema changes to database (development)

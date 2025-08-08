@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waitlist Management - Backend Services</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Waitlist Management Service</h1>
+        
+        <p>The Waitlist Management service handles scenarios where services are fully booked, allowing customers to join waitlists and be automatically notified when slots become available.</p>
+
+        <h2>Waitlist Overview</h2>
+        <ul>
+            <li><strong>Automatic Queue Management:</strong> First-come, first-served waitlist ordering</li>
+            <li><strong>Smart Notifications:</strong> Instant alerts when slots become available</li>
+            <li><strong>Time-limited Offers:</strong> Limited time for waitlisted users to book available slots</li>
+            <li><strong>Provider Control:</strong> Providers can manage waitlist priorities and notifications</li>
+        </ul>
+
+        <h2>Waitlist Flow</h2>
+        <div class="mermaid">
+        graph TD
+            A[Service Fully Booked] --> B[Customer Joins Waitlist]
+            B --> C[Queue Position Assigned]
+            C --> D[Wait for Availability]
+            
+            E[Slot Becomes Available] --> F[Notify Next in Queue]
+            F --> G{Customer Responds?}
+            G -->|Yes, within time limit| H[Booking Confirmed]
+            G -->|No, or timeout| I[Move to Next in Queue]
+            I --> F
+            
+            H --> J[Remove from Waitlist]
+            
+            K[Customer Cancels Booking] --> E
+            L[Provider Adds Availability] --> E
+            
+            style A fill:#FFCDD2
+            style B fill:#ADD8E6
+            style F fill:#FFD700
+            style H fill:#C8E6C9
+            style I fill:#87CEEB
+        </div>
+
+        <h2>API Endpoints</h2>
+
+        <h3>Join Waitlist</h3>
+        <pre><code>POST /api/trpc/waitlist.join
+{
+  "serviceId": "service_id",
+  "preferredDate": "2024-03-15",
+  "timeSlot": "morning", // morning, afternoon, evening, any
+  "notes": "Flexible with timing",
+  "notificationPreferences": {
+    "email": true,
+    "sms": true,
+    "push": true
+  }
+}
+
+Response:
+{
+  "waitlistId": "waitlist_id",
+  "position": 3,
+  "estimatedWaitTime": "2-3 days",
+  "service": {...}
+}</code></pre>
+
+        <h3>Check Waitlist Status</h3>
+        <pre><code>GET /api/trpc/waitlist.getStatus
+{
+  "waitlistId": "waitlist_id"
+}
+
+Response:
+{
+  "position": 2,
+  "estimatedWaitTime": "1-2 days",
+  "totalWaiting": 8,
+  "lastUpdate": "2024-03-14T15:30:00Z"
+}</code></pre>
+
+        <h3>Leave Waitlist</h3>
+        <pre><code>POST /api/trpc/waitlist.leave
+{
+  "waitlistId": "waitlist_id"
+}</code></pre>
+
+        <h2>Waitlist States</h2>
+        <div class="mermaid">
+        stateDiagram-v2
+            [*] --> Active: Joined Waitlist
+            Active --> Notified: Slot Available
+            Notified --> Booked: Customer Confirms
+            Notified --> Expired: Timeout Reached
+            Active --> Left: Customer Leaves
+            Expired --> [*]
+            Booked --> [*]
+            Left --> [*]
+            
+            note right of Notified : Limited time to respond
+            note right of Expired : Moved to next person
+            note right of Booked : Successfully converted
+        </div>
+
+        <h2>Notification System</h2>
+        <h3>Availability Notifications</h3>
+        <div class="mermaid">
+        sequenceDiagram
+            participant S as Slot Becomes Available
+            participant W as Waitlist Service
+            participant N as Notification Service
+            participant C as Customer
+            
+            S->>W: Availability detected
+            W->>W: Find next in queue
+            W->>N: Send availability notification
+            N->>C: Email/SMS/Push notification
+            C->>W: Respond within time limit
+            W->>S: Reserve slot or move to next
+        </div>
+
+        <h3>Notification Types</h3>
+        <ul>
+            <li><strong>Availability Alert:</strong> "A slot is now available for [Service Name]"</li>
+            <li><strong>Position Update:</strong> "You've moved up to position #2 in the waitlist"</li>
+            <li><strong>Time Reminder:</strong> "You have 30 minutes left to book your available slot"</li>
+            <li><strong>Waitlist Confirmation:</strong> "You've been added to the waitlist for [Service Name]"</li>
+        </ul>
+
+        <h2>Provider Waitlist Management</h2>
+        <h3>Provider Controls</h3>
+        <pre><code>// Get service waitlists
+GET /api/trpc/waitlist.getServiceWaitlists
+{
+  "serviceId": "service_id"
+}
+
+// Manage waitlist priorities
+POST /api/trpc/waitlist.updatePriority
+{
+  "waitlistId": "waitlist_id",
+  "newPosition": 1
+}
+
+// Bulk notify waitlist
+POST /api/trpc/waitlist.bulkNotify
+{
+  "serviceId": "service_id",
+  "slots": 3,
+  "timeSlot": "2024-03-15T10:00:00Z"
+}</code></pre>
+
+        <h3>Provider Benefits</h3>
+        <ul>
+            <li><strong>Demand Insights:</strong> See how many people want your service</li>
+            <li><strong>Revenue Recovery:</strong> Fill last-minute cancellations automatically</li>
+            <li><strong>Customer Retention:</strong> Keep interested customers engaged</li>
+            <li><strong>Planning Tool:</strong> Understand future demand patterns</li>
+        </ul>
+
+        <h2>Intelligent Matching</h2>
+        <h3>Matching Criteria</h3>
+        <ul>
+            <li><strong>Date Preferences:</strong> Match available slots with preferred dates</li>
+            <li><strong>Time Preferences:</strong> Morning, afternoon, evening, or flexible</li>
+            <li><strong>Location Match:</strong> Consider travel distance for in-person services</li>
+            <li><strong>Service Variations:</strong> Offer alternative service options</li>
+        </ul>
+
+        <h3>Smart Prioritization</h3>
+        <div class="mermaid">
+        graph TD
+            A[Available Slot] --> B[Check Waitlist]
+            B --> C{Multiple Matches?}
+            C -->|Yes| D[Apply Priority Rules]
+            C -->|No| E[Notify Single Match]
+            
+            D --> F[First in Queue]
+            D --> G[Date Preference Match]
+            D --> H[VIP/Loyalty Status]
+            D --> I[Provider Preference]
+            
+            F --> J[Calculate Priority Score]
+            G --> J
+            H --> J
+            I --> J
+            
+            J --> K[Notify Highest Priority]
+            
+            style D fill:#90EE90
+            style J fill:#DDA0DD
+            style K fill:#C8E6C9
+        </div>
+
+        <h2>Business Rules</h2>
+        <h3>Time Limits</h3>
+        <ul>
+            <li><strong>Response Window:</strong> 2 hours to claim available slot</li>
+            <li><strong>Notification Frequency:</strong> Maximum 1 notification per day per waitlist</li>
+            <li><strong>Auto-removal:</strong> Remove from waitlist after 30 days of inactivity</li>
+            <li><strong>Booking Window:</strong> Must book within 24 hours of slot availability</li>
+        </ul>
+
+        <h3>Capacity Management</h3>
+        <ul>
+            <li><strong>Waitlist Limits:</strong> Maximum 50 people per service waitlist</li>
+            <li><strong>Multiple Waitlists:</strong> Users can join multiple service waitlists</li>
+            <li><strong>Duplicate Prevention:</strong> One waitlist entry per user per service</li>
+            <li><strong>Fair Distribution:</strong> Limit simultaneous offers to prevent hoarding</li>
+        </ul>
+
+        <h2>Analytics Integration</h2>
+        <ul>
+            <li><strong>Demand Metrics:</strong> Track waitlist size and conversion rates</li>
+            <li><strong>Provider Insights:</strong> Show providers their service popularity</li>
+            <li><strong>Conversion Tracking:</strong> Measure waitlist-to-booking success rates</li>
+            <li><strong>Optimization Data:</strong> Identify optimal notification timing</li>
+        </ul>
+
+        <nav>
+            <a href="index.html">← Back to Backend Services</a>
+        </nav>
+    </div>
+</body>
+</html>

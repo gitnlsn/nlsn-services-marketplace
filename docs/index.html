@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savoir Link - UX Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        
+        h1 {
+            color: #111;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: #1f2937;
+            font-size: 1.875rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            color: #374151;
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f3f4f6;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+        
+        .feature-list strong {
+            color: #1f2937;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-needs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .need-card {
+            background: #eff6ff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .need-card h4 {
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+        
+        pre.mermaid {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: inherit;
+        }
+        
+        .highlight {
+            background: #fef3c7;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Savoir Link - UX Documentation</h1>
+    
+    <div class="section">
+        <h2>📌 Main Feature: Professional Services Marketplace</h2>
+        
+        <p><strong>Core Value Proposition:</strong> Savoir Link is a two-sided marketplace that connects people who need services with skilled professionals who can provide them. Every user can seamlessly switch between being a customer seeking services and a professional offering their expertise.</p>
+        
+        <h3>The Problem We're Solving</h3>
+        <p>People struggle to find trusted, skilled professionals for their needs (home repairs, tutoring, beauty services, etc.), while talented professionals lack a platform to showcase their work and connect with clients efficiently. Traditional marketplaces create artificial barriers between "buyers" and "sellers," but in reality, today's plumber might need a web designer tomorrow.</p>
+        
+        <h3>Our Solution</h3>
+        <p>A unified platform where <span class="highlight">one account = infinite possibilities</span>. Users can:</p>
+        <ul class="feature-list">
+            <li>
+                <strong>Discover Services</strong>
+                Find the right professional through smart search that understands what you really need, not just keywords
+            </li>
+            <li>
+                <strong>Showcase Expertise</strong>
+                Create beautiful portfolios for each service you offer, complete with photos, pricing, and availability
+            </li>
+            <li>
+                <strong>Book with Confidence</strong>
+                Secure booking system with transparent pricing, protected payments, and verified reviews
+            </li>
+            <li>
+                <strong>Communicate Directly</strong>
+                Chat with professionals, get quotes, and coordinate services all in one place
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>👤 Basic User Needs</h2>
+        
+        <div class="user-needs">
+            <div class="need-card">
+                <h4>As a Customer, I need to:</h4>
+                <ul>
+                    <li>🔍 Find professionals quickly</li>
+                    <li>💬 Compare services and prices</li>
+                    <li>⭐ Read authentic reviews</li>
+                    <li>📅 Book appointments easily</li>
+                    <li>💳 Pay securely</li>
+                    <li>📱 Track my bookings</li>
+                    <li>💭 Communicate with providers</li>
+                </ul>
+            </div>
+            
+            <overestimate class="need-card">
+                <h4>As a Professional, I need to:</h4>
+                <ul>
+                    <li>📸 Showcase my work portfolio</li>
+                    <li>💰 Set my own prices</li>
+                    <li>📅 Manage my availability</li>
+                    <li>📊 Track my earnings</li>
+                    <li>🔔 Get notified of bookings</li>
+                    <li>⭐ Build my reputation</li>
+                    <li>💵 Receive payments promptly</li>
+                </ul>
+            </div>
+            
+            <div class="need-card">
+                <h4>As Both, I need to:</h4>
+                <ul>
+                    <li>🔄 Switch roles seamlessly</li>
+                    <li>👤 Manage one profile</li>
+                    <li>🔒 Trust the platform</li>
+                    <li>📱 Access from any device</li>
+                    <li>🔔 Control notifications</li>
+                    <li>🛡️ Feel secure</li>
+                    <li>🤝 Resolve disputes fairly</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔄 Basic User Flow</h2>
+        
+        <pre class="mermaid">
+graph TD
+    Start([User Opens App]) --> Auth{Logged In?}
+    
+    Auth -->|No| Login[Sign Up / Login]
+    Auth -->|Yes| Home[Home Screen]
+    Login --> Home
+    
+    Home --> Choice{User Intent}
+    
+    %% Customer Flow
+    Choice -->|Find Service| Search[Search Services]
+    Search --> Results[View Results]
+    Results --> Detail[Service Details]
+    Detail --> Book{Want to Book?}
+    Book -->|Yes| Booking[Create Booking]
+    Book -->|No| Results
+    Booking --> Payment[Secure Payment]
+    Payment --> Confirm[Booking Confirmed]
+    Confirm --> Track[Track Service]
+    Track --> Complete[Service Completed]
+    Complete --> Review[Leave Review]
+    Review --> Home
+    
+    %% Professional Flow
+    Choice -->|Offer Service| Profile[Professional Profile]
+    Profile --> Create{Has Services?}
+    Create -->|No| CreateService[Create Service Listing]
+    Create -->|Yes| Dashboard[Professional Dashboard]
+    CreateService --> Dashboard
+    Dashboard --> Manage{Manage}
+    Manage --> Bookings[View Bookings]
+    Manage --> Calendar[Set Availability]
+    Manage --> Portfolio[Update Portfolio]
+    Manage --> Earnings[Check Earnings]
+    Bookings --> Accept[Accept/Decline]
+    Accept --> Deliver[Deliver Service]
+    Deliver --> GetPaid[Receive Payment]
+    GetPaid --> Dashboard
+    
+    %% Switching Roles
+    Home --> Switch[Switch Role]
+    Switch --> Choice
+    
+    style Start fill:#e0f2fe
+    style Home fill:#fef3c7
+    style Payment fill:#dcfce7
+    style GetPaid fill:#dcfce7
+    style Review fill:#fce7f3
+        </pre>
+        
+        <h3>Key Flow Points</h3>
+        <ul class="feature-list">
+            <li>
+                <strong>Entry Point</strong>
+                Single entry point with smart onboarding that adapts to user intent
+            </li>
+            <li>
+                <strong>Role Flexibility</strong>
+                Users can switch between customer and professional modes at any time
+            </li>
+            <li>
+                <strong>Trust Building</strong>
+                Reviews, secure payments, and verified profiles build trust throughout the journey
+            </li>
+            <li>
+                <strong>Complete Cycle</strong>
+                Both customer and professional flows complete full cycles that encourage repeat usage
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become Professional Screen - Frontend</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <a href="./index.html">Frontend Screens</a>
+            <span class="breadcrumb-separator">›</span>
+            <span>Become Professional</span>
+        </div>
+
+        <h1>Become Professional Screen</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> Onboarding flow for users transitioning from customer to professional service provider status.
+        </div>
+
+        <h2>Screen Overview</h2>
+        <p>The Become Professional screen guides users through a comprehensive onboarding process to set up their professional profile, verify credentials, configure payment methods, and start offering services on the platform.</p>
+
+        <h2>User Flow</h2>
+        <div class="mermaid">
+        graph TB
+            Start[Customer Account] -->|Click Become Professional| Landing[Professional Benefits Page]
+            Landing -->|Start Application| Step1[Basic Information]
+            Step1 --> Step2[Professional Details]
+            Step2 --> Step3[Service Categories]
+            Step3 --> Step4[Verification Documents]
+            Step4 --> Step5[Payment Setup]
+            Step5 --> Step6[Terms & Agreement]
+            Step6 --> Review[Application Review]
+            Review -->|Approved| Dashboard[Professional Dashboard]
+            Review -->|Need More Info| Step4
+            
+            style Start fill:#ADD8E6
+            style Landing fill:#FFD700
+            style Dashboard fill:#C8E6C9
+            style Review fill:#DDA0DD
+        </div>
+
+        <h2>Onboarding Steps</h2>
+
+        <h3>Step 1: Basic Information</h3>
+        <div class="card">
+            <h4>Required Fields</h4>
+            <ul>
+                <li>Full legal name</li>
+                <li>Date of birth</li>
+                <li>CPF/CNPJ (tax ID)</li>
+                <li>Phone number (with WhatsApp option)</li>
+                <li>Professional email</li>
+                <li>Business address</li>
+            </ul>
+        </div>
+
+        <h3>Step 2: Professional Details</h3>
+        <div class="card">
+            <h4>Profile Setup</h4>
+            <ul>
+                <li>Professional headline (60 characters)</li>
+                <li>Professional bio (500 characters)</li>
+                <li>Years of experience</li>
+                <li>Certifications and qualifications</li>
+                <li>Languages spoken</li>
+                <li>Service area radius</li>
+            </ul>
+        </div>
+
+        <h3>Step 3: Service Categories</h3>
+        <div class="card">
+            <h4>Category Selection</h4>
+            <ul>
+                <li>Primary service category</li>
+                <li>Secondary categories (up to 3)</li>
+                <li>Specialized skills within categories</li>
+                <li>Service delivery method (on-site, remote, hybrid)</li>
+            </ul>
+        </div>
+
+        <h2>Component Structure</h2>
+        <div class="code-section">
+            <div class="code-header">
+                <span>React Component - TypeScript</span>
+                <span class="code-language">TSX</span>
+            </div>
+            <pre><code>// app/become-professional/page.tsx
+export default function BecomeProfessionalPage() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<ProfessionalOnboarding>({});
+  
+  const steps = [
+    { id: 1, title: 'Basic Information', component: BasicInfoStep },
+    { id: 2, title: 'Professional Details', component: ProfessionalDetailsStep },
+    { id: 3, title: 'Service Categories', component: ServiceCategoriesStep },
+    { id: 4, title: 'Verification', component: VerificationStep },
+    { id: 5, title: 'Payment Setup', component: PaymentSetupStep },
+    { id: 6, title: 'Terms & Agreement', component: TermsStep }
+  ];
+  
+  return (
+    &lt;div className="min-h-screen bg-gray-50 py-12"&gt;
+      &lt;div className="mx-auto max-w-3xl px-4"&gt;
+        {/* Progress Bar */}
+        &lt;div className="mb-8"&gt;
+          &lt;div className="flex justify-between"&gt;
+            {steps.map((step) => (
+              &lt;div
+                key={step.id}
+                className={`flex-1 ${
+                  step.id <= currentStep ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
+              /&gt;
+            ))}
+          &lt;/div&gt;
+          &lt;p className="mt-2 text-sm text-gray-600"&gt;
+            Step {currentStep} of {steps.length}: {steps[currentStep - 1].title}
+          &lt;/p&gt;
+        &lt;/div&gt;
+        
+        {/* Step Content */}
+        &lt;div className="rounded-lg bg-white p-8 shadow-md"&gt;
+          {renderCurrentStep()}
+        &lt;/div&gt;
+        
+        {/* Navigation Buttons */}
+        &lt;div className="mt-8 flex justify-between"&gt;
+          &lt;Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentStep === 1}
+          &gt;
+            Previous
+          &lt;/Button&gt;
+          &lt;Button
+            onClick={handleNext}
+            disabled={!isStepValid()}
+          &gt;
+            {currentStep === steps.length ? 'Submit Application' : 'Next'}
+          &lt;/Button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h2>Verification Requirements</h2>
+        <table class="config-table">
+            <thead>
+                <tr>
+                    <th>Document Type</th>
+                    <th>Required</th>
+                    <th>Format</th>
+                    <th>Max Size</th>
+                    <th>Validation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Government ID</td>
+                    <td>Yes</td>
+                    <td>JPG, PNG, PDF</td>
+                    <td>5MB</td>
+                    <td>Manual review</td>
+                </tr>
+                <tr>
+                    <td>Proof of Address</td>
+                    <td>Yes</td>
+                    <td>JPG, PNG, PDF</td>
+                    <td>5MB</td>
+                    <td>Within 3 months</td>
+                </tr>
+                <tr>
+                    <td>Professional License</td>
+                    <td>Category-specific</td>
+                    <td>JPG, PNG, PDF</td>
+                    <td>5MB</td>
+                    <td>Valid expiry date</td>
+                </tr>
+                <tr>
+                    <td>Insurance Certificate</td>
+                    <td>Optional</td>
+                    <td>PDF</td>
+                    <td>10MB</td>
+                    <td>Current coverage</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>UI Components</h2>
+        
+        <h3>Progress Indicator</h3>
+        <div class="feature-list">
+            <li>Visual progress bar showing completion percentage</li>
+            <li>Step numbers with checkmarks for completed steps</li>
+            <li>Current step highlighted in primary color</li>
+            <li>Ability to navigate to previous completed steps</li>
+        </div>
+
+        <h3>Form Validation</h3>
+        <div class="feature-list">
+            <li>Real-time field validation with error messages</li>
+            <li>Required field indicators</li>
+            <li>Format validation for emails, phones, documents</li>
+            <li>Server-side validation for duplicates (CPF/CNPJ)</li>
+            <li>Progress saved automatically to prevent data loss</li>
+        </div>
+
+        <h2>Payment Setup Options</h2>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Bank Account</h3>
+                <ul>
+                    <li>Bank name selection</li>
+                    <li>Account type (checking/savings)</li>
+                    <li>Agency number</li>
+                    <li>Account number</li>
+                    <li>Account holder name verification</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Digital Wallet</h3>
+                <ul>
+                    <li>PIX key registration</li>
+                    <li>Key type selection</li>
+                    <li>Automatic validation</li>
+                    <li>Instant transfer capability</li>
+                    <li>QR code generation</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Success State</h2>
+        <div class="alert alert-success">
+            <strong>Application Submitted!</strong>
+            <p>Your professional account application has been received. You'll receive an email within 24-48 hours with the review results. Meanwhile, you can start creating your service listings as drafts.</p>
+        </div>
+
+        <h2>Mobile Responsiveness</h2>
+        <div class="card">
+            <h3>Mobile Optimizations</h3>
+            <ul>
+                <li>Vertical step indicator instead of horizontal progress bar</li>
+                <li>Full-screen form sections with swipe navigation</li>
+                <li>Camera integration for document upload</li>
+                <li>Touch-optimized file upload areas</li>
+                <li>Sticky navigation buttons at bottom</li>
+                <li>Auto-save on field blur to prevent data loss</li>
+            </ul>
+        </div>
+
+        <h2>Error Handling</h2>
+        <div class="alert alert-danger">
+            <strong>Common Error Scenarios:</strong>
+            <ul>
+                <li><strong>Duplicate CPF/CNPJ:</strong> "This tax ID is already registered"</li>
+                <li><strong>Invalid document:</strong> "Please upload a clear, readable document"</li>
+                <li><strong>Incomplete profile:</strong> "Please complete all required fields"</li>
+                <li><strong>Failed verification:</strong> "Document verification failed. Please try again"</li>
+                <li><strong>Network error:</strong> "Connection lost. Your progress has been saved"</li>
+            </ul>
+        </div>
+
+        <h2>Integration Points</h2>
+        <ul>
+            <li><strong>User Service:</strong> Update user role to professional</li>
+            <li><strong>Verification Service:</strong> Document validation and storage</li>
+            <li><strong>Payment Service:</strong> Bank account validation with Pagarme</li>
+            <li><strong>Notification Service:</strong> Application status updates</li>
+            <li><strong>Analytics Service:</strong> Track conversion funnel</li>
+        </ul>
+
+        <h2>Accessibility Features</h2>
+        <div class="feature-list">
+            <li>ARIA labels for all form fields and buttons</li>
+            <li>Keyboard navigation support with tab ordering</li>
+            <li>Screen reader announcements for step changes</li>
+            <li>High contrast mode support</li>
+            <li>Focus indicators on interactive elements</li>
+            <li>Error messages linked to form fields</li>
+        </div>
+    </div>
+</body>
+</html>

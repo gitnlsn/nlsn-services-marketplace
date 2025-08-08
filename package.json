@@ -9,6 +9,7 @@
 		"db:push": "prisma db push",
 		"docker": "sudo docker compose up && sudo docker compose down -v",
 		"dev": "next dev --turbo",
+		"mermaid": "node scripts/validate-mermaid.js",
 		"postinstall": "prisma generate",
 		"preview": "next build && next start",
 		"start": "next start",
@@ -16,7 +17,7 @@
 		"test:backend": "dotenv -e .env.test -- vitest run --config vitest.config.backend.ts",
 		"test:all": "dotenv -e .env.test -- npm run test:backend && npm run test:frontend",
 		"typecheck": "biome check --write --unsafe . && tsc --noEmit",
-		"check": "npm run typecheck && npm run build && npm run test:all"
+		"check": "npm run mermaid && npm run typecheck && npm run build && npm run test:all"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.7.2",
@@ -44,7 +45,10 @@
 		"@vitejs/plugin-react": "^5.0.0",
 		"@vitest/ui": "^3.2.4",
 		"dotenv-cli": "^10.0.0",
+		"glob": "^11.0.3",
 		"happy-dom": "^18.0.1",
+		"jsdom": "^26.1.0",
+		"mermaid": "^11.9.0",
 		"postcss": "^8.5.3",
 		"prisma": "^6.5.0",
 		"tailwindcss": "^4.0.15",
