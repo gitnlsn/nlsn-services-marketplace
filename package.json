@@ -1,0 +1,58 @@
+{
+	"name": "savoir-link",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "next build",
+		"db:drop": "prisma migrate reset",
+		"db:push": "prisma db push",
+		"docker": "sudo docker compose up && sudo docker compose down -v",
+		"dev": "next dev --turbo",
+		"postinstall": "prisma generate",
+		"preview": "next build && next start",
+		"start": "next start",
+		"test:frontend": "dotenv -e .env.test -- vitest run --config vitest.config.frontend.ts",
+		"test:backend": "dotenv -e .env.test -- vitest run --config vitest.config.backend.ts",
+		"test:all": "dotenv -e .env.test -- npm run test:backend && npm run test:frontend",
+		"typecheck": "biome check --write --unsafe . && tsc --noEmit",
+		"check": "npm run typecheck && npm run build && npm run test:all"
+	},
+	"dependencies": {
+		"@auth/prisma-adapter": "^2.7.2",
+		"@prisma/client": "^6.5.0",
+		"@t3-oss/env-nextjs": "^0.12.0",
+		"@tanstack/react-query": "^5.69.0",
+		"@trpc/client": "^11.0.0",
+		"@trpc/react-query": "^11.0.0",
+		"@trpc/server": "^11.0.0",
+		"next": "^15.2.3",
+		"next-auth": "5.0.0-beta.25",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"server-only": "^0.0.1",
+		"superjson": "^2.2.1",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@tailwindcss/postcss": "^4.0.15",
+		"@testing-library/react": "^16.3.0",
+		"@types/node": "^20.14.10",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"@vitejs/plugin-react": "^5.0.0",
+		"@vitest/ui": "^3.2.4",
+		"dotenv-cli": "^10.0.0",
+		"happy-dom": "^18.0.1",
+		"postcss": "^8.5.3",
+		"prisma": "^6.5.0",
+		"tailwindcss": "^4.0.15",
+		"typescript": "^5.8.2",
+		"vitest": "^3.2.4"
+	},
+	"ct3aMetadata": {
+		"initVersion": "7.39.3"
+	},
+	"packageManager": "npm@10.9.2"
+}

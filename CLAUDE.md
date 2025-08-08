@@ -1,0 +1,188 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Core Development Principles
+
+### SOLID Principles
+- **Single Responsibility**: Each class/function should have one reason to change
+- **Open/Closed**: Open for extension, closed for modification
+- **Liskov Substitution**: Derived classes must be substitutable for base classes
+- **Interface Segregation**: Prefer specific interfaces over general-purpose ones
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+### KISS (Keep It Simple, Stupid)
+- Write the simplest solution that works
+- Avoid over-engineering and premature optimization
+- Clear, readable code over clever solutions
+
+### YAGNI (You Aren't Gonna Need It)
+- Do not implement features until they are actually needed
+- Avoid building large architectures for hypothetical future requirements
+- Focus on current requirements, not potential future ones
+
+### Testing-First Development
+- Write code with testability in mind from the start
+- Every piece of logic should be testable in isolation
+- Prefer dependency injection for better testability
+- Use object parameters instead of arrays for function inputs (allows for easier extension and mocking)
+
+### Fullstack Feature Development with tRPC
+When implementing features using tRPC, adopt a fullstack mindset:
+- **Complete Feature Implementation**: Implement each feature completely from backend to frontend before starting the next one
+- **Type-Safe Integration**: Leverage tRPC's automatic TypeScript interface extension from backend to frontend
+- **Development Flow**:
+  1. Understand the Prisma schema requirements
+  2. Implement the complete backend logic (tRPC procedures)
+  3. Implement the frontend visualization and interaction
+  4. Verify the end-to-end flow works correctly
+- **Benefits**: This approach keeps everything connected throughout development, reduces context switching, and ensures type safety across the entire stack
+
+### Service Layer Architecture
+Even though we use tRPC routers, we maintain a clean separation of concerns with a service layer:
+- **tRPC Router Role**: Handle request/response, validation, and authentication
+- **Service Layer Role**: Contains all business logic, database operations, and external service integrations
+- **Dependency Injection**: Services receive all dependencies as a single object with a defined interface
+- **Structure Example**:
+  ```typescript
+  // Define dependencies interface
+  interface UserServiceDeps {
+    db: PrismaClient;
+    emailService: EmailService;
+    logger?: Logger;
+  }
+  
+  // Service with injected dependencies
+  class UserService {
+    constructor(private deps: UserServiceDeps) {}
+    
+    async createUser(data: CreateUserInput) {
+      // Business logic here
+      const user = await this.deps.db.user.create({ data });
+      await this.deps.emailService.sendWelcome(user.email);
+      return user;
+    }
+  }
+  
+  // tRPC router calls the service
+  export const userRouter = createTRPCRouter({
+    create: protectedProcedure
+      .input(createUserSchema)
+      .mutation(async ({ ctx, input }) => {
+        // Create service with dependencies
+        const userService = new UserService({
+          db: ctx.db,
+          emailService: new EmailService(), // or from a service container
+          logger: console,
+        });
+        return userService.createUser(input);
+      }),
+  });
+  ```
+- **Benefits**:
+  - Services are easily testable with mocked dependencies
+  - Business logic is decoupled from the API layer
+  - Services can be reused across different routers or contexts
+  - Clear separation between transport layer (tRPC) and business logic
+  - Single interface makes it easy to extend dependencies without changing constructor signature
+
+### Dependency Injection Pattern
+```typescript
+// Preferred: Object injection for testability and extensibility
+function processUser({ userService, logger, validator }: {
+  userService: UserService;
+  logger: Logger;
+  validator: Validator;
+}) { /* ... */ }
+
+// Avoid: Multiple separate parameters that are harder to extend
+function processUser(userService: UserService, logger: Logger, validator: Validator) { /* ... */ }
+```
+
+### Development Tools as Quality Gates
+We trust our development tools as the primary indicators of code health:
+- **Biome**: If linting and formatting pass, the code style is correct
+- **TypeScript (tsc)**: If type checking passes, the types are sound
+- **Vitest**: If tests pass, the logic is correct (when configured)
+- **Build**: If the build succeeds, the application is deployable
+
+A clean output from all these tools means the project is healthy. Always run these checks before considering any task complete.
+
+## Commands
+
+### Development
+- `npm run dev` - Start development server with Next.js Turbo mode on http://localhost:3000
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run preview` - Build and preview production locally
+
+### Database
+- `npm run db:push` - Push schema changes to database (development)
+- `npm run db:generate` - Generate Prisma migrations
+- `./start-database.sh` or `docker-compose up -d` - Start PostgreSQL with pgvector extension
+
+### Code Quality
+- `npm run check` - Run Biome linting and formatting checks
+- `npm run check:write` - Apply safe fixes automatically
+- `npm run typecheck` - Check TypeScript types without building
+
+### Testing
+- `npm run test:frontend` - Run frontend tests
+- `npm run test:backend` - Run backend tests
+- `npm run test:all` - Run all tests
+
+## Architecture
+
+### Tech Stack
+- **Framework**: Next.js 15 with App Router and React 19
+- **API**: tRPC v11 for type-safe APIs with automatic client generation
+- **Database**: PostgreSQL with Prisma ORM and pgvector extension
+- **Auth**: NextAuth.js v5 (beta) with database sessions
+- **Styling**: Tailwind CSS v4
+- **Language**: TypeScript with strict mode
+
+### Key Architectural Patterns
+
+#### API Layer (tRPC)
+- Router definition: `src/server/api/root.ts`
+- Procedure types: Public and protected (authenticated)
+- Context creation with timing middleware in development
+- Client setup: `src/trpc/react.tsx` (React Query) and `src/trpc/server.ts` (server-side)
+
+#### Authentication Flow
+- Configuration: `src/server/auth/config.ts`
+- Google OAuth provider with Prisma adapter
+- Database-backed sessions with extended typing
+- Protected procedures check `ctx.session?.user` before execution
+
+#### Database Access Pattern
+- Single Prisma client instance: `src/server/db.ts`
+- Global singleton pattern for development hot-reload
+- Schema-first approach with migrations
+- Relations: User → Posts, User → Accounts/Sessions
+
+#### Environment Management
+- Validation layer: `src/env.js` using @t3-oss/env-nextjs
+- Server/client variable separation
+- Runtime validation with Zod schemas
+- Required vars: DATABASE_URL, AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
+
+### Project Structure
+```
+src/
+├── app/              # Next.js App Router pages and components
+│   ├── api/         # API route handlers (auth, tRPC)
+│   └── _components/ # Shared React components
+├── server/          # Backend logic
+│   ├── api/        # tRPC routers and procedures
+│   ├── auth/       # NextAuth.js configuration
+│   └── db.ts       # Prisma client singleton
+├── trpc/           # tRPC client configuration
+└── styles/         # Global CSS with Tailwind
+```
+
+### Development Notes
+- Artificial delay (1s) added to API calls in development for testing loading states
+- Biome configured with sorted-classes rule for Tailwind consistency
+- Path alias: `~/*` maps to `./src/*`
+- Post-install automatically generates Prisma client
