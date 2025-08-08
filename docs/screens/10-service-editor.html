@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Service - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .back-button:hover {
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        /* Progress Indicator */
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            color: #9ca3af;
+        }
+        
+        .progress-step.active {
+            color: #3b82f6;
+        }
+        
+        .progress-step.completed {
+            color: #10b981;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background: #e5e7eb;
+            color: #6b7280;
+            margin: 0 0.5rem;
+        }
+        
+        .progress-step.active .step-circle {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .progress-step.completed .step-circle {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step-connector {
+            width: 60px;
+            height: 2px;
+            background: #e5e7eb;
+            margin: 0 1rem;
+        }
+        
+        .progress-step.completed .step-connector {
+            background: #10b981;
+        }
+        
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-description {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .form-textarea {
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-help {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        /* Image Upload */
+        .image-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .image-upload:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .image-upload.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        
+        /* Pricing Options */
+        .pricing-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .pricing-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .pricing-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .pricing-option:hover {
+            border-color: #d1d5db;
+        }
+        
+        .pricing-option.selected:hover {
+            border-color: #3b82f6;
+        }
+        
+        .option-title {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .option-description {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        /* Availability Settings */
+        .availability-grid {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .day-label {
+            font-weight: 500;
+            color: #374151;
+            min-width: 80px;
+        }
+        
+        .day-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .day-toggle.active {
+            background: #3b82f6;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .day-toggle.active .toggle-slider {
+            transform: translateX(20px);
+        }
+        
+        .time-inputs {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .time-input {
+            padding: 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 100px;
+        }
+        
+        /* Package Options */
+        .package-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .package-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .package-info h4 {
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .package-info p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .package-price {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .add-package-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-package-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-options {
+                flex-direction: column;
+            }
+            
+            .availability-grid {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .time-inputs {
+                justify-content: space-between;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="09-services-management.html" class="back-button">
+                ← Back to Services
+            </a>
+            
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-outline">Preview</button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Create New Service</h1>
+            <p class="page-subtitle">Share your expertise with customers who need your skills</p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-step active">
+                <div class="step-circle">1</div>
+                <span>Basic Info</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="progress-step">
+                <div class="step-circle">2</div>
+                <span>Pricing</span>
+            </div>
+            <div class="step-connector"></div>
+            <div class="progress-step">
+                <div class="step-circle">3</div>
+                <span>Availability</span>
+            </div>
+        </div>
+        
+        <form id="service-form" onsubmit="handleSubmit(event)">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h2 class="section-title">Basic Information</h2>
+                <p class="section-description">Tell customers what service you're offering and what makes it special.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Service Title *</label>
+                        <input type="text" class="form-input" placeholder="e.g., Professional Photography Services" required>
+                        <span class="form-help">Choose a clear, descriptive title that customers will search for</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" required>
+                            <option value="">Select a category</option>
+                            <option value="home">Home Services</option>
+                            <option value="tech">Tech & Digital</option>
+                            <option value="education">Education</option>
+                            <option value="beauty">Beauty & Wellness</option>
+                            <option value="automotive">Automotive</option>
+                            <option value="creative">Creative Services</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Subcategory</label>
+                        <select class="form-select">
+                            <option value="">Select a subcategory</option>
+                            <option value="portrait">Portrait Photography</option>
+                            <option value="wedding">Wedding Photography</option>
+                            <option value="event">Event Photography</option>
+                            <option value="product">Product Photography</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Service Description *</label>
+                        <textarea class="form-textarea" placeholder="Describe your service in detail. What do you offer? What's included? What makes you unique?" required></textarea>
+                        <span class="form-help">Be specific about what customers can expect</span>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Service Images</label>
+                        <div class="image-upload" onclick="document.getElementById('image-input').click()">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">Click to upload images or drag and drop</div>
+                            <div class="upload-hint">PNG, JPG up to 10MB each (max 5 images)</div>
+                        </div>
+                        <input type="file" id="image-input" style="display: none;" multiple accept="image/*">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pricing -->
+            <div class="form-section">
+                <h2 class="section-title">Pricing</h2>
+                <p class="section-description">Set your rates and create package options for customers.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Pricing Model *</label>
+                    <div class="pricing-options">
+                        <div class="pricing-option selected" onclick="selectPricingModel(this, 'hourly')">
+                            <div class="option-title">Hourly Rate</div>
+                            <div class="option-description">Charge by the hour</div>
+                        </div>
+                        <div class="pricing-option" onclick="selectPricingModel(this, 'fixed')">
+                            <div class="option-title">Fixed Price</div>
+                            <div class="option-description">Set price per project</div>
+                        </div>
+                        <div class="pricing-option" onclick="selectPricingModel(this, 'package')">
+                            <div class="option-title">Packages</div>
+                            <div class="option-description">Offer service tiers</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-grid" id="pricing-details">
+                    <div class="form-group">
+                        <label class="form-label">Base Rate *</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280;">$</span>
+                            <input type="number" class="form-input" style="padding-left: 2rem;" placeholder="150" min="1" required>
+                        </div>
+                        <span class="form-help">Your starting rate per hour</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Minimum Duration</label>
+                        <select class="form-select">
+                            <option value="1">1 hour</option>
+                            <option value="2">2 hours</option>
+                            <option value="3">3 hours</option>
+                            <option value="4">4+ hours</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Package Options (hidden by default) -->
+                <div id="package-section" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Service Packages</label>
+                        <div class="package-list">
+                            <div class="package-item">
+                                <div class="package-info">
+                                    <h4>Basic Package</h4>
+                                    <p>1 hour session, 10 edited photos</p>
+                                </div>
+                                <div class="package-price">$150</div>
+                            </div>
+                            <div class="package-item">
+                                <div class="package-info">
+                                    <h4>Standard Package</h4>
+                                    <p>2 hour session, 25 edited photos, online gallery</p>
+                                </div>
+                                <div class="package-price">$300</div>
+                            </div>
+                            <button type="button" class="add-package-btn">
+                                <span>+</span>
+                                <span>Add Package</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Availability -->
+            <div class="form-section">
+                <h2 class="section-title">Availability</h2>
+                <p class="section-description">Set your working hours and availability preferences.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Working Hours</label>
+                    <div class="availability-grid">
+                        <div class="day-label">Monday</div>
+                        <div class="day-toggle active" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="09:00">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="17:00">
+                        </div>
+                        
+                        <div class="day-label">Tuesday</div>
+                        <div class="day-toggle active" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="09:00">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="17:00">
+                        </div>
+                        
+                        <div class="day-label">Wednesday</div>
+                        <div class="day-toggle active" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="09:00">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="17:00">
+                        </div>
+                        
+                        <div class="day-label">Thursday</div>
+                        <div class="day-toggle active" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="09:00">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="17:00">
+                        </div>
+                        
+                        <div class="day-label">Friday</div>
+                        <div class="day-toggle active" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="09:00">
+                            <span>to</span>
+                            <input type="time" class="time-input" value="17:00">
+                        </div>
+                        
+                        <div class="day-label">Saturday</div>
+                        <div class="day-toggle" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="10:00" disabled>
+                            <span>to</span>
+                            <input type="time" class="time-input" value="16:00" disabled>
+                        </div>
+                        
+                        <div class="day-label">Sunday</div>
+                        <div class="day-toggle" onclick="toggleDay(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <div class="time-inputs">
+                            <input type="time" class="time-input" value="10:00" disabled>
+                            <span>to</span>
+                            <input type="time" class="time-input" value="16:00" disabled>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Advance Booking</label>
+                        <select class="form-select">
+                            <option value="1">1 day in advance</option>
+                            <option value="2">2 days in advance</option>
+                            <option value="7" selected>1 week in advance</option>
+                            <option value="14">2 weeks in advance</option>
+                            <option value="30">1 month in advance</option>
+                        </select>
+                        <span class="form-help">How far in advance must customers book?</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Cancellation Policy</label>
+                        <select class="form-select">
+                            <option value="flexible">Flexible - Full refund 24h before</option>
+                            <option value="moderate" selected>Moderate - Full refund 48h before</option>
+                            <option value="strict">Strict - 50% refund 48h before</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary">Save as Draft</button>
+                <button type="submit" class="btn btn-primary">Publish Service</button>
+            </div>
+        </form>
+    </main>
+    
+    <script>
+        function selectPricingModel(element, model) {
+            // Remove selected class from all options
+            document.querySelectorAll('.pricing-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            // Show/hide package section
+            const packageSection = document.getElementById('package-section');
+            if (model === 'package') {
+                packageSection.style.display = 'block';
+            } else {
+                packageSection.style.display = 'none';
+            }
+        }
+        
+        function toggleDay(toggle) {
+            toggle.classList.toggle('active');
+            const timeInputs = toggle.parentElement.querySelectorAll('.time-input');
+            const isActive = toggle.classList.contains('active');
+            
+            timeInputs.forEach(input => {
+                input.disabled = !isActive;
+                input.style.opacity = isActive ? '1' : '0.5';
+            });
+        }
+        
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            // In a real app, this would validate and submit the form data
+            alert('Service published successfully! You can now manage it from your Services page.');
+            window.location.href = '09-services-management.html';
+        }
+        
+        // Image upload handler
+        document.getElementById('image-input').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                const uploadArea = document.querySelector('.image-upload');
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">✓</div>
+                    <div class="upload-text">${files.length} image(s) selected</div>
+                    <div class="upload-hint">Click to change selection</div>
+                `;
+            }
+        });
+        
+        // Drag and drop for images
+        const imageUpload = document.querySelector('.image-upload');
+        
+        imageUpload.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        imageUpload.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        imageUpload.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            if (files.length > 0) {
+                this.innerHTML = `
+                    <div class="upload-icon">✓</div>
+                    <div class="upload-text">${files.length} image(s) selected</div>
+                    <div class="upload-hint">Click to change selection</div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

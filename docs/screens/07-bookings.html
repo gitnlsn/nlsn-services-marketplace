@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .notification-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 10px;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+        
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .booking-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        /* Booking Tabs */
+        .booking-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 12px;
+            padding: 0.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .booking-tab {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .booking-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .booking-tab:not(.active) {
+            color: #6b7280;
+        }
+        
+        .booking-tab:hover:not(.active) {
+            background: #f3f4f6;
+        }
+        
+        .tab-count {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .booking-tab.active .tab-count {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Booking List */
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .booking-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+        }
+        
+        .booking-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .booking-info h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .booking-provider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .provider-avatar {
+            width: 35px;
+            height: 35px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .provider-name {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .booking-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .booking-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .booking-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .status-upcoming {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-confirmed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        /* Booking Actions */
+        .booking-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+        
+        .empty-state .btn {
+            padding: 0.75rem 1.5rem;
+        }
+        
+        /* Price Display */
+        .booking-price {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-top: 0.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .booking-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .booking-actions {
+                flex-direction: column;
+            }
+            
+            .booking-tabs {
+                flex-direction: column;
+            }
+            
+            .booking-tab {
+                text-align: left;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab active">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab">Messages</a>
+            <a href="09-services-management.html" class="nav-tab">My Services</a>
+            <a href="11-earnings.html" class="nav-tab">Earnings</a>
+            <a href="13-settings.html" class="nav-tab">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">My Bookings</h1>
+            <div class="booking-filters">
+                <select class="filter-select">
+                    <option>All Time</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                    <option>Last 3 Months</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Services</option>
+                    <option>Home Services</option>
+                    <option>Tech & Digital</option>
+                    <option>Education</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Booking Tabs -->
+        <div class="booking-tabs">
+            <button class="booking-tab active" onclick="switchTab('requested')">
+                As Customer
+                <span class="tab-count">4</span>
+            </button>
+            <button class="booking-tab" onclick="switchTab('offered')">
+                As Professional
+                <span class="tab-count">2</span>
+            </button>
+        </div>
+        
+        <!-- Customer Bookings -->
+        <div id="customer-bookings" class="booking-list">
+            <!-- Upcoming Booking -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Professional House Cleaning</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">SJ</div>
+                            <span class="provider-name">Sarah Johnson</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Tomorrow, Jan 4, 2025</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>10:00 AM - 12:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Standard Cleaning</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$80.00</div>
+                    </div>
+                    <div class="booking-status status-confirmed">Confirmed</div>
+                </div>
+                <div class="booking-actions">
+                    <a href="08-messages.html" class="btn btn-primary">Contact Sarah</a>
+                    <button class="btn btn-outline">View Details</button>
+                    <button class="btn btn-secondary">Reschedule</button>
+                    <button class="btn btn-danger">Cancel</button>
+                </div>
+            </div>
+            
+            <!-- Upcoming Booking -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Math Tutoring Session</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">ER</div>
+                            <span class="provider-name">Dr. Emily Roberts</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Jan 6, 2025</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>2:00 PM - 3:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Online Session</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$60.00</div>
+                    </div>
+                    <div class="booking-status status-upcoming">Upcoming</div>
+                </div>
+                <div class="booking-actions">
+                    <a href="08-messages.html" class="btn btn-primary">Contact Emily</a>
+                    <button class="btn btn-outline">Join Online Session</button>
+                    <button class="btn btn-secondary">Reschedule</button>
+                </div>
+            </div>
+            
+            <!-- Completed Booking -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Web Development Consultation</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">MC</div>
+                            <span class="provider-name">Mike Chen</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Dec 20, 2024</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>3:00 PM - 4:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Online Consultation</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$150.00</div>
+                    </div>
+                    <div class="booking-status status-completed">Completed</div>
+                </div>
+                <div class="booking-actions">
+                    <a href="12-reviews.html" class="btn btn-primary">Leave Review</a>
+                    <a href="06-service-detail.html" class="btn btn-outline">Book Again</a>
+                    <button class="btn btn-secondary">Download Receipt</button>
+                </div>
+            </div>
+            
+            <!-- Pending Booking -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Photography Session</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">AS</div>
+                            <span class="provider-name">Alex Smith</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Jan 8, 2025</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>11:00 AM - 1:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Portrait Session</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$200.00</div>
+                    </div>
+                    <div class="booking-status status-pending">Awaiting Response</div>
+                </div>
+                <div class="booking-actions">
+                    <a href="08-messages.html" class="btn btn-outline">Contact Alex</a>
+                    <button class="btn btn-danger">Cancel Request</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Professional Bookings (hidden by default) -->
+        <div id="professional-bookings" class="booking-list" style="display: none;">
+            <!-- Incoming Request -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Photography Session Request</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">JS</div>
+                            <span class="provider-name">From: Jessica Brown</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Jan 10, 2025</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>2:00 PM - 4:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Wedding Photography</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$500.00</div>
+                    </div>
+                    <div class="booking-status status-pending">New Request</div>
+                </div>
+                <div class="booking-actions">
+                    <button class="btn btn-primary">Accept</button>
+                    <button class="btn btn-danger">Decline</button>
+                    <a href="08-messages.html" class="btn btn-outline">Message Customer</a>
+                    <button class="btn btn-secondary">Counter Offer</button>
+                </div>
+            </div>
+            
+            <!-- Confirmed Booking -->
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div class="booking-info">
+                        <h3>Graphic Design Project</h3>
+                        <div class="booking-provider">
+                            <div class="provider-avatar">MR</div>
+                            <span class="provider-name">From: Mark Rodriguez</span>
+                        </div>
+                        <div class="booking-details">
+                            <div class="booking-detail">
+                                <span>📅</span>
+                                <span>Jan 5, 2025</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>⏰</span>
+                                <span>9:00 AM - 12:00 PM</span>
+                            </div>
+                            <div class="booking-detail">
+                                <span>📍</span>
+                                <span>Logo Design</span>
+                            </div>
+                        </div>
+                        <div class="booking-price">$300.00</div>
+                    </div>
+                    <div class="booking-status status-confirmed">Confirmed</div>
+                </div>
+                <div class="booking-actions">
+                    <a href="08-messages.html" class="btn btn-primary">Contact Mark</a>
+                    <button class="btn btn-outline">Upload Work</button>
+                    <button class="btn btn-secondary">Mark Complete</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        function switchTab(tab) {
+            // Update tab appearance
+            document.querySelectorAll('.booking-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide booking lists
+            if (tab === 'requested') {
+                document.getElementById('customer-bookings').style.display = 'flex';
+                document.getElementById('professional-bookings').style.display = 'none';
+            } else {
+                document.getElementById('customer-bookings').style.display = 'none';
+                document.getElementById('professional-bookings').style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>

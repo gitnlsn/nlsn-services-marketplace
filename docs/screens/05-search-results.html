@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search & Results - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header (simplified) */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-size: 1.5rem; font-weight: bold; color: #3b82f6; cursor: pointer; }
+        .back-btn { color: #6b7280; text-decoration: none; }
+        
+        /* Search Bar */
+        .search-section {
+            background: white;
+            padding: 1.5rem 5%;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+        }
+        
+        /* Filters & Results Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+        }
+        
+        /* Filters Sidebar */
+        .filters-sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+        
+        .filter-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .filter-option input {
+            width: auto;
+        }
+        
+        .filter-option label {
+            color: #4b5563;
+            cursor: pointer;
+        }
+        
+        .price-range {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .price-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+        
+        /* Results Section */
+        .results-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .results-count {
+            font-size: 1.1rem;
+            color: #374151;
+        }
+        
+        .sort-dropdown {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Service Cards Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .service-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .service-card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .service-image {
+            width: 100%;
+            height: 180px;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+        }
+        
+        .service-content {
+            padding: 1rem;
+        }
+        
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .service-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .service-provider {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .provider-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+        
+        .provider-name {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .service-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stars {
+            color: #fbbf24;
+        }
+        
+        .rating-text {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        
+        .service-description {
+            color: #4b5563;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+        
+        .service-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .tag {
+            padding: 0.25rem 0.75rem;
+            background: #f3f4f6;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #4b5563;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .page-btn:hover {
+            background: #f9fafb;
+        }
+        
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="03-home.html" class="back-btn">← Back</a>
+        <div class="logo" onclick="window.location.href='03-home.html'">Savoir Link</div>
+        <div></div>
+    </header>
+    
+    <!-- Search Bar -->
+    <section class="search-section">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="What service are you looking for?" value="House cleaning">
+            <input type="text" class="search-input" placeholder="Location" value="San Francisco, CA">
+            <button class="btn btn-primary">Search</button>
+            <button class="btn btn-outline">🔧 Filters</button>
+        </div>
+    </section>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Filters Sidebar -->
+        <aside class="filters-sidebar">
+            <div class="filter-section">
+                <h3 class="filter-title">Category</h3>
+                <div class="filter-option">
+                    <input type="checkbox" id="home-services" checked>
+                    <label for="home-services">Home Services</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="tech">
+                    <label for="tech">Tech & Digital</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="education">
+                    <label for="education">Education</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="beauty">
+                    <label for="beauty">Beauty & Wellness</label>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3 class="filter-title">Price Range</h3>
+                <div class="price-range">
+                    <input type="number" class="price-input" placeholder="Min">
+                    <span>-</span>
+                    <input type="number" class="price-input" placeholder="Max">
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3 class="filter-title">Rating</h3>
+                <div class="filter-option">
+                    <input type="radio" name="rating" id="4plus">
+                    <label for="4plus">⭐⭐⭐⭐ & up</label>
+                </div>
+                <div class="filter-option">
+                    <input type="radio" name="rating" id="3plus">
+                    <label for="3plus">⭐⭐⭐ & up</label>
+                </div>
+                <div class="filter-option">
+                    <input type="radio" name="rating" id="any" checked>
+                    <label for="any">Any rating</label>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3 class="filter-title">Availability</h3>
+                <div class="filter-option">
+                    <input type="checkbox" id="today">
+                    <label for="today">Available Today</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="week">
+                    <label for="week">This Week</label>
+                </div>
+                <div class="filter-option">
+                    <input type="checkbox" id="weekend">
+                    <label for="weekend">Weekends</label>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Results Section -->
+        <section class="results-section">
+            <div class="results-header">
+                <span class="results-count">Found 24 services near you</span>
+                <select class="sort-dropdown">
+                    <option>Sort: Recommended</option>
+                    <option>Price: Low to High</option>
+                    <option>Price: High to Low</option>
+                    <option>Rating: High to Low</option>
+                    <option>Distance: Nearest</option>
+                </select>
+            </div>
+            
+            <div class="services-grid">
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Professional House Cleaning</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">SJ</div>
+                            <span class="provider-name">Sarah Johnson</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-text">4.9 (234 reviews)</span>
+                        </div>
+                        <p class="service-description">Thorough and eco-friendly house cleaning service. 5+ years experience...</p>
+                        <div class="service-price">From $80/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Eco-friendly</span>
+                            <span class="tag">Same day</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Deep Clean Specialists</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">MT</div>
+                            <span class="provider-name">Maria Torres</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-text">5.0 (189 reviews)</span>
+                        </div>
+                        <p class="service-description">Specialized in deep cleaning, move-in/out cleaning, and post-construction...</p>
+                        <div class="service-price">From $120/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Deep clean</span>
+                            <span class="tag">Insured</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Quick & Reliable Cleaning</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">JW</div>
+                            <span class="provider-name">James Wilson</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐</span>
+                            <span class="rating-text">4.7 (156 reviews)</span>
+                        </div>
+                        <p class="service-description">Fast and efficient cleaning service for busy professionals. Flexible scheduling...</p>
+                        <div class="service-price">From $65/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Quick service</span>
+                            <span class="tag">Flexible</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Green Clean Co.</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">LG</div>
+                            <span class="provider-name">Lisa Green</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-text">4.8 (203 reviews)</span>
+                        </div>
+                        <p class="service-description">100% organic cleaning products. Pet and child safe. Weekly/bi-weekly plans...</p>
+                        <div class="service-price">From $90/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Organic</span>
+                            <span class="tag">Pet-safe</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Sparkle Home Services</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">RB</div>
+                            <span class="provider-name">Robert Brown</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐</span>
+                            <span class="rating-text">4.6 (142 reviews)</span>
+                        </div>
+                        <p class="service-description">Complete home cleaning with attention to detail. Licensed and bonded...</p>
+                        <div class="service-price">From $75/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Licensed</span>
+                            <span class="tag">Bonded</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="06-service-detail.html" class="service-card">
+                    <div class="service-image">Image Placeholder</div>
+                    <div class="service-content">
+                        <div class="service-header">
+                            <h3 class="service-title">Maid to Perfection</h3>
+                        </div>
+                        <div class="service-provider">
+                            <div class="provider-avatar">AK</div>
+                            <span class="provider-name">Amanda Kim</span>
+                        </div>
+                        <div class="service-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                            <span class="rating-text">4.9 (178 reviews)</span>
+                        </div>
+                        <p class="service-description">Premium cleaning service with satisfaction guarantee. Same team every visit...</p>
+                        <div class="service-price">From $100/session</div>
+                        <div class="service-tags">
+                            <span class="tag">Premium</span>
+                            <span class="tag">Guaranteed</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn">←</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">→</button>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

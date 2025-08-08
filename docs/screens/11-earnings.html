@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+        
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .header-actions-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .time-filter {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        /* Earnings Overview */
+        .earnings-overview {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .overview-stats {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .total-earnings {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .earnings-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .earnings-period {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .earnings-change {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* Earnings Chart */
+        .earnings-chart {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .chart-tabs {
+            display: flex;
+            gap: 0;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+        
+        .chart-tab {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .chart-tab.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        /* Payout Information */
+        .payout-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .payout-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .payout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payout-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .payout-amount {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #3b82f6;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .payout-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .payout-label {
+            color: #6b7280;
+        }
+        
+        .payout-value {
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .payout-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        /* Transaction History */
+        .transaction-history {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .transaction-header {
+            padding: 2rem 2rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .transaction-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .transaction-filters {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .filter-btn:hover:not(.active) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .transaction-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+        
+        .transaction-item:hover {
+            background: #f9fafb;
+        }
+        
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .earning-icon {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .payout-icon {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .fee-icon {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .transaction-details h4 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .transaction-details p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .transaction-amount {
+            text-align: right;
+        }
+        
+        .amount-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .amount-positive {
+            color: #10b981;
+        }
+        
+        .amount-negative {
+            color: #ef4444;
+        }
+        
+        .transaction-date {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-title {
+            font-size: 1.5rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .earnings-overview {
+                grid-template-columns: 1fr;
+            }
+            
+            .payout-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .transaction-amount {
+                text-align: left;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab">Messages</a>
+            <a href="09-services-management.html" class="nav-tab">My Services</a>
+            <a href="11-earnings.html" class="nav-tab active">Earnings</a>
+            <a href="13-settings.html" class="nav-tab">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Earnings</h1>
+            <div class="header-actions-right">
+                <select class="time-filter">
+                    <option>This Month</option>
+                    <option>Last Month</option>
+                    <option>Last 3 Months</option>
+                    <option>This Year</option>
+                    <option>All Time</option>
+                </select>
+                <button class="btn btn-outline">Export Report</button>
+            </div>
+        </div>
+        
+        <!-- Earnings Overview -->
+        <div class="earnings-overview">
+            <div class="overview-stats">
+                <div class="total-earnings">
+                    <div class="earnings-amount">$3,420</div>
+                    <div class="earnings-period">Total earnings this month</div>
+                    <div class="earnings-change">↗ +28% from last month</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">52</div>
+                        <div class="stat-label">Completed Jobs</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">$66</div>
+                        <div class="stat-label">Average Per Job</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">4.9</div>
+                        <div class="stat-label">Average Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">87%</div>
+                        <div class="stat-label">Repeat Customers</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="earnings-chart">
+                <div class="chart-header">
+                    <h2 class="chart-title">Earnings Trend</h2>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active">7 Days</button>
+                        <button class="chart-tab">30 Days</button>
+                        <button class="chart-tab">90 Days</button>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    📊 Earnings Chart Visualization
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payout Information -->
+        <div class="payout-section">
+            <div class="payout-card">
+                <div class="payout-header">
+                    <h2 class="payout-title">Available Balance</h2>
+                    <button class="btn btn-primary">Request Payout</button>
+                </div>
+                <div class="payout-amount">$1,248.50</div>
+                <div class="payout-info">
+                    <span class="payout-label">Minimum payout:</span>
+                    <span class="payout-value">$50.00</span>
+                </div>
+                <div class="payout-info">
+                    <span class="payout-label">Processing time:</span>
+                    <span class="payout-value">2-3 business days</span>
+                </div>
+                <div class="payout-info">
+                    <span class="payout-label">Next auto payout:</span>
+                    <span class="payout-value">Jan 15, 2025</span>
+                </div>
+            </div>
+            
+            <div class="payout-card">
+                <div class="payout-header">
+                    <h2 class="payout-title">Pending Payout</h2>
+                </div>
+                <div class="payout-amount">$850.00</div>
+                <div class="payout-info">
+                    <span class="payout-label">Status:</span>
+                    <span class="payout-status status-processing">Processing</span>
+                </div>
+                <div class="payout-info">
+                    <span class="payout-label">Requested:</span>
+                    <span class="payout-value">Dec 28, 2024</span>
+                </div>
+                <div class="payout-info">
+                    <span class="payout-label">Expected:</span>
+                    <span class="payout-value">Jan 3, 2025</span>
+                </div>
+                <div class="payout-info">
+                    <span class="payout-label">Method:</span>
+                    <span class="payout-value">Bank Transfer</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transaction History -->
+        <div class="transaction-history">
+            <div class="transaction-header">
+                <h2 class="transaction-title">Transaction History</h2>
+                <div class="transaction-filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Earnings</button>
+                    <button class="filter-btn">Payouts</button>
+                    <button class="filter-btn">Fees</button>
+                </div>
+            </div>
+            
+            <div class="transaction-list">
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Photography Session Payment</h4>
+                            <p>From Jessica Brown • Wedding photography booking</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$450.00</div>
+                        <div class="transaction-date">Jan 2, 2025</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Graphic Design Payment</h4>
+                            <p>From Mark Rodriguez • Logo design project</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$240.00</div>
+                        <div class="transaction-date">Jan 1, 2025</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon payout-icon">🏦</div>
+                        <div class="transaction-details">
+                            <h4>Payout to Bank Account</h4>
+                            <p>Bank of America ••••4567</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-negative">-$850.00</div>
+                        <div class="transaction-date">Dec 28, 2024</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Photography Session Payment</h4>
+                            <p>From Alex Chen • Portrait session</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$180.00</div>
+                        <div class="transaction-date">Dec 27, 2024</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon fee-icon">📝</div>
+                        <div class="transaction-details">
+                            <h4>Platform Fee</h4>
+                            <p>5% service fee on $180.00 transaction</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-negative">-$9.00</div>
+                        <div class="transaction-date">Dec 27, 2024</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Graphic Design Payment</h4>
+                            <p>From Sarah Wilson • Website mockups</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$320.00</div>
+                        <div class="transaction-date">Dec 25, 2024</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Photography Session Payment</h4>
+                            <p>From David Kim • Family portrait session</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$200.00</div>
+                        <div class="transaction-date">Dec 23, 2024</div>
+                    </div>
+                </div>
+                
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-icon earning-icon">💰</div>
+                        <div class="transaction-details">
+                            <h4>Photography Session Payment</h4>
+                            <p>From Lisa Martinez • Corporate headshots</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="amount-value amount-positive">+$380.00</div>
+                        <div class="transaction-date">Dec 20, 2024</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Chart tab functionality
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                // In a real app, this would update the chart data
+            });
+        });
+        
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // In a real app, this would filter the transaction list
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Services - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+        
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .header-actions-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* Stats Summary */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .service-image {
+            height: 150px;
+            background: linear-gradient(45deg, #e5e7eb, #d1d5db);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            position: relative;
+        }
+        
+        .service-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-paused {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        .status-draft {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .service-content {
+            padding: 1.5rem;
+        }
+        
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .service-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .service-category {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .service-price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .service-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .stat-text {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .service-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .service-toggle {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: #6b7280;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        
+        .empty-state p {
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        
+        /* Performance Insights */
+        .insights-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .insights-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .insights-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .insight-card {
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .insight-title {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.25rem;
+        }
+        
+        .insight-description {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .service-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .service-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab">Messages</a>
+            <a href="09-services-management.html" class="nav-tab active">My Services</a>
+            <a href="11-earnings.html" class="nav-tab">Earnings</a>
+            <a href="13-settings.html" class="nav-tab">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">My Services</h1>
+            <div class="header-actions-right">
+                <a href="#" class="btn btn-outline">View Profile</a>
+                <a href="10-service-editor.html" class="btn btn-primary">+ Add Service</a>
+            </div>
+        </div>
+        
+        <!-- Stats Summary -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-value">2</div>
+                <div class="stat-label">Active Services</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4.9</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">52</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$3,420</div>
+                <div class="stat-label">Total Earnings</div>
+            </div>
+        </div>
+        
+        <!-- Performance Insights -->
+        <div class="insights-section">
+            <div class="insights-header">
+                <h2 class="insights-title">Performance Insights</h2>
+            </div>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-title">Profile Views</div>
+                    <div class="insight-value">245</div>
+                    <div class="insight-description">+12% from last month</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">Booking Rate</div>
+                    <div class="insight-value">68%</div>
+                    <div class="insight-description">Views that became bookings</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-title">Response Time</div>
+                    <div class="insight-value">2.5h</div>
+                    <div class="insight-description">Average message response</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Services Grid -->
+        <div class="services-grid">
+            <!-- Photography Service -->
+            <div class="service-card">
+                <div class="service-image">
+                    <span>Photography Portfolio</span>
+                    <div class="service-status status-active">Active</div>
+                </div>
+                <div class="service-content">
+                    <div class="service-header">
+                        <div>
+                            <h3 class="service-title">Professional Photography</h3>
+                            <div class="service-category">Creative Services</div>
+                        </div>
+                        <div class="service-price">From $150/hour</div>
+                    </div>
+                    
+                    <div class="service-stats">
+                        <div class="stat">
+                            <div class="stat-number">⭐ 4.9</div>
+                            <div class="stat-text">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">32</div>
+                            <div class="stat-text">Bookings</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">$2,400</div>
+                            <div class="stat-text">Earned</div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-actions">
+                        <a href="10-service-editor.html" class="btn btn-primary btn-small">Edit</a>
+                        <a href="06-service-detail.html" class="btn btn-outline btn-small">View</a>
+                        <button class="btn btn-secondary btn-small">Analytics</button>
+                        
+                        <div class="service-toggle">
+                            <span>Active</span>
+                            <div class="toggle-switch active" onclick="toggleService(this)">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Graphic Design Service -->
+            <div class="service-card">
+                <div class="service-image">
+                    <span>Design Portfolio</span>
+                    <div class="service-status status-active">Active</div>
+                </div>
+                <div class="service-content">
+                    <div class="service-header">
+                        <div>
+                            <h3 class="service-title">Graphic Design</h3>
+                            <div class="service-category">Creative Services</div>
+                        </div>
+                        <div class="service-price">From $80/hour</div>
+                    </div>
+                    
+                    <div class="service-stats">
+                        <div class="stat">
+                            <div class="stat-number">⭐ 5.0</div>
+                            <div class="stat-text">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">20</div>
+                            <div class="stat-text">Bookings</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">$1,020</div>
+                            <div class="stat-text">Earned</div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-actions">
+                        <a href="10-service-editor.html" class="btn btn-primary btn-small">Edit</a>
+                        <a href="06-service-detail.html" class="btn btn-outline btn-small">View</a>
+                        <button class="btn btn-secondary btn-small">Analytics</button>
+                        
+                        <div class="service-toggle">
+                            <span>Active</span>
+                            <div class="toggle-switch active" onclick="toggleService(this)">
+                                <div class="toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Draft Service -->
+            <div class="service-card">
+                <div class="service-image">
+                    <span>Service Image</span>
+                    <div class="service-status status-draft">Draft</div>
+                </div>
+                <div class="service-content">
+                    <div class="service-header">
+                        <div>
+                            <h3 class="service-title">Web Development</h3>
+                            <div class="service-category">Tech & Digital</div>
+                        </div>
+                        <div class="service-price">From $120/hour</div>
+                    </div>
+                    
+                    <div class="service-stats">
+                        <div class="stat">
+                            <div class="stat-number">-</div>
+                            <div class="stat-text">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">0</div>
+                            <div class="stat-text">Bookings</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">$0</div>
+                            <div class="stat-text">Earned</div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-actions">
+                        <a href="10-service-editor.html" class="btn btn-primary btn-small">Complete Setup</a>
+                        <button class="btn btn-outline btn-small">Preview</button>
+                        <button class="btn btn-secondary btn-small">Delete Draft</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Call to Action for First Service -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🛠️</div>
+            <h3>Start Offering Your Services</h3>
+            <p>
+                Share your skills with the world! Create your first service listing and start connecting 
+                with customers who need your expertise. It only takes a few minutes to get started.
+            </p>
+            <a href="10-service-editor.html" class="btn btn-primary">Create Your First Service</a>
+        </div>
+    </main>
+    
+    <script>
+        function toggleService(toggle) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+            const statusText = toggle.parentElement.querySelector('span');
+            statusText.textContent = isActive ? 'Active' : 'Paused';
+            
+            // In a real app, this would send a request to update service status
+            console.log('Service toggled:', isActive ? 'activated' : 'paused');
+        }
+        
+        // Show empty state if no services (for demo purposes, we have services)
+        function checkEmptyState() {
+            const servicesGrid = document.querySelector('.services-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (servicesGrid.children.length === 0) {
+                emptyState.style.display = 'block';
+                servicesGrid.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

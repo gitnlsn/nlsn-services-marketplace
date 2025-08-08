@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Dashboard - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .role-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #f3f4f6;
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+        
+        .role-btn {
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .role-btn.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .notification-btn, .profile-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 10px;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+        }
+        
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .welcome-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .welcome-text h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-text p {
+            opacity: 0.9;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-white {
+            background: white;
+            color: #3b82f6;
+        }
+        
+        .btn-white:hover {
+            background: #f0f0f0;
+        }
+        
+        .btn-outline-white {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-outline-white:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-title {
+            color: #6b7280;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-change {
+            font-size: 0.85rem;
+            color: #10b981;
+        }
+        
+        .stat-change.negative {
+            color: #ef4444;
+        }
+        
+        /* Activity Sections */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .view-all {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .view-all:hover {
+            text-decoration: underline;
+        }
+        
+        /* Booking List */
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .booking-item {
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .booking-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: #1f2937;
+        }
+        
+        .booking-info p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .booking-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-upcoming {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        
+        /* Quick Links */
+        .quick-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .quick-link {
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #374151;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .quick-link:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+        
+        .quick-link-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .quick-link-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Professional Dashboard Elements */
+        .service-performance {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .performance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .performance-name {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .performance-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="role-toggle">
+                <button class="role-btn active" onclick="toggleRole('customer')">Customer</button>
+                <button class="role-btn" onclick="toggleRole('professional')">Professional</button>
+            </div>
+            
+            <div class="header-actions">
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab active">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab">Messages</a>
+            <a href="09-services-management.html" class="nav-tab">My Services</a>
+            <a href="11-earnings.html" class="nav-tab">Earnings</a>
+            <a href="13-settings.html" class="nav-tab">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h1>Welcome back, John!</h1>
+                    <p>Ready to explore new services or manage your offerings?</p>
+                </div>
+                <div class="quick-actions">
+                    <a href="05-search-results.html" class="btn btn-white">Browse Services</a>
+                    <a href="09-services-management.html" class="btn btn-outline-white">Manage Services</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Active Bookings</span>
+                    <span class="stat-icon">📅</span>
+                </div>
+                <div class="stat-value">3</div>
+                <div class="stat-change">+2 this week</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Total Spent</span>
+                    <span class="stat-icon">💰</span>
+                </div>
+                <div class="stat-value">$1,245</div>
+                <div class="stat-change">+$320 this month</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Services Offered</span>
+                    <span class="stat-icon">🛠️</span>
+                </div>
+                <div class="stat-value">2</div>
+                <div class="stat-change">Active</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Total Earned</span>
+                    <span class="stat-icon">📈</span>
+                </div>
+                <div class="stat-value">$3,420</div>
+                <div class="stat-change">+$850 this month</div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Recent Activity -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Bookings</h2>
+                    <a href="07-bookings.html" class="view-all">View all →</a>
+                </div>
+                
+                <div class="booking-list">
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <h4>House Cleaning</h4>
+                            <p>Tomorrow, 10:00 AM • Sarah Johnson</p>
+                        </div>
+                        <span class="booking-status status-upcoming">Upcoming</span>
+                    </div>
+                    
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <h4>Math Tutoring Session</h4>
+                            <p>Dec 28, 2:00 PM • Dr. Emily Roberts</p>
+                        </div>
+                        <span class="booking-status status-upcoming">Upcoming</span>
+                    </div>
+                    
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <h4>Web Development Consultation</h4>
+                            <p>Dec 20, 3:00 PM • Mike Chen</p>
+                        </div>
+                        <span class="booking-status status-completed">Completed</span>
+                    </div>
+                    
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <h4>Photography Session Request</h4>
+                            <p>Dec 30, 11:00 AM • From: Alex Smith</p>
+                        </div>
+                        <span class="booking-status status-pending">Pending</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Links & Stats -->
+            <div>
+                <!-- Quick Links -->
+                <div class="section-card" style="margin-bottom: 2rem;">
+                    <div class="section-header">
+                        <h2 class="section-title">Quick Links</h2>
+                    </div>
+                    
+                    <div class="quick-links">
+                        <a href="05-search-results.html" class="quick-link">
+                            <div class="quick-link-icon">🔍</div>
+                            <div class="quick-link-text">Find Services</div>
+                        </a>
+                        
+                        <a href="10-service-editor.html" class="quick-link">
+                            <div class="quick-link-icon">➕</div>
+                            <div class="quick-link-text">Add Service</div>
+                        </a>
+                        
+                        <a href="08-messages.html" class="quick-link">
+                            <div class="quick-link-icon">💬</div>
+                            <div class="quick-link-text">Messages</div>
+                        </a>
+                        
+                        <a href="12-reviews.html" class="quick-link">
+                            <div class="quick-link-icon">⭐</div>
+                            <div class="quick-link-text">Reviews</div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Service Performance -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Your Services</h2>
+                        <a href="09-services-management.html" class="view-all">Manage →</a>
+                    </div>
+                    
+                    <div class="service-performance">
+                        <div class="performance-item">
+                            <span class="performance-name">Photography</span>
+                            <div class="performance-stats">
+                                <span>⭐ 4.9</span>
+                                <span>12 bookings</span>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-item">
+                            <span class="performance-name">Graphic Design</span>
+                            <div class="performance-stats">
+                                <span>⭐ 5.0</span>
+                                <span>8 bookings</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        function toggleRole(role) {
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            // In real app, this would update the dashboard view
+        }
+    </script>
+</body>
+</html>

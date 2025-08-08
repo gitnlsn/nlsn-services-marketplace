@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+            overflow: hidden;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Messages Layout */
+        .messages-container {
+            height: calc(100vh - 120px);
+            display: flex;
+            background: white;
+        }
+        
+        /* Conversations Sidebar */
+        .conversations-sidebar {
+            width: 350px;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #f9fafb;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+        
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .conversation-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .conversation-item:hover {
+            background: #f9fafb;
+        }
+        
+        .conversation-item.active {
+            background: #eff6ff;
+            border-right: 3px solid #3b82f6;
+        }
+        
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .conversation-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            color: #1f2937;
+            font-size: 0.95rem;
+        }
+        
+        .conversation-preview {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .conversation-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+        
+        .conversation-time {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+        
+        .unread-badge {
+            background: #3b82f6;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        .online-indicator {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            border: 2px solid white;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+        
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .chat-user-details h3 {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .chat-user-status {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chat-action-btn {
+            padding: 0.5rem;
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+        
+        .chat-action-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .messages-list {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message.sent .message-content {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .message.received .message-content {
+            background: white;
+            color: #1f2937;
+        }
+        
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        
+        .message.sent .message-avatar {
+            order: 1;
+        }
+        
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            max-width: 70%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+        }
+        
+        .message.sent .message-content {
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.received .message-content {
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-text {
+            line-height: 1.4;
+            margin-bottom: 0.25rem;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+        
+        .message-date-divider {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.8rem;
+            padding: 1rem 0;
+            position: relative;
+        }
+        
+        .message-date-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+        
+        .message-date-divider span {
+            background: #f9fafb;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Message Input */
+        .message-input-area {
+            padding: 1.5rem;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .message-input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        
+        .message-input {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 22px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .message-input:focus {
+            border-color: #3b82f6;
+        }
+        
+        .send-button {
+            width: 44px;
+            height: 44px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .send-button:hover {
+            background: #2563eb;
+        }
+        
+        .send-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        /* Empty State */
+        .empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .empty-chat-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-chat h3 {
+            font-size: 1.5rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-chat p {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .conversations-sidebar {
+                width: 100%;
+                display: none;
+            }
+            
+            .conversations-sidebar.mobile-show {
+                display: flex;
+            }
+            
+            .chat-area.mobile-show {
+                display: flex;
+            }
+            
+            .chat-area {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab active">Messages</a>
+            <a href="09-services-management.html" class="nav-tab">My Services</a>
+            <a href="11-earnings.html" class="nav-tab">Earnings</a>
+            <a href="13-settings.html" class="nav-tab">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Messages Container -->
+    <div class="messages-container">
+        <!-- Conversations Sidebar -->
+        <div class="conversations-sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Messages</h2>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Search conversations...">
+                </div>
+            </div>
+            
+            <div class="conversations-list">
+                <div class="conversation-item active" onclick="selectConversation('sarah')">
+                    <div class="conversation-header">
+                        <div class="conversation-user">
+                            <div class="user-avatar" style="background: #f59e0b;">
+                                SJ
+                                <div class="online-indicator"></div>
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">Sarah Johnson</div>
+                                <div class="conversation-preview">Great! I'll be there at 10 AM sharp tomorrow.</div>
+                            </div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">2 min ago</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item" onclick="selectConversation('emily')">
+                    <div class="conversation-header">
+                        <div class="conversation-user">
+                            <div class="user-avatar" style="background: #8b5cf6;">
+                                ER
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">Dr. Emily Roberts</div>
+                                <div class="conversation-preview">Don't forget to bring your math homework for review.</div>
+                            </div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">1 hour ago</div>
+                            <div class="unread-badge">1</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item" onclick="selectConversation('mike')">
+                    <div class="conversation-header">
+                        <div class="conversation-user">
+                            <div class="user-avatar" style="background: #10b981;">
+                                MC
+                                <div class="online-indicator"></div>
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">Mike Chen</div>
+                                <div class="conversation-preview">The project files are ready for your review.</div>
+                            </div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">3 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item" onclick="selectConversation('alex')">
+                    <div class="conversation-header">
+                        <div class="conversation-user">
+                            <div class="user-avatar" style="background: #ef4444;">
+                                AS
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">Alex Smith</div>
+                                <div class="conversation-preview">Thanks for considering my photography request!</div>
+                            </div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">1 day ago</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item" onclick="selectConversation('jessica')">
+                    <div class="conversation-header">
+                        <div class="conversation-user">
+                            <div class="user-avatar" style="background: #f97316;">
+                                JB
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">Jessica Brown</div>
+                                <div class="conversation-preview">Hi! I'm interested in booking your photography service for...</div>
+                            </div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">2 days ago</div>
+                            <div class="unread-badge">3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="chat-user-info">
+                    <div class="chat-avatar" style="background: #f59e0b;">
+                        SJ
+                        <div class="online-indicator"></div>
+                    </div>
+                    <div class="chat-user-details">
+                        <h3>Sarah Johnson</h3>
+                        <div class="chat-user-status">Online • Professional Cleaner</div>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="chat-action-btn" title="Voice call">📞</button>
+                    <button class="chat-action-btn" title="Video call">📹</button>
+                    <button class="chat-action-btn" title="View profile">👤</button>
+                </div>
+            </div>
+            
+            <div class="messages-list" id="messages-list">
+                <div class="message-date-divider">
+                    <span>Today</span>
+                </div>
+                
+                <div class="message received">
+                    <div class="message-avatar" style="background: #f59e0b;">SJ</div>
+                    <div class="message-content">
+                        <div class="message-text">Hi John! Thanks for booking my cleaning service. I have a few questions about your preferences.</div>
+                        <div class="message-time">10:30 AM</div>
+                    </div>
+                </div>
+                
+                <div class="message received">
+                    <div class="message-avatar" style="background: #f59e0b;">SJ</div>
+                    <div class="message-content">
+                        <div class="message-text">Do you have any specific areas you'd like me to focus on? Any allergies or preferences for cleaning products?</div>
+                        <div class="message-time">10:31 AM</div>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-avatar" style="background: #3b82f6;">JD</div>
+                    <div class="message-content">
+                        <div class="message-text">Hi Sarah! Thanks for reaching out. Please focus extra attention on the kitchen and bathroom. I prefer eco-friendly products if possible.</div>
+                        <div class="message-time">10:45 AM</div>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-avatar" style="background: #3b82f6;">JD</div>
+                    <div class="message-content">
+                        <div class="message-text">Also, I have a cat, so please be careful about leaving doors open.</div>
+                        <div class="message-time">10:46 AM</div>
+                    </div>
+                </div>
+                
+                <div class="message received">
+                    <div class="message-avatar" style="background: #f59e0b;">SJ</div>
+                    <div class="message-content">
+                        <div class="message-text">Perfect! I only use eco-friendly products and I'm very experienced with pet-friendly cleaning. I'll make sure to keep doors closed.</div>
+                        <div class="message-time">11:15 AM</div>
+                    </div>
+                </div>
+                
+                <div class="message received">
+                    <div class="message-avatar" style="background: #f59e0b;">SJ</div>
+                    <div class="message-content">
+                        <div class="message-text">Great! I'll be there at 10 AM sharp tomorrow. Should I ring the doorbell or text you when I arrive?</div>
+                        <div class="message-time">2 min ago</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="message-input-area">
+                <div class="message-input-container">
+                    <textarea 
+                        class="message-input" 
+                        placeholder="Type a message..." 
+                        rows="1"
+                        onkeypress="handleKeyPress(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button class="send-button" onclick="sendMessage()">
+                        ➤
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function selectConversation(user) {
+            // Remove active state from all conversations
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active state to clicked conversation
+            event.currentTarget.classList.add('active');
+            
+            // In a real app, this would load the conversation messages
+            console.log('Selected conversation with:', user);
+        }
+        
+        function sendMessage() {
+            const input = document.querySelector('.message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add message to chat (in real app, this would send to server)
+            const messagesList = document.getElementById('messages-list');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message sent';
+            messageElement.innerHTML = `
+                <div class="message-avatar" style="background: #3b82f6;">JD</div>
+                <div class="message-content">
+                    <div class="message-text">${message}</div>
+                    <div class="message-time">Just now</div>
+                </div>
+            `;
+            
+            messagesList.appendChild(messageElement);
+            messagesList.scrollTop = messagesList.scrollHeight;
+            
+            // Clear input
+            input.value = '';
+            autoResize(input);
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+        
+        // Auto-scroll to bottom of messages on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const messagesList = document.getElementById('messages-list');
+            messagesList.scrollTop = messagesList.scrollHeight;
+        });
+    </script>
+</body>
+</html>

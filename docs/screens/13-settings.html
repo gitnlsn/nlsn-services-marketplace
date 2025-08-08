@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Savoir Link</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #1a1a1a;
+            background: #f9fafb;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            padding: 0 5%;
+            gap: 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 0;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .nav-tab:hover {
+            color: #3b82f6;
+        }
+        
+        .nav-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        
+        /* Main Layout */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 5%;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+        
+        /* Settings Sidebar */
+        .settings-sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem 0;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            padding: 0 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .settings-menu {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        
+        .menu-item:hover {
+            background: #f9fafb;
+            color: #374151;
+        }
+        
+        .menu-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            border-right-color: #3b82f6;
+        }
+        
+        .menu-icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Settings Content */
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .section-header {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-description {
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        
+        /* Profile Section */
+        .profile-info {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .avatar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .profile-details {
+            flex: 1;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .form-textarea {
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+        
+        .btn-outline:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .toggle-group:last-child {
+            border-bottom: none;
+        }
+        
+        .toggle-info h4 {
+            font-size: 1rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .toggle-info p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+        
+        /* Connected Accounts */
+        .account-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .account-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .google-icon {
+            background: #ea4335;
+            color: white;
+        }
+        
+        .facebook-icon {
+            background: #1877f2;
+            color: white;
+        }
+        
+        .account-details h4 {
+            font-size: 1rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .account-details p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .account-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* Payment Methods */
+        .payment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .payment-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: #f3f4f6;
+        }
+        
+        .default-badge {
+            background: #3b82f6;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.5rem;
+        }
+        
+        .payment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        /* Danger Zone */
+        .danger-zone {
+            border: 2px solid #fee2e2;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: #fef2f2;
+        }
+        
+        .danger-title {
+            color: #991b1b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .danger-description {
+            color: #7f1d1d;
+            margin-bottom: 1rem;
+        }
+        
+        /* Hidden Sections */
+        .settings-section.hidden {
+            display: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .settings-sidebar {
+                position: relative;
+                top: auto;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-info {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">Savoir Link</div>
+            
+            <div class="header-actions">
+                <button class="profile-btn">
+                    <div class="profile-avatar">JD</div>
+                </button>
+            </div>
+        </div>
+        
+        <nav class="nav-tabs">
+            <a href="03-home.html" class="nav-tab">Dashboard</a>
+            <a href="05-search-results.html" class="nav-tab">Find Services</a>
+            <a href="07-bookings.html" class="nav-tab">My Bookings</a>
+            <a href="08-messages.html" class="nav-tab">Messages</a>
+            <a href="09-services-management.html" class="nav-tab">My Services</a>
+            <a href="11-earnings.html" class="nav-tab">Earnings</a>
+            <a href="13-settings.html" class="nav-tab active">Settings</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Settings Sidebar -->
+        <div class="settings-sidebar">
+            <h2 class="sidebar-title">Settings</h2>
+            <nav class="settings-menu">
+                <a href="#" class="menu-item active" onclick="showSection('profile')">
+                    <span class="menu-icon">👤</span>
+                    <span>Profile</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('notifications')">
+                    <span class="menu-icon">🔔</span>
+                    <span>Notifications</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('privacy')">
+                    <span class="menu-icon">🛡️</span>
+                    <span>Privacy</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('connected')">
+                    <span class="menu-icon">🔗</span>
+                    <span>Connected Accounts</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('advanced')">
+                    <span class="menu-icon">⚙️</span>
+                    <span>Advanced</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <!-- Profile Settings -->
+            <div id="profile-section" class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">Profile Information</h2>
+                    <p class="section-description">Update your personal information and how others see you on the platform.</p>
+                </div>
+                
+                <div class="profile-info">
+                    <div>
+                        <div class="profile-avatar-large">JD</div>
+                        <div class="avatar-actions">
+                            <button class="btn btn-outline btn-small">Change Photo</button>
+                            <button class="btn btn-secondary btn-small">Remove</button>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-details">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-input" value="John">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-input" value="Doe">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" value="john.doe@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-input" value="+1 (555) 123-4567">
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-input" value="San Francisco, CA">
+                            </div>
+                            <div class="form-group full-width">
+                                <label class="form-label">Bio</label>
+                                <textarea class="form-textarea" placeholder="Tell others about yourself...">Professional photographer and graphic designer with over 8 years of experience. Passionate about capturing moments and creating beautiful designs.</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary">Save Changes</button>
+                            <button class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications Settings -->
+            <div id="notifications-section" class="settings-section hidden">
+                <div class="section-header">
+                    <h2 class="section-title">Notification Preferences</h2>
+                    <p class="section-description">Choose how you want to be notified about activity on your account.</p>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Email Notifications</h4>
+                        <p>Receive important updates via email</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Booking Notifications</h4>
+                        <p>Get notified about new bookings and updates</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Message Notifications</h4>
+                        <p>Receive notifications for new messages</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Review Notifications</h4>
+                        <p>Get notified when you receive new reviews</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Marketing Emails</h4>
+                        <p>Receive tips, updates, and promotional content</p>
+                    </div>
+                    <div class="toggle-switch" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary">Save Preferences</button>
+                </div>
+            </div>
+            
+            <!-- Privacy Settings -->
+            <div id="privacy-section" class="settings-section hidden">
+                <div class="section-header">
+                    <h2 class="section-title">Privacy Settings</h2>
+                    <p class="section-description">Control your privacy and what information is visible to others.</p>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Profile Visibility</h4>
+                        <p>Make your profile visible in search results</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Show Contact Information</h4>
+                        <p>Display your phone number on your profile</p>
+                    </div>
+                    <div class="toggle-switch" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="toggle-group">
+                    <div class="toggle-info">
+                        <h4>Show Last Active</h4>
+                        <p>Let others see when you were last active</p>
+                    </div>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary">Save Settings</button>
+                    <a href="15-privacy.html" class="btn btn-outline">Privacy Policy</a>
+                </div>
+            </div>
+            
+            <!-- Connected Accounts -->
+            <div id="connected-section" class="settings-section hidden">
+                <div class="section-header">
+                    <h2 class="section-title">Connected Accounts</h2>
+                    <p class="section-description">Manage your connected social media and service accounts.</p>
+                </div>
+                
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="account-icon google-icon">G</div>
+                        <div class="account-details">
+                            <h4>Google Account</h4>
+                            <p>john.doe@gmail.com</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="account-status status-connected">Connected</span>
+                        <button class="btn btn-secondary btn-small" style="margin-left: 1rem;">Disconnect</button>
+                    </div>
+                </div>
+                
+                <div class="account-item">
+                    <div class="account-info">
+                        <div class="account-icon facebook-icon">f</div>
+                        <div class="account-details">
+                            <h4>Facebook</h4>
+                            <p>Connect to import your portfolio</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="account-status status-disconnected">Not Connected</span>
+                        <button class="btn btn-primary btn-small" style="margin-left: 1rem;">Connect</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced Settings -->
+            <div id="advanced-section" class="settings-section hidden">
+                <div class="section-header">
+                    <h2 class="section-title">Advanced Settings</h2>
+                    <p class="section-description">Advanced account options and data management.</p>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label">Account Language</label>
+                    <select class="form-select">
+                        <option value="en" selected>English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label">Timezone</label>
+                    <select class="form-select">
+                        <option value="pst" selected>Pacific Standard Time (PST)</option>
+                        <option value="est">Eastern Standard Time (EST)</option>
+                        <option value="cst">Central Standard Time (CST)</option>
+                        <option value="mst">Mountain Standard Time (MST)</option>
+                    </select>
+                </div>
+                
+                <div class="danger-zone">
+                    <h3 class="danger-title">Danger Zone</h3>
+                    <p class="danger-description">
+                        These actions are permanent and cannot be undone. Please be careful.
+                    </p>
+                    <div class="action-buttons">
+                        <button class="btn btn-outline">Deactivate Account</button>
+                        <button class="btn btn-danger">Delete Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update active menu item
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+        }
+        
+        function toggleSwitch(toggle) {
+            toggle.classList.toggle('active');
+            // In a real app, this would save the setting to the backend
+        }
+    </script>
+</body>
+</html>
