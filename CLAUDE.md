@@ -189,7 +189,12 @@ A clean output from all these tools means the project is healthy. Always run the
 ### Testing
 - `npm run test:frontend` - Run frontend tests
 - `npm run test:backend` - Run backend tests
-- `npm run test:all` - Run all tests
+- `npm run test:all` - Run all unit tests
+- `npm run test:e2e` - Run landing page e2e test
+- `npm run test:e2e:auth` - Run authentication flow e2e test
+- `npm run test:e2e:navigation` - Run navigation e2e test
+- `npm run test:e2e:performance` - Run performance e2e test
+- `npm run test:full` - Run complete test suite (quality checks + production build + all e2e tests)
 
 ## Architecture
 
@@ -198,6 +203,7 @@ A clean output from all these tools means the project is healthy. Always run the
 - **API**: tRPC v11 for type-safe APIs with automatic client generation
 - **Database**: PostgreSQL with Prisma ORM and pgvector extension
 - **Auth**: NextAuth.js v5 (beta) with database sessions
+- **UI Components**: shadcn/ui components (exclusively - no other component libraries)
 - **Styling**: Tailwind CSS v4
 - **Language**: TypeScript with strict mode
 
@@ -227,18 +233,68 @@ A clean output from all these tools means the project is healthy. Always run the
 - Runtime validation with Zod schemas
 - Required vars: DATABASE_URL, AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET
 
+### UI Component Guidelines
+
+**IMPORTANT: Use shadcn/ui components exclusively for all UI elements**
+- All UI components are located in `src/components/ui/`
+- These components are pre-installed and configured
+- DO NOT install or suggest other UI libraries (Material-UI, Ant Design, Chakra UI, etc.)
+- DO NOT create custom components when a shadcn/ui component exists for that purpose
+- Always check `src/components/ui/` for available components before implementing new UI
+
+Available shadcn/ui components:
+- Form controls: Button, Input, Textarea, Select, Checkbox, Radio, Switch, Slider
+- Layout: Card, Accordion, Tabs, Sheet, Dialog, Alert, Separator
+- Navigation: NavigationMenu, Breadcrumb, DropdownMenu, ContextMenu, Menubar
+- Data display: Table, Badge, Progress, Skeleton, Avatar
+- Feedback: Alert, AlertDialog, Toast (via Sonner), Tooltip, HoverCard
+- Date/Time: Calendar, DatePicker, DateRangePicker (custom compositions)
+- Search: Command (command palette/search)
+- Utility: ScrollArea, Form (with react-hook-form integration)
+
 ### Project Structure
 ```
 src/
 ├── app/              # Next.js App Router pages and components
 │   ├── api/         # API route handlers (auth, tRPC)
-│   └── _components/ # Shared React components
-├── server/          # Backend logic
-│   ├── api/        # tRPC routers and procedures
-│   ├── auth/       # NextAuth.js configuration
-│   └── db.ts       # Prisma client singleton
-├── trpc/           # tRPC client configuration
-└── styles/         # Global CSS with Tailwind
+│   ├── (auth)/      # Auth-required pages group
+│   ├── (public)/    # Public pages group
+│   └── _components/ # Page-specific components
+├── components/       # Reusable components
+│   ├── ui/          # shadcn/ui components (DO NOT modify directly)
+│   ├── layout/      # Layout components (header, sidebar, footer)
+│   ├── service/     # Service-related components
+│   ├── forms/       # Form components
+│   ├── data/        # Data display components
+│   └── common/      # Common/utility components
+├── lib/              # Utility functions and helpers
+├── hooks/            # Custom React hooks
+├── server/           # Backend logic
+│   ├── api/         # tRPC routers and procedures
+│   ├── auth/        # NextAuth.js configuration
+│   ├── services/    # Business logic services
+│   └── db.ts        # Prisma client singleton
+├── trpc/             # tRPC client configuration
+├── styles/           # Global styles
+├── types/            # TypeScript type definitions
+└── env.js            # Environment validation
+
+docs/                 # Documentation
+├── screens/          # HTML mockups/prototypes
+├── flow/             # User flow diagrams
+└── *.md              # Documentation files
+
+e2e/                  # End-to-end tests
+├── tests/            # Test specifications
+├── utils/            # Test utilities
+├── screenshots/      # Test screenshots (gitignored)
+└── browser-session/  # Browser session data (gitignored)
+
+prisma/               # Database
+└── schema.prisma     # Database schema
+
+public/               # Static assets
+└── ...               # Images, fonts, etc.
 ```
 
 ### Development Notes

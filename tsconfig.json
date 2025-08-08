@@ -45,6 +45,7 @@
 		"**/*.spec.ts",
 		"**/*.spec.tsx",
 		"src/test/**/*",
+		"scripts/**/*",
 		"vitest.config.*.ts"
 	]
 }

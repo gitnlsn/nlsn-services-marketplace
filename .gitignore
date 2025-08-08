@@ -44,3 +44,7 @@ yarn-error.log*
 
 # idea files
 .idea
+
+# e2e test artifacts
+/e2e/browser-session/
+/e2e/screenshots/
