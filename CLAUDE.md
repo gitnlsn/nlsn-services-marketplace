@@ -4,6 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Core Development Principles
 
+### Planning Before Execution
+**ALWAYS design and plan actions before executing them:**
+- **Understand the Task**: Fully comprehend what needs to be done before starting
+- **Use TodoWrite Tool**: For any non-trivial task, use the TodoWrite tool to create a structured plan
+- **Break Down Complex Tasks**: Divide large tasks into smaller, manageable steps
+- **Consider Dependencies**: Identify what needs to be done first and what can be done in parallel
+- **Verify Requirements**: Ensure you understand all requirements before implementation
+- **Think Through Edge Cases**: Consider potential issues and edge cases during planning
+- **Plan Verification**: Include steps to verify the implementation works correctly
+
 ### SOLID Principles
 - **Single Responsibility**: Each class/function should have one reason to change
 - **Open/Closed**: Open for extension, closed for modification
