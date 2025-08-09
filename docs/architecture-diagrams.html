@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savoir Link - System Architecture Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .toc {
+            padding: 2rem;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .toc h2 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        
+        .toc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .toc-item {
+            padding: 0.5rem;
+        }
+        
+        .toc-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .toc-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        
+        .diagram-section {
+            padding: 3rem 2rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .diagram-section:last-child {
+            border-bottom: none;
+        }
+        
+        .diagram-title {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #3b82f6;
+        }
+        
+        .diagram-description {
+            color: #64748b;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .mermaid-container {
+            background: #fafbfc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        pre.mermaid {
+            text-align: center;
+            background: transparent !important;
+            border: none !important;
+            margin: 0;
+            padding: 0;
+            font-family: inherit !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
+            white-space: pre-wrap !important;
+            overflow: visible !important;
+            display: block !important;
+        }
+        
+        .legend {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .legend-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+        
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .interface-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .interface-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .interface-name {
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .interface-methods {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        
+        .interface-method {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .interface-method:last-child {
+            border-bottom: none;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            padding: 2rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .section-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            margin-right: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Savoir Link System Architecture</h1>
+            <p>Complete architectural design with routers, services, and external integrations</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">20</div>
+                <div class="stat-label">Tables</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">11</div>
+                <div class="stat-label">Enums</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">50+</div>
+                <div class="stat-label">Relationships</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">30+</div>
+                <div class="stat-label">Indexes</div>
+            </div>
+        </div>
+        
+        <div class="toc">
+            <h2>Table of Contents</h2>
+            <div class="toc-list">
+                <div class="toc-item">1. <a href="#overview" class="toc-link">System Overview</a></div>
+                <div class="toc-item">2. <a href="#layers" class="toc-link">Layer Architecture</a></div>
+                <div class="toc-item">3. <a href="#routers" class="toc-link">Router Structure</a></div>
+                <div class="toc-item">4. <a href="#services" class="toc-link">Service Layer</a></div>
+                <div class="toc-item">5. <a href="#dependencies" class="toc-link">Dependencies</a></div>
+                <div class="toc-item">6. <a href="#dataflow" class="toc-link">Data Flow</a></div>
+                <div class="toc-item">7. <a href="#external" class="toc-link">External Services</a></div>
+                <div class="toc-item">8. <a href="#sequence" class="toc-link">Request Sequence</a></div>
+            </div>
+        </div>
+        
+        <!-- 1. Overview Diagram -->
+        <div id="overview" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">1</span>System Overview</h2>
+            <p class="diagram-description">
+                High-level architecture showing all major components and their relationships. The system follows a clean architecture pattern with clear separation between presentation, business logic, and data layers.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph TB
+                    subgraph "Client Layer"
+                        WEB[Web App<br/>Next.js/React]
+                        MOBILE[Mobile App<br/>Future]
+                    end
+                    
+                    subgraph "API Gateway"
+                        TRPC[tRPC Server<br/>Type-safe RPC]
+                    end
+                    
+                    subgraph "Router Layer"
+                        AUTH_R[Auth Router]
+                        USER_R[User Router]
+                        SERVICE_R[Service Router]
+                        BOOKING_R[Booking Router]
+                        PAYMENT_R[Payment Router]
+                        MESSAGE_R[Message Router]
+                        REVIEW_R[Review Router]
+                    end
+                    
+                    subgraph "Service Layer"
+                        AUTH_S[Auth Service]
+                        USER_S[User Service]
+                        SERVICE_S[Service Service]
+                        BOOKING_S[Booking Service]
+                        PAYMENT_S[Payment Service]
+                        MESSAGE_S[Message Service]
+                        REVIEW_S[Review Service]
+                        EMAIL_S[Email Service]
+                        STORAGE_S[Storage Service]
+                    end
+                    
+                    subgraph "Data Layer"
+                        PRISMA[Prisma ORM]
+                        POSTGRES[(PostgreSQL<br/>+ pgvector)]
+                        REDIS[(Redis Cache<br/>Future)]
+                    end
+                    
+                    subgraph "External Services"
+                        PAGARME[Pagar.me<br/>Payment Gateway]
+                        GDRIVE[Google Drive<br/>File Storage]
+                        RESEND[Resend<br/>Email Service]
+                        GOOGLE_AUTH[Google OAuth]
+                    end
+                    
+                    WEB --> TRPC
+                    MOBILE --> TRPC
+                    
+                    TRPC --> AUTH_R
+                    TRPC --> USER_R
+                    TRPC --> SERVICE_R
+                    TRPC --> BOOKING_R
+                    TRPC --> PAYMENT_R
+                    TRPC --> MESSAGE_R
+                    TRPC --> REVIEW_R
+                    
+                    AUTH_R --> AUTH_S
+                    USER_R --> USER_S
+                    SERVICE_R --> SERVICE_S
+                    BOOKING_R --> BOOKING_S
+                    PAYMENT_R --> PAYMENT_S
+                    MESSAGE_R --> MESSAGE_S
+                    REVIEW_R --> REVIEW_S
+                    
+                    SERVICE_S --> STORAGE_S
+                    BOOKING_S --> EMAIL_S
+                    PAYMENT_S --> EMAIL_S
+                    
+                    AUTH_S --> PRISMA
+                    USER_S --> PRISMA
+                    SERVICE_S --> PRISMA
+                    BOOKING_S --> PRISMA
+                    PAYMENT_S --> PRISMA
+                    MESSAGE_S --> PRISMA
+                    REVIEW_S --> PRISMA
+                    
+                    PRISMA --> POSTGRES
+                    SERVICE_S --> REDIS
+                    
+                    PAYMENT_S --> PAGARME
+                    STORAGE_S --> GDRIVE
+                    EMAIL_S --> RESEND
+                    AUTH_S --> GOOGLE_AUTH
+                    
+                    style WEB fill:#e0f2fe
+                    style MOBILE fill:#e0f2fe
+                    style TRPC fill:#ddd6fe
+                    style POSTGRES fill:#fef3c7
+                    style REDIS fill:#fef3c7
+                    style PAGARME fill:#fecaca
+                    style GDRIVE fill:#fecaca
+                    style RESEND fill:#fecaca
+                    style GOOGLE_AUTH fill:#fecaca
+                </pre>
+            </div>
+        </div>
+        
+        <!-- 2. Layer Architecture -->
+        <div id="layers" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">2</span>Layer Architecture</h2>
+            <p class="diagram-description">
+                Clean architecture layers with dependency flow. Each layer only depends on the layers below it, ensuring loose coupling and high cohesion.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph TD
+                    subgraph "Presentation Layer"
+                        CLIENT[Client Applications]
+                        API[API Endpoints]
+                    end
+                    
+                    subgraph "Application Layer"
+                        ROUTERS[tRPC Routers<br/>Request validation<br/>Response formatting<br/>Error handling]
+                        MIDDLEWARE[Middleware<br/>Authentication<br/>Rate limiting<br/>Logging]
+                    end
+                    
+                    subgraph "Business Logic Layer"
+                        SERVICES[Services<br/>Business rules<br/>Data transformation<br/>External integrations]
+                        VALIDATORS[Validators<br/>Input validation<br/>Business constraints]
+                        UTILS[Utilities<br/>Helpers<br/>Common functions]
+                    end
+                    
+                    subgraph "Data Access Layer"
+                        REPOSITORIES[Repositories<br/>Data queries<br/>Data mutations<br/>Caching]
+                        ORM[Prisma ORM<br/>Type-safe queries<br/>Migrations<br/>Relations]
+                    end
+                    
+                    subgraph "Infrastructure Layer"
+                        DATABASE[(Database)]
+                        CACHE[(Cache)]
+                        STORAGE[File Storage]
+                        EXTERNAL[External APIs]
+                    end
+                    
+                    CLIENT --> API
+                    API --> ROUTERS
+                    ROUTERS --> MIDDLEWARE
+                    MIDDLEWARE --> SERVICES
+                    SERVICES --> VALIDATORS
+                    SERVICES --> UTILS
+                    SERVICES --> REPOSITORIES
+                    REPOSITORIES --> ORM
+                    ORM --> DATABASE
+                    REPOSITORIES --> CACHE
+                    SERVICES --> STORAGE
+                    SERVICES --> EXTERNAL
+                    
+                    style CLIENT fill:#e0f2fe
+                    style ROUTERS fill:#ddd6fe
+                    style SERVICES fill:#dcfce7
+                    style ORM fill:#fef3c7
+                    style DATABASE fill:#fecaca
+                </pre>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-title">Dependency Rules</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        <span>Dependencies flow downward only</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>Inner layers don't know about outer layers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>Interfaces define contracts between layers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. Router Structure -->
+        <div id="routers" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">3</span>tRPC Router Structure</h2>
+            <p class="diagram-description">
+                Complete router hierarchy with procedures and their relationships to services. Each router handles a specific domain and delegates business logic to services.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph LR
+                    ROOT[Root Router]
+                    
+                    subgraph "Auth Router"
+                        AUTH[auth.router]
+                        AUTH --> AUTH_P[signIn<br/>signOut<br/>getSession<br/>register]
+                    end
+                    
+                    subgraph "User Router"
+                        USER[user.router]
+                        USER --> USER_P[getProfile<br/>updateProfile<br/>becomeProfessional<br/>getPublicProfile<br/>listProfessionals]
+                    end
+                    
+                    subgraph "Service Router"
+                        SERVICE[service.router]
+                        SERVICE --> SERVICE_P[create<br/>update<br/>delete<br/>getById<br/>search<br/>getByProvider<br/>toggleStatus<br/>uploadMedia]
+                    end
+                    
+                    subgraph "Booking Router"
+                        BOOKING[booking.router]
+                        BOOKING --> BOOKING_P[create<br/>confirm<br/>cancel<br/>complete<br/>getCustomerBookings<br/>getProviderBookings<br/>getAvailability]
+                    end
+                    
+                    subgraph "Payment Router"
+                        PAYMENT[payment.router]
+                        PAYMENT --> PAYMENT_P[createCheckout<br/>confirmPayment<br/>refund<br/>getEarnings<br/>requestWithdrawal<br/>getTransactions]
+                    end
+                    
+                    subgraph "Message Router"
+                        MESSAGE[message.router]
+                        MESSAGE --> MESSAGE_P[send<br/>getConversations<br/>getMessages<br/>markAsRead<br/>createConversation]
+                    end
+                    
+                    subgraph "Review Router"
+                        REVIEW[review.router]
+                        REVIEW --> REVIEW_P[create<br/>update<br/>getServiceReviews<br/>getUserReviews<br/>getStats]
+                    end
+                    
+                    ROOT --> AUTH
+                    ROOT --> USER
+                    ROOT --> SERVICE
+                    ROOT --> BOOKING
+                    ROOT --> PAYMENT
+                    ROOT --> MESSAGE
+                    ROOT --> REVIEW
+                    
+                    style ROOT fill:#fef3c7
+                    style AUTH fill:#ddd6fe
+                    style USER fill:#ddd6fe
+                    style SERVICE fill:#ddd6fe
+                    style BOOKING fill:#ddd6fe
+                    style PAYMENT fill:#ddd6fe
+                    style MESSAGE fill:#ddd6fe
+                    style REVIEW fill:#ddd6fe
+                </pre>
+            </div>
+        </div>
+        
+        <!-- 4. Service Layer -->
+        <div id="services" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">4</span>Service Layer Design</h2>
+            <p class="diagram-description">
+                Service architecture with dependency injection pattern. Each service encapsulates business logic and receives dependencies through constructor injection.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph TB
+                    subgraph "Service Dependencies Interface"
+                        DEPS[ServiceDependencies<br/>db: PrismaClient<br/>cache: Redis<br/>logger: Logger]
+                    end
+                    
+                    subgraph "Core Services"
+                        USER_SVC[UserService<br/>Profile management<br/>Role management<br/>Preferences]
+                        
+                        SERVICE_SVC[ServiceService<br/>CRUD operations<br/>Search and filter<br/>Media management<br/>Availability]
+                        
+                        BOOKING_SVC[BookingService<br/>Booking lifecycle<br/>Availability check<br/>Conflict resolution<br/>Status management]
+                        
+                        PAYMENT_SVC[PaymentService<br/>Payment processing<br/>Earnings calculation<br/>Withdrawals<br/>Refunds]
+                    end
+                    
+                    subgraph "Support Services"
+                        EMAIL_SVC[EmailService<br/>Transactional emails<br/>Notifications<br/>Templates]
+                        
+                        STORAGE_SVC[StorageService<br/>File upload<br/>File management<br/>CDN integration]
+                        
+                        NOTIFICATION_SVC[NotificationService<br/>Push notifications<br/>In-app notifications<br/>Preferences]
+                        
+                        SEARCH_SVC[SearchService<br/>Full-text search<br/>Filters<br/>Ranking<br/>Suggestions]
+                    end
+                    
+                    subgraph "External Integrations"
+                        PAGARME_SVC[PagarmeService<br/>Checkout links<br/>Webhooks<br/>Transactions]
+                        
+                        GDRIVE_SVC[GoogleDriveService<br/>Upload files<br/>Organize folders<br/>Share links]
+                        
+                        AUTH_SVC[AuthService<br/>Google OAuth<br/>Session management<br/>Token validation]
+                    end
+                    
+                    DEPS --> USER_SVC
+                    DEPS --> SERVICE_SVC
+                    DEPS --> BOOKING_SVC
+                    DEPS --> PAYMENT_SVC
+                    
+                    SERVICE_SVC --> STORAGE_SVC
+                    SERVICE_SVC --> SEARCH_SVC
+                    
+                    BOOKING_SVC --> EMAIL_SVC
+                    BOOKING_SVC --> NOTIFICATION_SVC
+                    BOOKING_SVC --> PAYMENT_SVC
+                    
+                    PAYMENT_SVC --> PAGARME_SVC
+                    PAYMENT_SVC --> EMAIL_SVC
+                    
+                    STORAGE_SVC --> GDRIVE_SVC
+                    
+                    style DEPS fill:#fef3c7
+                    style PAGARME_SVC fill:#fecaca
+                    style GDRIVE_SVC fill:#fecaca
+                    style AUTH_SVC fill:#fecaca
+                </pre>
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Service Interfaces</h3>
+            <div class="interface-list">
+                <div class="interface-card">
+                    <div class="interface-name">IUserService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">findById(id: string)</div>
+                        <div class="interface-method">updateProfile(id, data)</div>
+                        <div class="interface-method">becomeProfessional(id)</div>
+                        <div class="interface-method">updatePreferences(id, prefs)</div>
+                    </div>
+                </div>
+                
+                <div class="interface-card">
+                    <div class="interface-name">IServiceService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">create(data, providerId)</div>
+                        <div class="interface-method">update(id, data)</div>
+                        <div class="interface-method">search(filters, pagination)</div>
+                        <div class="interface-method">uploadMedia(serviceId, files)</div>
+                    </div>
+                </div>
+                
+                <div class="interface-card">
+                    <div class="interface-name">IBookingService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">createBooking(data)</div>
+                        <div class="interface-method">confirmBooking(id)</div>
+                        <div class="interface-method">checkAvailability(serviceId, date)</div>
+                        <div class="interface-method">handlePayment(bookingId)</div>
+                    </div>
+                </div>
+                
+                <div class="interface-card">
+                    <div class="interface-name">IPaymentService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">createCheckoutLink(booking)</div>
+                        <div class="interface-method">processWebhook(data)</div>
+                        <div class="interface-method">calculateEarnings(bookingId)</div>
+                        <div class="interface-method">requestWithdrawal(userId, amount)</div>
+                    </div>
+                </div>
+                
+                <div class="interface-card">
+                    <div class="interface-name">IStorageService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">uploadFile(file, folder)</div>
+                        <div class="interface-method">deleteFile(fileId)</div>
+                        <div class="interface-method">getPublicUrl(fileId)</div>
+                        <div class="interface-method">createFolder(name, parentId)</div>
+                    </div>
+                </div>
+                
+                <div class="interface-card">
+                    <div class="interface-name">IEmailService</div>
+                    <div class="interface-methods">
+                        <div class="interface-method">sendBookingConfirmation(booking)</div>
+                        <div class="interface-method">sendPaymentReceipt(payment)</div>
+                        <div class="interface-method">sendWelcomeEmail(user)</div>
+                        <div class="interface-method">sendNotification(userId, data)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 5. Dependencies Diagram -->
+        <div id="dependencies" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">5</span>Dependency Injection Pattern</h2>
+            <p class="diagram-description">
+                How services receive their dependencies through constructor injection, making them testable and loosely coupled.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph TD
+                    subgraph "Router Layer"
+                        ROUTER[tRPC Router<br/>Context: db, session, req]
+                    end
+                    
+                    subgraph "Service Creation"
+                        CREATE[Service Factory<br/>Creates service with deps]
+                    end
+                    
+                    subgraph "Dependencies"
+                        DB[(PrismaClient)]
+                        CACHE[(Redis Client)]
+                        LOGGER[Logger]
+                        CONFIG[Configuration]
+                        
+                        PAGARME_CLIENT[Pagar.me SDK]
+                        GDRIVE_CLIENT[Google Drive API]
+                        EMAIL_CLIENT[Resend Client]
+                    end
+                    
+                    subgraph "Service Instance"
+                        SERVICE[Service<br/>constructor with deps:<br/>db: PrismaClient<br/>cache: Redis<br/>logger: Logger<br/>config: Config<br/>externalClients: APIs]
+                    end
+                    
+                    ROUTER --> CREATE
+                    CREATE --> DB
+                    CREATE --> CACHE
+                    CREATE --> LOGGER
+                    CREATE --> CONFIG
+                    CREATE --> PAGARME_CLIENT
+                    CREATE --> GDRIVE_CLIENT
+                    CREATE --> EMAIL_CLIENT
+                    
+                    DB --> SERVICE
+                    CACHE --> SERVICE
+                    LOGGER --> SERVICE
+                    CONFIG --> SERVICE
+                    PAGARME_CLIENT --> SERVICE
+                    GDRIVE_CLIENT --> SERVICE
+                    EMAIL_CLIENT --> SERVICE
+                    
+                    style ROUTER fill:#ddd6fe
+                    style SERVICE fill:#dcfce7
+                    style DB fill:#fef3c7
+                    style PAGARME_CLIENT fill:#fecaca
+                    style GDRIVE_CLIENT fill:#fecaca
+                    style EMAIL_CLIENT fill:#fecaca
+                </pre>
+            </div>
+            
+            <div class="code-block">
+// Example: Service with Dependency Injection
+interface ServiceDeps {
+  db: PrismaClient;
+  cache?: RedisClient;
+  logger: Logger;
+  config: Config;
+  pagarmeClient?: PagarmeClient;
+  storageClient?: GoogleDriveClient;
+}
+
+class BookingService {
+  constructor(private deps: ServiceDeps) {}
+  
+  async createBooking(data: CreateBookingInput) {
+    const { db, logger, config } = this.deps;
+    
+    logger.info('Creating booking', { data });
+    
+    // Business logic here
+    const booking = await db.booking.create({
+      data: {
+        ...data,
+        serviceFee: data.price * config.serviceFeeRate,
+      }
+    });
+    
+    return booking;
+  }
+}
+
+// In Router
+const bookingService = new BookingService({
+  db: ctx.db,
+  cache: redisClient,
+  logger: logger,
+  config: appConfig,
+});
+            </div>
+        </div>
+        
+        <!-- 6. Data Flow -->
+        <div id="dataflow" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">6</span>Request Data Flow</h2>
+            <p class="diagram-description">
+                Complete flow of a request from client to database and back, showing all transformation and validation points.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                sequenceDiagram
+                    participant C as Client
+                    participant T as tRPC Server
+                    participant M as Middleware
+                    participant R as Router
+                    participant S as Service
+                    participant V as Validator
+                    participant D as Database
+                    participant E as External Service
+                    
+                    C->>T: Request (typed)
+                    T->>M: Check auth/rate limit
+                    M->>R: Route to procedure
+                    R->>V: Validate input
+                    V->>R: Validation result
+                    
+                    alt Valid input
+                        R->>S: Call service method
+                        S->>D: Query/Mutation
+                        D->>S: Data
+                        
+                        opt External integration needed
+                            S->>E: External API call
+                            E->>S: External response
+                        end
+                        
+                        S->>S: Apply business logic
+                        S->>R: Processed data
+                        R->>T: Format response
+                        T->>C: Typed response
+                    else Invalid input
+                        R->>T: Validation error
+                        T->>C: Error response
+                    end
+                </pre>
+            </div>
+        </div>
+        
+        <!-- 7. External Services -->
+        <div id="external" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">7</span>External Service Integrations</h2>
+            <p class="diagram-description">
+                How the system integrates with Pagar.me for payments and Google Drive for file storage.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                graph TB
+                    subgraph "Savoir Link System"
+                        PAYMENT_SVC[Payment Service]
+                        STORAGE_SVC[Storage Service]
+                        WEBHOOK[Webhook Handler]
+                    end
+                    
+                    subgraph "Pagar.me Integration"
+                        PAGARME_API[Pagar.me API]
+                        CHECKOUT[Checkout Link API]
+                        WEBHOOK_PM[Webhooks]
+                        TRANSACTION[Transaction API]
+                        
+                        PAGARME_API --> CHECKOUT
+                        PAGARME_API --> WEBHOOK_PM
+                        PAGARME_API --> TRANSACTION
+                    end
+                    
+                    subgraph "Google Drive Integration"
+                        GDRIVE_API[Google Drive API]
+                        UPLOAD[Upload API]
+                        FOLDERS[Folder Management]
+                        SHARING[Sharing and Permissions]
+                        
+                        GDRIVE_API --> UPLOAD
+                        GDRIVE_API --> FOLDERS
+                        GDRIVE_API --> SHARING
+                    end
+                    
+                    subgraph "Storage Structure in Drive"
+                        ROOT_FOLDER[Savoir Link Storage]
+                        SERVICES_FOLDER[Services]
+                        USERS_FOLDER[Users]
+                        PORTFOLIO[Portfolios]
+                        
+                        ROOT_FOLDER --> SERVICES_FOLDER
+                        ROOT_FOLDER --> USERS_FOLDER
+                        ROOT_FOLDER --> PORTFOLIO
+                    end
+                    
+                    PAYMENT_SVC -->|Create checkout| CHECKOUT
+                    PAYMENT_SVC -->|Check status| TRANSACTION
+                    WEBHOOK_PM -->|Payment events| WEBHOOK
+                    
+                    STORAGE_SVC -->|Upload files| UPLOAD
+                    STORAGE_SVC -->|Organize| FOLDERS
+                    STORAGE_SVC -->|Get public URL| SHARING
+                    
+                    UPLOAD --> SERVICES_FOLDER
+                    UPLOAD --> USERS_FOLDER
+                    UPLOAD --> PORTFOLIO
+                    
+                    style PAGARME_API fill:#fecaca
+                    style GDRIVE_API fill:#fecaca
+                    style PAYMENT_SVC fill:#dcfce7
+                    style STORAGE_SVC fill:#dcfce7
+                </pre>
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Pagar.me Checkout Flow</h3>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                sequenceDiagram
+                    participant U as User
+                    participant B as Booking Service
+                    participant P as Payment Service
+                    participant PM as Pagar.me
+                    participant W as Webhook
+                    
+                    U->>B: Create booking
+                    B->>P: Request payment
+                    P->>PM: Create checkout link
+                    PM->>P: Return checkout URL
+                    P->>B: Payment initiated
+                    B->>U: Redirect to checkout
+                    
+                    U->>PM: Complete payment
+                    PM->>W: Send webhook
+                    W->>P: Process payment event
+                    P->>B: Update booking status
+                    B->>U: Booking confirmed
+                </pre>
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Google Drive Storage Flow</h3>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                sequenceDiagram
+                    participant U as User
+                    participant S as Service Router
+                    participant ST as Storage Service
+                    participant GD as Google Drive
+                    participant DB as Database
+                    
+                    U->>S: Upload service image
+                    S->>ST: Process upload
+                    ST->>ST: Validate file
+                    ST->>GD: Upload to folder
+                    GD->>ST: Return file ID
+                    ST->>GD: Set permissions
+                    GD->>ST: Get public URL
+                    ST->>DB: Save media record
+                    DB->>ST: Confirm saved
+                    ST->>S: Return media info
+                    S->>U: Upload complete
+                </pre>
+            </div>
+        </div>
+        
+        <!-- 8. Request Sequence -->
+        <div id="sequence" class="diagram-section">
+            <h2 class="diagram-title"><span class="section-number">8</span>Complete Request Sequence Example</h2>
+            <p class="diagram-description">
+                End-to-end flow of a booking creation request showing all components interaction.
+            </p>
+            
+            <div class="mermaid-container">
+                <pre class="mermaid">
+                sequenceDiagram
+                    participant C as Client
+                    participant TRPC as tRPC Server
+                    participant AUTH as Auth Middleware
+                    participant BR as Booking Router
+                    participant BS as Booking Service
+                    participant PS as Payment Service
+                    participant ES as Email Service
+                    participant DB as Database
+                    participant PM as Pagar.me
+                    participant RS as Resend
+                    
+                    C->>TRPC: POST /api/trpc/booking.create
+                    TRPC->>AUTH: Verify session
+                    AUTH->>AUTH: Check JWT/Session
+                    
+                    alt Authenticated
+                        AUTH->>BR: Forward to router
+                        BR->>BR: Validate input schema
+                        BR->>BS: createBooking(data, userId)
+                        
+                        BS->>DB: Check service availability
+                        DB->>BS: Availability confirmed
+                        
+                        BS->>DB: Create booking record
+                        DB->>BS: Booking created
+                        
+                        BS->>PS: initializePayment(booking)
+                        PS->>PM: Create checkout link
+                        PM->>PS: Checkout URL
+                        PS->>DB: Save payment record
+                        
+                        BS->>ES: sendBookingRequest(provider)
+                        ES->>RS: Send email
+                        RS->>ES: Email sent
+                        
+                        BS->>BR: Return booking + payment URL
+                        BR->>TRPC: Format response
+                        TRPC->>C: Success response
+                    else Not authenticated
+                        AUTH->>TRPC: Unauthorized error
+                        TRPC->>C: 401 Unauthorized
+                    end
+                </pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Only Mermaid.js initialization allowed - no custom JavaScript -->
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryBorderColor: '#2563eb',
+                primaryTextColor: '#fff',
+                lineColor: '#64748b',
+                secondaryColor: '#f3f4f6',
+                tertiaryColor: '#fef3c7',
+                background: '#ffffff',
+                mainBkg: '#ddd6fe',
+                secondBkg: '#dcfce7',
+                tertiaryBkg: '#fef3c7'
+            }
+        });
+    </script>
+</body>
+</html>

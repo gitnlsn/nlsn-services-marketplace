@@ -7,6 +7,7 @@
 		"build": "next build",
 		"db:drop": "prisma migrate reset",
 		"db:push": "prisma db push",
+		"db:seed": "tsx prisma/seed.ts",
 		"docker": "sudo docker compose up && sudo docker compose down -v",
 		"dev": "next dev --turbo",
 		"mermaid": "node scripts/validate-mermaid.js",

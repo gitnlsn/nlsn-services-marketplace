@@ -37,6 +37,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Mockups/Wireframes**: Visual representations of the interface
 - **User Stories**: "As a [user], I want to [action] so that [outcome]"
 
+### Documentation Requirements (docs folder)
+**IMPORTANT: No JavaScript in documentation files:**
+- **NEVER use JavaScript** in HTML files within the `docs/` folder
+- All documentation should be static HTML only
+- Remove any `<script>` tags, onclick handlers, or JavaScript functionality
+- Documentation should work without any JavaScript execution
+- Exception: Mermaid.js CDN for diagram rendering is allowed (but no custom JS)
+
+### Mermaid Diagram Requirements
+**ALWAYS use `<pre class="mermaid">` tags for Mermaid diagrams in HTML files:**
+- Never use `<div class="mermaid">` - it causes rendering issues
+- Always wrap Mermaid code in `<pre class="mermaid">` tags
+- This ensures proper parsing and rendering of diagrams
+- Example:
+  ```html
+  <pre class="mermaid">
+  graph TD
+      A[Start] --> B[Process]
+      B --> C[End]
+  </pre>
+  ```
+
 ### Implementation Order (Building Phase)
 **When IMPLEMENTING features, build from database to frontend:**
 
